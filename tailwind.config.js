@@ -1,0 +1,80 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#F28B22',
+          '50': '#FEF2E7',
+          '100': '#FDE5CF',
+          '200': '#FBCB9F',
+          '300': '#F9B16F',
+          '400': '#F4973F',
+          '500': '#F28B22',
+          '600': '#D17311',
+          '700': '#A15A0D',
+          '800': '#714009',
+          '900': '#412705',
+          'dark': '#D17311',
+        },
+        secondary: {
+          DEFAULT: '#D1D1D1',
+          '50': '#FFFFFF',
+          '100': '#FFFFFF',
+          '200': '#F7F7F7',
+          '300': '#EBEBEB',
+          '400': '#DEDEDE',
+          '500': '#D1D1D1',
+          '600': '#B5B5B5',
+          '700': '#999999',
+          '800': '#7D7D7D',
+          '900': '#616161',
+        },
+        background: '#F7F7F9',
+        success: {
+          DEFAULT: '#10B981',
+          '50': '#ECFDF5',
+          '100': '#D1FAE5',
+          '200': '#A7F3D0',
+          '300': '#6EE7B7',
+          '400': '#34D399',
+          '500': '#10B981',
+          '600': '#059669',
+          '700': '#047857',
+          '800': '#065F46',
+          '900': '#064E3B',
+        },
+        danger: {
+          DEFAULT: '#EF4444',
+          '50': '#FEF2F2',
+          '100': '#FEE2E2',
+          '200': '#FECACA',
+          '300': '#FCA5A5',
+          '400': '#F87171',
+          '500': '#EF4444',
+          '600': '#DC2626',
+          '700': '#B91C1C',
+          '800': '#991B1B',
+          '900': '#7F1D1D',
+        },
+      },
+      boxShadow: {
+        'card': '0 2px 5px 0 rgba(0, 0, 0, 0.05)',
+        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      },
+      borderRadius: {
+        'xl': '0.75rem',
+        '2xl': '1rem',
+      },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+    },
+  },
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
+}
