@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+/**
+ * DashboardPage Component
+ *
+ * The main dashboard page for the ConnectChain admin panel.
+ */
+
+import React, { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,9 +18,14 @@ import {
   BarElement,
 } from 'chart.js';
 import { Line, Pie, Bar } from 'react-chartjs-2';
-import Card from '../components/Card.tsx';
-import Button from '../components/Button.tsx';
-import DataTable from '../components/DataTable.tsx';
+import PageHeader from '../components/layout/PageHeader.tsx';
+import Card from '../components/common/Card.tsx';
+import Button from '../components/common/Button.tsx';
+import DataTable from '../components/common/DataTable.tsx';
+import Badge from '../components/common/Badge.tsx';
+import { formatCurrency } from '../utils/formatters.ts';
+import { mockDb } from '../mockData/db.ts';
+import { DashboardStats } from '../mockData/entities/dashboard.ts';
 import {
   UsersIcon,
   ShoppingCartIcon,
@@ -26,6 +37,7 @@ import {
   EllipsisHorizontalIcon
 } from '@heroicons/react/24/outline';
 
+// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -41,52 +53,38 @@ ChartJS.register(
 const DashboardPage: React.FC = () => {
   const [activeTimeRange, setActiveTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
 
-  // Sample data for charts
-  const salesData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Sales',
-        data: [12, 19, 3, 5, 2, 3],
-        borderColor: '#F28B22',
-        backgroundColor: 'rgba(242, 139, 34, 0.1)',
-        tension: 0.4,
-        fill: true,
-      },
-    ],
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // In a real app, this would be an API call
+        const data = mockDb.getAll<DashboardStats, 'dashboardStats'>('dashboardStats')[0];
+        setDashboardData(data);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Handle refresh
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Simulate data refresh
+    setTimeout(() => {
+      const data = mockDb.getAll<DashboardStats, 'dashboardStats'>('dashboardStats')[0];
+      setDashboardData(data);
+      setIsRefreshing(false);
+    }, 1500);
   };
 
-  const categoryData = {
-    labels: ['Electronics', 'Clothing', 'Food', 'Other'],
-    datasets: [
-      {
-        data: [30, 25, 20, 25],
-        backgroundColor: [
-          '#F28B22',
-          '#D1D1D1',
-          '#4CAF50',
-          '#2196F3',
-        ],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const revenueData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Revenue',
-        data: [4500, 5200, 3800, 5100, 4200, 6300],
-        backgroundColor: '#F28B22',
-        borderRadius: 6,
-      },
-    ],
-  };
-
+  // Chart options
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'bottom' as const,
@@ -108,91 +106,76 @@ const DashboardPage: React.FC = () => {
     },
   };
 
-  // Recent orders data
-  const recentOrders = [
-    {
-      id: 'ORD-001',
-      customerName: 'John Doe',
-      date: '2024-01-15',
-      amount: 1250.00,
-      status: 'completed',
-    },
-    {
-      id: 'ORD-002',
-      customerName: 'Jane Smith',
-      date: '2024-01-14',
-      amount: 850.50,
-      status: 'pending',
-    },
-    {
-      id: 'ORD-003',
-      customerName: 'Robert Johnson',
-      date: '2024-01-13',
-      amount: 1120.75,
-      status: 'approved',
-    },
-    {
-      id: 'ORD-004',
-      customerName: 'Emily Davis',
-      date: '2024-01-12',
-      amount: 450.25,
-      status: 'completed',
-    },
-  ];
-
+  // Recent orders columns
   const orderColumns = [
-    { key: 'id', label: 'Order ID', sortable: true },
+    { key: 'orderNumber', label: 'Order ID', sortable: true },
     { key: 'customerName', label: 'Customer', sortable: true },
     { key: 'date', label: 'Date', sortable: true },
     {
       key: 'amount',
       label: 'Amount',
       sortable: true,
-      render: (value: number) => `$${value.toFixed(2)}`
+      render: (value: number) => formatCurrency(value)
     },
-    { key: 'status', label: 'Status', sortable: true },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (value: string) => (
+        <Badge
+          variant={
+            value === 'completed' || value === 'approved' ? 'success' :
+            value === 'pending' ? 'warning' :
+            value === 'rejected' ? 'danger' : 'gray'
+          }
+        >
+          {value.charAt(0).toUpperCase() + value.slice(1)}
+        </Badge>
+      )
+    },
   ];
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    // Simulate data refresh
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 1500);
-  };
+  // If data is not loaded yet
+  if (!dashboardData) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Welcome to ConnectChain Admin Dashboard</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button
-            variant="outline"
-            icon={<ArrowDownTrayIcon className="h-5 w-5" />}
-          >
-            Export Report
-          </Button>
-          <Button
-            icon={<DocumentChartBarIcon className="h-5 w-5" />}
-          >
-            Generate Report
-          </Button>
-          <Button
-            variant="outline"
-            icon={<ArrowPathIcon className="h-5 w-5" />}
-            onClick={handleRefresh}
-            loading={isRefreshing}
-          >
-            Refresh
-          </Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Dashboard"
+        description="Welcome to ConnectChain Admin Dashboard"
+        actions={
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              icon={<ArrowDownTrayIcon className="h-5 w-5" />}
+            >
+              Export Report
+            </Button>
+            <Button
+              icon={<DocumentChartBarIcon className="h-5 w-5" />}
+            >
+              Generate Report
+            </Button>
+            <Button
+              variant="outline"
+              icon={<ArrowPathIcon className="h-5 w-5" />}
+              onClick={handleRefresh}
+              loading={isRefreshing}
+            >
+              Refresh
+            </Button>
+          </div>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <Card
           hoverable
           className="transform transition-all duration-300 hover:scale-105"
@@ -201,7 +184,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">1,234</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{dashboardData.summary.totalUsers.toLocaleString()}</p>
             </div>
             <div className="p-3 bg-primary bg-opacity-10 rounded-lg">
               <UsersIcon className="w-6 h-6 text-primary" />
@@ -221,7 +204,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">567</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{dashboardData.summary.totalOrders.toLocaleString()}</p>
             </div>
             <div className="p-3 bg-blue-500 bg-opacity-10 rounded-lg">
               <ShoppingCartIcon className="w-6 h-6 text-blue-500" />
@@ -236,12 +219,12 @@ const DashboardPage: React.FC = () => {
         <Card
           hoverable
           className="transform transition-all duration-300 hover:scale-105"
-          onClick={() => console.log('Pending actions card clicked')}
+          onClick={() => console.log('Pending verifications card clicked')}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Pending Actions</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">23</p>
+              <p className="text-sm font-medium text-gray-500">Pending Verifications</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{dashboardData.summary.pendingVerifications}</p>
             </div>
             <div className="p-3 bg-yellow-500 bg-opacity-10 rounded-lg">
               <ClockIcon className="w-6 h-6 text-yellow-500" />
@@ -261,7 +244,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Revenue</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">$45,678</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(dashboardData.summary.totalRevenue)}</p>
             </div>
             <div className="p-3 bg-green-500 bg-opacity-10 rounded-lg">
               <CurrencyDollarIcon className="w-6 h-6 text-green-500" />
@@ -275,9 +258,9 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card
-          title="Sales Trend"
+          title="Revenue Trend"
           icon={
             <div className="flex space-x-2">
               {['day', 'week', 'month', 'year'].map((range) => (
@@ -300,12 +283,18 @@ const DashboardPage: React.FC = () => {
           }
         >
           <div className="h-80">
-            <Line data={salesData} options={chartOptions} />
+            <Line
+              data={{
+                labels: dashboardData.revenueData.labels,
+                datasets: dashboardData.revenueData.datasets
+              }}
+              options={chartOptions}
+            />
           </div>
         </Card>
 
         <Card
-          title="Revenue Overview"
+          title="User Growth"
           icon={
             <button className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
               <EllipsisHorizontalIcon className="h-5 w-5" />
@@ -313,7 +302,13 @@ const DashboardPage: React.FC = () => {
           }
         >
           <div className="h-80">
-            <Bar data={revenueData} options={chartOptions} />
+            <Line
+              data={{
+                labels: dashboardData.userGrowth.labels,
+                datasets: dashboardData.userGrowth.datasets
+              }}
+              options={chartOptions}
+            />
           </div>
         </Card>
       </div>
@@ -324,26 +319,33 @@ const DashboardPage: React.FC = () => {
             title="Recent Orders"
             description="Latest orders from customers"
             columns={orderColumns}
-            data={recentOrders}
+            data={dashboardData.recentOrders}
             onRowClick={(order) => console.log('Order clicked:', order)}
+            pagination={false}
           />
         </div>
 
-        <Card title="Sales by Category">
+        <Card title="Category Distribution">
           <div className="h-80">
-            <Pie data={categoryData} options={chartOptions} />
+            <Pie
+              data={{
+                labels: dashboardData.categoryDistribution.labels,
+                datasets: dashboardData.categoryDistribution.datasets
+              }}
+              options={chartOptions}
+            />
           </div>
           <div className="mt-4 space-y-2">
-            {categoryData.labels?.map((label, index) => (
+            {dashboardData.categoryDistribution.labels.map((label, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div
                     className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: categoryData.datasets[0].backgroundColor[index] as string }}
+                    style={{ backgroundColor: dashboardData.categoryDistribution.datasets[0].backgroundColor[index] as string }}
                   ></div>
                   <span className="text-sm text-gray-600">{label}</span>
                 </div>
-                <span className="text-sm font-medium">{categoryData.datasets[0].data[index]}%</span>
+                <span className="text-sm font-medium">{dashboardData.categoryDistribution.datasets[0].data[index]}%</span>
               </div>
             ))}
           </div>
