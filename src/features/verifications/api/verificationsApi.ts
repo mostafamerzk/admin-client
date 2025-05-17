@@ -4,8 +4,8 @@
  * This file provides methods for interacting with the verifications API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { Verification, VerificationUpdateData } from '../types/index.ts';
+import apiClient from '../../../api';
+import type { Verification, VerificationRequest } from '../types';
 
 export const verificationsApi = {
   /**
@@ -13,7 +13,10 @@ export const verificationsApi = {
    */
   getVerifications: async (params?: Record<string, any>): Promise<Verification[]> => {
     try {
-      const response = await api.get('/verifications', { params });
+      const response = await apiClient.get<Verification[]>('/verifications', { params });
+      if (!response.data) {
+        throw new Error('No verifications data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching verifications:', error);
@@ -22,14 +25,49 @@ export const verificationsApi = {
   },
 
   /**
-   * Get a verification by ID
+   * Get verification by ID
    */
   getVerificationById: async (id: string): Promise<Verification> => {
     try {
-      const response = await api.get(`/verifications/${id}`);
+      const response = await apiClient.get<Verification>(`/verifications/${id}`);
+      if (!response.data) {
+        throw new Error(`No verification data received for ID: ${id}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error fetching verification ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Create verification request
+   */
+  createVerification: async (verificationData: VerificationRequest): Promise<Verification> => {
+    try {
+      const response = await apiClient.post<Verification>('/verifications', verificationData);
+      if (!response.data) {
+        throw new Error('Failed to create verification request');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error creating verification request:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update verification status
+   */
+  updateVerificationStatus: async (id: string, status: Verification['status']): Promise<Verification> => {
+    try {
+      const response = await apiClient.put<Verification>(`/verifications/${id}/status`, { status });
+      if (!response.data) {
+        throw new Error(`Failed to update verification status for ID: ${id}`);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating verification status for ${id}:`, error);
       throw error;
     }
   },
@@ -39,62 +77,29 @@ export const verificationsApi = {
    */
   getVerificationsByStatus: async (status: Verification['status']): Promise<Verification[]> => {
     try {
-      const response = await api.get('/verifications', { params: { status } });
+      const response = await apiClient.get<Verification[]>('/verifications', { params: { status } });
+      if (!response.data) {
+        throw new Error(`No verifications found with status: ${status}`);
+      }
       return response.data;
     } catch (error) {
-      console.error(`Error fetching verifications by status ${status}:`, error);
+      console.error(`Error fetching verifications with status ${status}:`, error);
       throw error;
     }
   },
 
   /**
-   * Get verifications by supplier
+   * Get verifications by user
    */
-  getVerificationsBySupplier: async (supplierId: string): Promise<Verification[]> => {
+  getVerificationsByUser: async (userId: string): Promise<Verification[]> => {
     try {
-      const response = await api.get('/verifications', { params: { supplierId } });
+      const response = await apiClient.get<Verification[]>('/verifications', { params: { userId } });
+      if (!response.data) {
+        throw new Error(`No verifications found for user: ${userId}`);
+      }
       return response.data;
     } catch (error) {
-      console.error(`Error fetching verifications for supplier ${supplierId}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Update a verification
-   */
-  updateVerification: async (id: string, data: VerificationUpdateData): Promise<Verification> => {
-    try {
-      const response = await api.put(`/verifications/${id}`, data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating verification ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Approve a verification
-   */
-  approveVerification: async (id: string, notes: string = ''): Promise<Verification> => {
-    try {
-      const response = await api.put(`/verifications/${id}/approve`, { notes });
-      return response.data;
-    } catch (error) {
-      console.error(`Error approving verification ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Reject a verification
-   */
-  rejectVerification: async (id: string, notes: string): Promise<Verification> => {
-    try {
-      const response = await api.put(`/verifications/${id}/reject`, { notes });
-      return response.data;
-    } catch (error) {
-      console.error(`Error rejecting verification ${id}:`, error);
+      console.error(`Error fetching verifications for user ${userId}:`, error);
       throw error;
     }
   }

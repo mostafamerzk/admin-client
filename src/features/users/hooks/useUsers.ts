@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { User, UserFormData } from '../types/index.ts';
+import type { User, UserFormData } from '../types/index.ts';
 import usersApi from '../api/usersApi.ts';
 import useNotification from '../../../hooks/useNotification.ts';
 

@@ -4,8 +4,8 @@
  * This file provides methods for interacting with the analytics API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { 
+import apiClient from '../../../api';
+import type { 
   AnalyticsData, 
   AnalyticsSummary, 
   SalesTrendData, 
@@ -15,7 +15,7 @@ import {
   TopSupplierData, 
   GeographicData,
   AnalyticsTimeRange
-} from '../types/index.ts';
+} from '../types';
 
 export const analyticsApi = {
   /**
@@ -23,7 +23,10 @@ export const analyticsApi = {
    */
   getAnalyticsData: async (timeRange: AnalyticsTimeRange = 'month'): Promise<AnalyticsData> => {
     try {
-      const response = await api.get('/analytics', { params: { timeRange } });
+      const response = await apiClient.get<AnalyticsData>('/analytics', { params: { timeRange } });
+      if (!response.data) {
+        throw new Error('No analytics data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching analytics data:', error);
@@ -36,7 +39,10 @@ export const analyticsApi = {
    */
   getAnalyticsSummary: async (timeRange: AnalyticsTimeRange = 'month'): Promise<AnalyticsSummary> => {
     try {
-      const response = await api.get('/analytics/summary', { params: { timeRange } });
+      const response = await apiClient.get<AnalyticsSummary>('/analytics/summary', { params: { timeRange } });
+      if (!response.data) {
+        throw new Error('No analytics summary received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching analytics summary:', error);
@@ -49,7 +55,10 @@ export const analyticsApi = {
    */
   getSalesTrend: async (timeRange: AnalyticsTimeRange = 'month'): Promise<SalesTrendData> => {
     try {
-      const response = await api.get('/analytics/sales-trend', { params: { timeRange } });
+      const response = await apiClient.get<SalesTrendData>('/analytics/sales-trend', { params: { timeRange } });
+      if (!response.data) {
+        throw new Error('No sales trend data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching sales trend data:', error);
@@ -62,7 +71,10 @@ export const analyticsApi = {
    */
   getUserGrowth: async (timeRange: AnalyticsTimeRange = 'month'): Promise<UserGrowthData> => {
     try {
-      const response = await api.get('/analytics/user-growth', { params: { timeRange } });
+      const response = await apiClient.get<UserGrowthData>('/analytics/user-growth', { params: { timeRange } });
+      if (!response.data) {
+        throw new Error('No user growth data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching user growth data:', error);
@@ -75,7 +87,10 @@ export const analyticsApi = {
    */
   getCategoryDistribution: async (timeRange: AnalyticsTimeRange = 'month'): Promise<CategoryDistributionData> => {
     try {
-      const response = await api.get('/analytics/category-distribution', { params: { timeRange } });
+      const response = await apiClient.get<CategoryDistributionData>('/analytics/category-distribution', { params: { timeRange } });
+      if (!response.data) {
+        throw new Error('No category distribution data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching category distribution data:', error);
@@ -88,7 +103,10 @@ export const analyticsApi = {
    */
   getTopProducts: async (timeRange: AnalyticsTimeRange = 'month', limit: number = 10): Promise<TopProductData[]> => {
     try {
-      const response = await api.get('/analytics/top-products', { params: { timeRange, limit } });
+      const response = await apiClient.get<TopProductData[]>('/analytics/top-products', { params: { timeRange, limit } });
+      if (!response.data) {
+        throw new Error('No top products data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching top products data:', error);
@@ -101,7 +119,10 @@ export const analyticsApi = {
    */
   getTopSuppliers: async (timeRange: AnalyticsTimeRange = 'month', limit: number = 10): Promise<TopSupplierData[]> => {
     try {
-      const response = await api.get('/analytics/top-suppliers', { params: { timeRange, limit } });
+      const response = await apiClient.get<TopSupplierData[]>('/analytics/top-suppliers', { params: { timeRange, limit } });
+      if (!response.data) {
+        throw new Error('No top suppliers data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching top suppliers data:', error);
@@ -114,7 +135,10 @@ export const analyticsApi = {
    */
   getGeographicData: async (timeRange: AnalyticsTimeRange = 'month'): Promise<GeographicData> => {
     try {
-      const response = await api.get('/analytics/geographic-data', { params: { timeRange } });
+      const response = await apiClient.get<GeographicData>('/analytics/geographic-data', { params: { timeRange } });
+      if (!response.data) {
+        throw new Error('No geographic data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching geographic data:', error);
@@ -127,10 +151,13 @@ export const analyticsApi = {
    */
   exportAnalyticsData: async (timeRange: AnalyticsTimeRange = 'month', format: 'csv' | 'excel' | 'pdf' = 'csv'): Promise<Blob> => {
     try {
-      const response = await api.get('/analytics/export', { 
+      const response = await apiClient.get<Blob>('/analytics/export', { 
         params: { timeRange, format },
         responseType: 'blob'
       });
+      if (!response.data) {
+        throw new Error('No export data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error exporting analytics data:', error);

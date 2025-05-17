@@ -10,6 +10,9 @@ A modern, feature-rich admin panel for the ConnectChain platform, built with Rea
 - **Order Management**: View and process customer orders
 - **Dashboard**: Real-time analytics and statistics
 - **Settings**: Configure platform settings and preferences
+- **Enhanced Performance**: Route preloading and code splitting
+- **Robust Error Handling**: Comprehensive error boundaries
+- **Advanced API Layer**: Caching, retry logic, and error handling
 
 ## Tech Stack
 
@@ -19,7 +22,7 @@ A modern, feature-rich admin panel for the ConnectChain platform, built with Rea
 - **Charts**: Chart.js with React-Chartjs-2
 - **UI Components**: Custom component library
 - **Icons**: Heroicons
-- **HTTP Client**: Axios
+- **HTTP Client**: Axios with enhanced features
 
 ## Project Structure
 
@@ -30,6 +33,9 @@ src/
 ├── assets/                     # Images, fonts, static resources
 ├── components/                 # Reusable UI components
 │   ├── common/                 # Generic components (Button, Table, Modal)
+│   │   ├── PageLoader.tsx      # Enhanced loading component
+│   │   ├── ErrorBoundary.tsx   # Error handling component
+│   │   └── NotificationsContainer.tsx
 │   ├── layout/                 # Sidebar, Navbar, structural components
 ├── features/                   # Feature-specific modules
 │   ├── dashboard/              # Dashboard components, hooks, API
@@ -42,7 +48,10 @@ src/
 ├── hooks/                      # Custom hooks (useAuth, useFetch, etc.)
 ├── pages/                      # Top-level page components
 ├── services/                   # API and authentication logic
+│   ├── api.ts                  # Enhanced API service
+│   └── mockApi.ts              # Mock API implementation
 ├── utils/                      # Utility functions and helpers
+│   └── routePreloader.ts       # Route preloading utilities
 ├── context/                    # React Context providers for global state
 ├── styles/                     # Tailwind configuration and global CSS
 ├── constants/                  # Routes, API endpoints, config values
@@ -102,6 +111,8 @@ For development, you can use the following credentials:
 - **Modal**: Dialog component for displaying content in a modal
 - **Badge**: Component for displaying status indicators
 - **Avatar**: Component for displaying user avatars
+- **PageLoader**: Enhanced loading component with accessibility features
+- **ErrorBoundary**: Component for graceful error handling
 
 ### Layout Components
 
@@ -123,12 +134,65 @@ For development, you can use the following credentials:
 - **useNotification**: Hook for displaying notifications
 - **useUI**: Hook for UI state and methods
 
+### Enhanced API Service
+
+The application includes an enhanced API service with the following features:
+
+```typescript
+import api from '@/services/api';
+
+// GET request with caching
+const data = await api.get('/endpoint');
+
+// POST request with retry logic
+const response = await api.post('/endpoint', data);
+
+// Configure cache settings
+api.setCacheConfig({ ttl: 10 * 60 * 1000 }); // 10 minutes
+
+// Configure retry settings
+api.setRetryConfig({ maxRetries: 5 });
+```
+
+### Route Preloading
+
+The application implements route preloading for better performance:
+
+```typescript
+import { preloadRoute, preloadOnHover } from '@/utils/routePreloader';
+
+// Preload a specific route
+preloadRoute(() => import('./pages/DashboardPage'), 'dashboard');
+
+// Preload on hover
+preloadOnHover(() => import('./pages/DashboardPage'), 'dashboard');
+```
+
 ## Performance Optimizations
 
 - **Code Splitting**: Lazy loading of page components
+- **Route Preloading**: Preloading routes for faster navigation
+- **API Caching**: Caching API responses to reduce server load
+- **Retry Logic**: Automatic retry for failed API requests
 - **Memoization**: React.memo, useMemo, and useCallback for preventing unnecessary renders
 - **Pagination**: Efficient data loading for large datasets
 - **Debouncing**: Preventing excessive API calls for search inputs
+
+## Error Handling
+
+The application implements comprehensive error handling:
+
+```typescript
+<ErrorBoundary
+  fallback={<CustomErrorComponent />}
+  onError={(error, errorInfo) => {
+    // Log to error tracking service
+    console.error(error, errorInfo);
+  }}
+>
+  <YourComponent />
+</ErrorBoundary>
+```
 
 ## Security Features
 
@@ -137,6 +201,7 @@ For development, you can use the following credentials:
 - **Input Sanitization**: Preventing XSS attacks
 - **HTTPS**: Secure API communication
 - **CSRF Protection**: Preventing cross-site request forgery
+- **API Error Handling**: Comprehensive error handling for API requests
 
 ## Available Scripts
 

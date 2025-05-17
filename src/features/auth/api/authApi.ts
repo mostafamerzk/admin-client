@@ -4,17 +4,17 @@
  * This file provides methods for interacting with the auth API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { 
+import apiClient from '../../../api';
+import type { 
   AuthUser, 
   LoginCredentials, 
   LoginResponse, 
   RegisterCredentials,
   ForgotPasswordRequest,
   ResetPasswordRequest
-} from '../types/index.ts';
-import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../../../constants/config.ts';
-import { handleApiError } from '../../../utils/errorHandling.ts';
+} from '../types';
+import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../../../constants/config';
+import { handleApiError } from '../../../utils/errorHandling';
 
 export const authApi = {
   /**
@@ -22,7 +22,10 @@ export const authApi = {
    */
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
-      const response = await api.post('/auth/login', credentials);
+      const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+      if (!response.data) {
+        throw new Error('Invalid login response');
+      }
       const { user, token, expiresIn } = response.data;
       
       // Store token and user data
@@ -40,7 +43,10 @@ export const authApi = {
    */
   register: async (credentials: RegisterCredentials): Promise<LoginResponse> => {
     try {
-      const response = await api.post('/auth/register', credentials);
+      const response = await apiClient.post<LoginResponse>('/auth/register', credentials);
+      if (!response.data) {
+        throw new Error('Invalid registration response');
+      }
       const { user, token, expiresIn } = response.data;
       
       // Store token and user data
@@ -58,8 +64,7 @@ export const authApi = {
    */
   logout: async (): Promise<void> => {
     try {
-      // Call logout endpoint
-      await api.post('/auth/logout', {});
+      await apiClient.post('/auth/logout', {});
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -72,45 +77,24 @@ export const authApi = {
   /**
    * Get the current authenticated user
    */
-  getCurrentUser: async (): Promise<AuthUser | null> => {
+  getCurrentUser: async (): Promise<AuthUser> => {
     try {
-      // First check if we have user data in localStorage
-      const userData = localStorage.getItem(USER_DATA_KEY);
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      
-      if (!token) {
-        return null;
+      const response = await apiClient.get<AuthUser>('/auth/me');
+      if (!response.data) {
+        throw new Error('No user data received');
       }
-      
-      if (userData) {
-        // If we have user data, return it
-        return JSON.parse(userData);
-      }
-      
-      // If no user data but we have a token, fetch the user
-      const response = await api.get('/auth/me');
-      const user = response.data;
-      
-      // Store user data
-      localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
-      
-      return user;
+      return response.data;
     } catch (error) {
-      console.error('Get current user error:', error);
-      // Clear storage on error
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(USER_DATA_KEY);
-      return null;
+      throw handleApiError(error);
     }
   },
   
   /**
    * Request password reset
    */
-  forgotPassword: async (request: ForgotPasswordRequest): Promise<{ success: boolean; message: string }> => {
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
     try {
-      const response = await api.post('/auth/forgot-password', request);
-      return response.data;
+      await apiClient.post('/auth/forgot-password', data);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -119,10 +103,9 @@ export const authApi = {
   /**
    * Reset password with token
    */
-  resetPassword: async (request: ResetPasswordRequest): Promise<{ success: boolean; message: string }> => {
+  resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
     try {
-      const response = await api.post('/auth/reset-password', request);
-      return response.data;
+      await apiClient.post('/auth/reset-password', data);
     } catch (error) {
       throw handleApiError(error);
     }

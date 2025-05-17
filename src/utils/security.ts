@@ -27,7 +27,7 @@ export const sanitizeInput = (input: string): string => {
 export const parseJwt = (token: string): any => {
   try {
     const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = base64Url?.replace(/-/g, '+').replace(/_/g, '/') || '';
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split('')
@@ -119,42 +119,5 @@ export const validatePasswordStrength = (password: string): { valid: boolean; me
   return { valid: true };
 };
 
-/**
- * Encrypt sensitive data using AES encryption
- * Note: This is a simple implementation for demonstration purposes.
- * In a real application, use a proper encryption library.
- */
-export const encryptData = (data: string, key: string): string => {
-  try {
-    // Simple XOR encryption for demonstration
-    const encrypted = data.split('').map((char, i) => {
-      return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length));
-    }).join('');
-    
-    return btoa(encrypted);
-  } catch (error) {
-    console.error('Error encrypting data:', error);
-    return '';
-  }
-};
 
-/**
- * Decrypt sensitive data
- * Note: This is a simple implementation for demonstration purposes.
- * In a real application, use a proper encryption library.
- */
-export const decryptData = (encryptedData: string, key: string): string => {
-  try {
-    const data = atob(encryptedData);
-    
-    // Simple XOR decryption for demonstration
-    const decrypted = data.split('').map((char, i) => {
-      return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length));
-    }).join('');
-    
-    return decrypted;
-  } catch (error) {
-    console.error('Error decrypting data:', error);
-    return '';
-  }
-};
+

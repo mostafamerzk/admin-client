@@ -4,16 +4,19 @@
  * This file provides methods for interacting with the profile API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { Profile, ProfileUpdateData, PasswordChangeData } from '../types/index.ts';
+import apiClient from '../../../api';
+import type { UserProfile, ProfileUpdateRequest, PasswordChangeRequest } from '../types';
 
 export const profileApi = {
   /**
-   * Get the current user's profile
+   * Get user profile
    */
-  getProfile: async (): Promise<Profile> => {
+  getProfile: async (): Promise<UserProfile> => {
     try {
-      const response = await api.get('/profile');
+      const response = await apiClient.get<UserProfile>('/profile');
+      if (!response.data) {
+        throw new Error('No profile data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -22,11 +25,14 @@ export const profileApi = {
   },
 
   /**
-   * Update the current user's profile
+   * Update user profile
    */
-  updateProfile: async (profileData: ProfileUpdateData): Promise<Profile> => {
+  updateProfile: async (profileData: ProfileUpdateRequest): Promise<UserProfile> => {
     try {
-      const response = await api.put('/profile', profileData);
+      const response = await apiClient.put<UserProfile>('/profile', profileData);
+      if (!response.data) {
+        throw new Error('Failed to update profile');
+      }
       return response.data;
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -35,32 +41,39 @@ export const profileApi = {
   },
 
   /**
-   * Update the current user's avatar
+   * Update profile picture
    */
-  updateAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
+  updateProfilePicture: async (file: File): Promise<UserProfile> => {
     try {
       const formData = new FormData();
-      formData.append('avatar', file);
+      formData.append('picture', file);
 
-      const response = await api.post('/profile/avatar', formData, {
+      const response = await apiClient.put<UserProfile>('/profile/picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
+      if (!response.data) {
+        throw new Error('Failed to update profile picture');
+      }
       return response.data;
     } catch (error) {
-      console.error('Error updating avatar:', error);
+      console.error('Error updating profile picture:', error);
       throw error;
     }
   },
 
   /**
-   * Change the current user's password
+   * Change password
    */
-  changePassword: async (passwordData: PasswordChangeData): Promise<{ success: boolean }> => {
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
     try {
-      const response = await api.post('/profile/change-password', passwordData);
-      return response.data;
+      const passwordData: PasswordChangeRequest = {
+        currentPassword,
+        newPassword,
+        confirmPassword: newPassword
+      };
+      await apiClient.put('/profile/password', passwordData);
     } catch (error) {
       console.error('Error changing password:', error);
       throw error;
@@ -68,27 +81,17 @@ export const profileApi = {
   },
 
   /**
-   * Update profile preferences
+   * Delete profile picture
    */
-  updatePreferences: async (preferences: Profile['preferences']): Promise<Profile['preferences']> => {
+  deleteProfilePicture: async (): Promise<UserProfile> => {
     try {
-      const response = await api.put('/profile/preferences', preferences);
+      const response = await apiClient.delete<UserProfile>('/profile/picture');
+      if (!response.data) {
+        throw new Error('Failed to delete profile picture');
+      }
       return response.data;
     } catch (error) {
-      console.error('Error updating preferences:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Get activity log for the current user
-   */
-  getActivityLog: async (params?: { page?: number; limit?: number }): Promise<any> => {
-    try {
-      const response = await api.get('/profile/activity', { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching activity log:', error);
+      console.error('Error deleting profile picture:', error);
       throw error;
     }
   }

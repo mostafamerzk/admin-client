@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import Button from '../../../components/common/Button.tsx';
-import { UserFormData } from '../types/index.ts';
+import type { UserFormData } from '../types/index.ts';
 
 interface AddUserFormProps {
   onSubmit: (userData: UserFormData & { confirmPassword: string; sendInvite: boolean }) => void;

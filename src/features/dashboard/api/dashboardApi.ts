@@ -4,19 +4,22 @@
  * This file provides methods for interacting with the dashboard API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { DashboardStats } from '../types/index.ts';
+import apiClient from '../../../api';
+import type { DashboardStats } from '../types';
 
 export const dashboardApi = {
   /**
    * Get dashboard statistics
    */
-  getStats: async (): Promise<DashboardStats> => {
+  getDashboardStats: async (): Promise<DashboardStats> => {
     try {
-      const response = await api.get('/dashboard');
+      const response = await apiClient.get<DashboardStats>('/dashboard/stats');
+      if (!response.data) {
+        throw new Error('No dashboard statistics received');
+      }
       return response.data;
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching dashboard statistics:', error);
       throw error;
     }
   },
@@ -26,7 +29,10 @@ export const dashboardApi = {
    */
   getSalesData: async (period: 'day' | 'week' | 'month' | 'year'): Promise<any> => {
     try {
-      const response = await api.get(`/dashboard/sales?period=${period}`);
+      const response = await apiClient.get(`/dashboard/sales`, { params: { period } });
+      if (!response.data) {
+        throw new Error(`No sales data received for period: ${period}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error fetching sales data for ${period}:`, error);
@@ -39,7 +45,10 @@ export const dashboardApi = {
    */
   getUserGrowth: async (period: 'week' | 'month' | 'year'): Promise<any> => {
     try {
-      const response = await api.get(`/dashboard/users?period=${period}`);
+      const response = await apiClient.get(`/dashboard/users`, { params: { period } });
+      if (!response.data) {
+        throw new Error(`No user growth data received for period: ${period}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error fetching user growth data for ${period}:`, error);

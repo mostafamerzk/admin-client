@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { User } from '../types/index.ts';
+import type { User } from '../types/index.ts';
 
 interface UserDetailsProps {
   user: User;

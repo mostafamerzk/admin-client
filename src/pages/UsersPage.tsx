@@ -13,8 +13,8 @@ import {
   AddUserForm,
   UserDetails,
   UserList,
-  User,
-  UserFormData,
+  type User,
+  type UserFormData,
   getMockUsers
 } from '../features/users/index.ts';
 
@@ -33,8 +33,6 @@ const UsersPage: React.FC = () => {
     if (activeTab === 'all') return true;
     return user.status === activeTab;
   });
-
-
 
   const handleUserClick = (user: User) => {
     handleViewUser(user);

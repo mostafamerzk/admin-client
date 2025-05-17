@@ -17,7 +17,7 @@ import {
   Legend,
   Filler,
   RadialLinearScale,
-  ChartOptions
+  type ChartOptions
 } from 'chart.js';
 
 // Register ChartJS components
@@ -60,7 +60,7 @@ export const defaultLineChartOptions: ChartOptions<'line'> = {
     y: {
       beginAtZero: true,
       grid: {
-        borderDash: [2, 4],
+        display: true,
         color: '#E5E7EB'
       }
     }

@@ -4,14 +4,8 @@
  * This file provides methods for interacting with the settings API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { 
-  Settings, 
-  GeneralSettings, 
-  NotificationSettings, 
-  SecuritySettings, 
-  AppearanceSettings 
-} from '../types/index.ts';
+import apiClient from '../../../api';
+import type { Settings, NotificationSettings } from '../types';
 
 export const settingsApi = {
   /**
@@ -19,7 +13,10 @@ export const settingsApi = {
    */
   getSettings: async (): Promise<Settings> => {
     try {
-      const response = await api.get('/settings');
+      const response = await apiClient.get<Settings>('/settings');
+      if (!response.data) {
+        throw new Error('No settings data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -28,14 +25,33 @@ export const settingsApi = {
   },
 
   /**
-   * Update general settings
+   * Update settings
    */
-  updateGeneralSettings: async (settings: Partial<GeneralSettings>): Promise<GeneralSettings> => {
+  updateSettings: async (settings: Partial<Settings>): Promise<Settings> => {
     try {
-      const response = await api.put('/settings/general', settings);
+      const response = await apiClient.put<Settings>('/settings', settings);
+      if (!response.data) {
+        throw new Error('Failed to update settings');
+      }
       return response.data;
     } catch (error) {
-      console.error('Error updating general settings:', error);
+      console.error('Error updating settings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get notification settings
+   */
+  getNotificationSettings: async (): Promise<NotificationSettings> => {
+    try {
+      const response = await apiClient.get<NotificationSettings>('/settings/notifications');
+      if (!response.data) {
+        throw new Error('No notification settings received');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching notification settings:', error);
       throw error;
     }
   },
@@ -45,49 +61,13 @@ export const settingsApi = {
    */
   updateNotificationSettings: async (settings: Partial<NotificationSettings>): Promise<NotificationSettings> => {
     try {
-      const response = await api.put('/settings/notifications', settings);
+      const response = await apiClient.put<NotificationSettings>('/settings/notifications', settings);
+      if (!response.data) {
+        throw new Error('Failed to update notification settings');
+      }
       return response.data;
     } catch (error) {
       console.error('Error updating notification settings:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Update security settings
-   */
-  updateSecuritySettings: async (settings: Partial<SecuritySettings>): Promise<SecuritySettings> => {
-    try {
-      const response = await api.put('/settings/security', settings);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating security settings:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Update appearance settings
-   */
-  updateAppearanceSettings: async (settings: Partial<AppearanceSettings>): Promise<AppearanceSettings> => {
-    try {
-      const response = await api.put('/settings/appearance', settings);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating appearance settings:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Reset settings to default
-   */
-  resetSettings: async (): Promise<Settings> => {
-    try {
-      const response = await api.post('/settings/reset');
-      return response.data;
-    } catch (error) {
-      console.error('Error resetting settings:', error);
       throw error;
     }
   }

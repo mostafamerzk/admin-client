@@ -4,8 +4,8 @@
  * This file provides methods for interacting with the users API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { User, UserFormData } from '../types/index.ts';
+import apiClient from '../../../api';
+import type { User, UserFormData } from '../types';
 
 export const usersApi = {
   /**
@@ -13,7 +13,10 @@ export const usersApi = {
    */
   getUsers: async (params?: Record<string, any>): Promise<User[]> => {
     try {
-      const response = await api.get('/users', { params });
+      const response = await apiClient.get<User[]>('/users', { params });
+      if (!response.data) {
+        throw new Error('No users data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -26,7 +29,10 @@ export const usersApi = {
    */
   getUserById: async (id: string): Promise<User> => {
     try {
-      const response = await api.get(`/users/${id}`);
+      const response = await apiClient.get<User>(`/users/${id}`);
+      if (!response.data) {
+        throw new Error(`No user data received for ID: ${id}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error fetching user ${id}:`, error);
@@ -39,7 +45,10 @@ export const usersApi = {
    */
   createUser: async (userData: UserFormData): Promise<User> => {
     try {
-      const response = await api.post('/users', userData);
+      const response = await apiClient.post<User>('/users', userData);
+      if (!response.data) {
+        throw new Error('Failed to create user');
+      }
       return response.data;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -52,7 +61,10 @@ export const usersApi = {
    */
   updateUser: async (id: string, userData: Partial<UserFormData>): Promise<User> => {
     try {
-      const response = await api.put(`/users/${id}`, userData);
+      const response = await apiClient.put<User>(`/users/${id}`, userData);
+      if (!response.data) {
+        throw new Error(`Failed to update user ${id}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error updating user ${id}:`, error);
@@ -65,7 +77,7 @@ export const usersApi = {
    */
   deleteUser: async (id: string): Promise<void> => {
     try {
-      await api.delete(`/users/${id}`);
+      await apiClient.delete(`/users/${id}`);
     } catch (error) {
       console.error(`Error deleting user ${id}:`, error);
       throw error;
@@ -77,7 +89,10 @@ export const usersApi = {
    */
   toggleUserStatus: async (id: string, status: 'active' | 'banned'): Promise<User> => {
     try {
-      const response = await api.put(`/users/${id}/status`, { status });
+      const response = await apiClient.put<User>(`/users/${id}/status`, { status });
+      if (!response.data) {
+        throw new Error(`Failed to toggle status for user ${id}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error toggling user status ${id}:`, error);

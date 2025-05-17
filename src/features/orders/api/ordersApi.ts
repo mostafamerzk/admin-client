@@ -4,8 +4,8 @@
  * This file provides methods for interacting with the orders API endpoints.
  */
 
-import api from '../../../services/api.ts';
-import { Order, OrderUpdateData } from '../types/index.ts';
+import apiClient from '../../../api';
+import type { Order, OrderUpdateData } from '../types';
 
 export const ordersApi = {
   /**
@@ -13,7 +13,10 @@ export const ordersApi = {
    */
   getOrders: async (params?: Record<string, any>): Promise<Order[]> => {
     try {
-      const response = await api.get('/orders', { params });
+      const response = await apiClient.get<Order[]>('/orders', { params });
+      if (!response.data) {
+        throw new Error('No orders data received');
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -26,7 +29,10 @@ export const ordersApi = {
    */
   getOrderById: async (id: string): Promise<Order> => {
     try {
-      const response = await api.get(`/orders/${id}`);
+      const response = await apiClient.get<Order>(`/orders/${id}`);
+      if (!response.data) {
+        throw new Error(`No order data received for ID: ${id}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error fetching order ${id}:`, error);
@@ -35,11 +41,30 @@ export const ordersApi = {
   },
 
   /**
+   * Create a new order
+   */
+  createOrder: async (orderData: OrderUpdateData): Promise<Order> => {
+    try {
+      const response = await apiClient.post<Order>('/orders', orderData);
+      if (!response.data) {
+        throw new Error('Failed to create order');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Update an order
    */
-  updateOrder: async (id: string, orderData: OrderUpdateData): Promise<Order> => {
+  updateOrder: async (id: string, orderData: Partial<OrderUpdateData>): Promise<Order> => {
     try {
-      const response = await api.put(`/orders/${id}`, orderData);
+      const response = await apiClient.put<Order>(`/orders/${id}`, orderData);
+      if (!response.data) {
+        throw new Error(`Failed to update order ${id}`);
+      }
       return response.data;
     } catch (error) {
       console.error(`Error updating order ${id}:`, error);
@@ -48,14 +73,29 @@ export const ordersApi = {
   },
 
   /**
-   * Cancel an order
+   * Delete an order
    */
-  cancelOrder: async (id: string): Promise<Order> => {
+  deleteOrder: async (id: string): Promise<void> => {
     try {
-      const response = await api.put(`/orders/${id}/cancel`, {});
+      await apiClient.delete(`/orders/${id}`);
+    } catch (error) {
+      console.error(`Error deleting order ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update order status
+   */
+  updateOrderStatus: async (id: string, status: Order['status']): Promise<Order> => {
+    try {
+      const response = await apiClient.put<Order>(`/orders/${id}/status`, { status });
+      if (!response.data) {
+        throw new Error(`Failed to update status for order ${id}`);
+      }
       return response.data;
     } catch (error) {
-      console.error(`Error cancelling order ${id}:`, error);
+      console.error(`Error updating status for order ${id}:`, error);
       throw error;
     }
   },
@@ -65,23 +105,13 @@ export const ordersApi = {
    */
   getOrdersByStatus: async (status: Order['status']): Promise<Order[]> => {
     try {
-      const response = await api.get('/orders', { params: { status } });
+      const response = await apiClient.get<Order[]>('/orders', { params: { status } });
+      if (!response.data) {
+        throw new Error(`No orders found with status: ${status}`);
+      }
       return response.data;
     } catch (error) {
-      console.error(`Error fetching orders by status ${status}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Get orders by customer
-   */
-  getOrdersByCustomer: async (customerId: string): Promise<Order[]> => {
-    try {
-      const response = await api.get('/orders', { params: { customerId } });
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching orders for customer ${customerId}:`, error);
+      console.error(`Error fetching orders with status ${status}:`, error);
       throw error;
     }
   }

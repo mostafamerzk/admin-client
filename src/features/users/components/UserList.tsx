@@ -6,8 +6,9 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import DataTable, { Column } from '../../../components/common/DataTable.tsx';
-import { User } from '../types/index.ts';
+import DataTable from '../../../components/common/DataTable.tsx';
+import type { Column } from '../../../components/common/DataTable.tsx';
+import type { User } from '../types/index.ts';
 import {
   EnvelopeIcon,
   PencilIcon,
