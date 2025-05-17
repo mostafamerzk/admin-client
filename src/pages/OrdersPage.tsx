@@ -1,88 +1,137 @@
-import React, { useState } from 'react';
-import DataTable from '../components/DataTable.tsx';
+/**
+ * Orders Page
+ *
+ * This page displays and manages orders in the system.
+ */
 
-interface Order {
-  id: string;
-  customerName: string;
-  supplierName: string;
-  totalAmount: number;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  orderDate: string;
-  deliveryDate: string;
-}
+import React, { useState } from 'react';
+import Card from '../components/common/Card.tsx';
+import Button from '../components/common/Button.tsx';
+import Modal from '../components/common/Modal.tsx';
+import PageHeader from '../components/layout/PageHeader.tsx';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import {
+  OrderList,
+  OrderDetails,
+  OrderFilter,
+  Order,
+  getMockOrders
+} from '../features/orders/index.ts';
 
 const OrdersPage: React.FC = () => {
-  const [orders] = useState<Order[]>([
-    {
-      id: '1',
-      customerName: 'John Doe',
-      supplierName: 'Tech Supplies Inc',
-      totalAmount: 1500.00,
-      status: 'pending',
-      orderDate: '2024-01-15',
-      deliveryDate: '2024-01-20',
-    },
-    {
-      id: '2',
-      customerName: 'Jane Smith',
-      supplierName: 'Office Solutions',
-      totalAmount: 750.50,
-      status: 'approved',
-      orderDate: '2024-01-14',
-      deliveryDate: '2024-01-19',
-    },
-  ]);
+  // In a real implementation, we would use the useOrders hook
+  // const { orders, isLoading, updateOrderStatus, exportOrders } = useOrders();
 
-  const columns = [
-    { key: 'id', label: 'Order ID', sortable: true },
-    { key: 'customerName', label: 'Customer', sortable: true },
-    { key: 'supplierName', label: 'Supplier', sortable: true },
-    { key: 'totalAmount', label: 'Total Amount', sortable: true },
-    { key: 'status', label: 'Status', sortable: true },
-    { key: 'orderDate', label: 'Order Date', sortable: true },
-    { key: 'deliveryDate', label: 'Delivery Date', sortable: true },
-  ];
+  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'approved' | 'completed' | 'rejected'>('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
+
+  // Use mock data from the centralized mock data file
+  const [orders] = useState<Order[]>(getMockOrders());
+
+  const filteredOrders = orders.filter(order => {
+    if (activeFilter === 'all') return true;
+    return order.status === activeFilter;
+  });
 
   const handleOrderClick = (order: Order) => {
-    // Handle order click - could open a modal with more details
-    console.log('Order clicked:', order);
+    setSelectedOrder(order);
+    setIsOrderDetailsModalOpen(true);
+  };
+
+  const handleExportOrders = () => {
+    setIsLoading(true);
+    // Simulate export process
+    setTimeout(() => {
+      setIsLoading(false);
+      console.log('Exporting orders...');
+    }, 1500);
+  };
+
+  const handleUpdateOrderStatus = (orderId: string, newStatus: 'pending' | 'approved' | 'rejected' | 'completed') => {
+    // In a real implementation, we would call the updateOrderStatus function from the useOrders hook
+    console.log(`Updating order ${orderId} status to ${newStatus}`);
+    setIsOrderDetailsModalOpen(false);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Orders</h1>
-        <div className="flex space-x-4">
-          <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-opacity-90">
+      <PageHeader
+        title="Orders"
+        description="Manage and track all orders in the system"
+        actions={
+          <Button
+            variant="outline"
+            icon={<ArrowDownTrayIcon className="h-5 w-5" />}
+            onClick={handleExportOrders}
+            loading={isLoading}
+          >
             Export Orders
-          </button>
-        </div>
-      </div>
+          </Button>
+        }
+      />
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex space-x-4 mb-4">
-          <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
-            All Orders
-          </button>
-          <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
-            Pending
-          </button>
-          <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
-            Approved
-          </button>
-          <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
-            Completed
-          </button>
-        </div>
-
-        <DataTable
-          columns={columns}
-          data={orders}
-          onRowClick={handleOrderClick}
+      <Card>
+        <OrderFilter
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
         />
-      </div>
+
+        <OrderList
+          orders={filteredOrders}
+          onOrderClick={handleOrderClick}
+          title={`${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Orders (${filteredOrders.length})`}
+        />
+      </Card>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <Modal
+          isOpen={isOrderDetailsModalOpen}
+          onClose={() => setIsOrderDetailsModalOpen(false)}
+          title="Order Details"
+          size="lg"
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsOrderDetailsModalOpen(false)}
+              >
+                Close
+              </Button>
+              {selectedOrder.status === 'pending' && (
+                <>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'rejected')}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    variant="success"
+                    onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'approved')}
+                  >
+                    Approve
+                  </Button>
+                </>
+              )}
+              {selectedOrder.status === 'approved' && (
+                <Button
+                  variant="primary"
+                  onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
+                >
+                  Mark as Completed
+                </Button>
+              )}
+            </>
+          }
+        >
+          <OrderDetails order={selectedOrder} />
+        </Modal>
+      )}
     </div>
   );
 };
 
-export default OrdersPage; 
+export default OrdersPage;

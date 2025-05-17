@@ -2,6 +2,7 @@
  * App Component
  *
  * The main application component that sets up routing and context providers.
+ * It implements code splitting and lazy loading for all page components.
  */
 
 import React, { lazy, Suspense } from 'react';
@@ -14,11 +15,13 @@ import NotificationsContainer from './components/common/NotificationsContainer.t
 import ProtectedRoute from './components/common/ProtectedRoute.tsx';
 import { ROUTES } from './constants/routes.ts';
 
-// Lazy-loaded page components
+// Lazy-loaded page components with improved naming for better code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx'));
 const UsersPage = lazy(() => import('./pages/UsersPage.tsx'));
+const UserEditPage = lazy(() => import('./pages/UserEditPage.tsx'));
 const SuppliersPage = lazy(() => import('./pages/SuppliersPage.tsx'));
+const SupplierEditPage = lazy(() => import('./pages/SupplierEditPage.tsx'));
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage.tsx'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage.tsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.tsx'));
@@ -36,14 +39,21 @@ const PageLoader = () => (
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <UIProvider>
-        <NotificationProvider>
-          <Router>
+    <Router>
+      <AuthProvider>
+        <UIProvider>
+          <NotificationProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public routes */}
-                <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+                <Route
+                  path={ROUTES.LOGIN}
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <LoginPage />
+                    </Suspense>
+                  }
+                />
 
                 {/* Protected routes */}
                 <Route
@@ -51,7 +61,9 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <DashboardPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <DashboardPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
@@ -62,7 +74,22 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <UsersPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <UsersPage />
+                        </Suspense>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path={ROUTES.USER_EDIT}
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Suspense fallback={<PageLoader />}>
+                          <UserEditPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
@@ -73,7 +100,22 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <SuppliersPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <SuppliersPage />
+                        </Suspense>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path={ROUTES.SUPPLIER_EDIT}
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Suspense fallback={<PageLoader />}>
+                          <SupplierEditPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
@@ -84,7 +126,9 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <CategoriesPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <CategoriesPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
@@ -95,7 +139,9 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <OrdersPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <OrdersPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
@@ -106,7 +152,9 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <ProfilePage />
+                        <Suspense fallback={<PageLoader />}>
+                          <ProfilePage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
@@ -117,35 +165,41 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <SettingsPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <SettingsPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
                 />
 
                 <Route
-                  path="/verifications"
+                  path={ROUTES.VERIFICATIONS}
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <VerificationsPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <VerificationsPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
                 />
 
                 <Route
-                  path="/analytics"
+                  path={ROUTES.ANALYTICS}
                   element={
                     <ProtectedRoute>
                       <MainLayout>
-                        <AnalyticsPage />
+                        <Suspense fallback={<PageLoader />}>
+                          <AnalyticsPage />
+                        </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
                   }
                 />
 
-                {/* Redirect to dashboard if already logged in */}
+                {/* Catch-all redirect for root path */}
                 <Route
                   path="/"
                   element={<Navigate to={ROUTES.DASHBOARD} replace />}
@@ -156,19 +210,21 @@ const App: React.FC = () => {
                   path="*"
                   element={
                     <MainLayout>
-                      <NotFoundPage />
+                      <Suspense fallback={<PageLoader />}>
+                        <NotFoundPage />
+                      </Suspense>
                     </MainLayout>
                   }
                 />
               </Routes>
             </Suspense>
-          </Router>
 
-          {/* Global notifications */}
-          <NotificationsContainer position="top-right" />
-        </NotificationProvider>
-      </UIProvider>
-    </AuthProvider>
+            {/* Global notifications */}
+            <NotificationsContainer position="top-right" />
+          </NotificationProvider>
+        </UIProvider>
+      </AuthProvider>
+    </Router>
   );
 };
 

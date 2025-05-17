@@ -1,19 +1,26 @@
 /**
  * useNotification Hook
- * 
+ *
  * This hook provides easy access to the notification context.
  */
 
 import { useContext } from 'react';
-import { NotificationContext, NotificationType } from '../context/NotificationContext.tsx';
+import { NotificationContext } from '../context/NotificationContext.tsx';
+
+export interface NotificationOptions {
+  type: 'success' | 'error' | 'warning' | 'info';
+  title: string;
+  message: string;
+  duration?: number;
+}
 
 const useNotification = () => {
   const context = useContext(NotificationContext);
-  
+
   if (context === undefined) {
     throw new Error('useNotification must be used within a NotificationProvider');
   }
-  
+
   // Helper methods for common notification types
   const showSuccess = (message: string, title?: string, duration?: number) => {
     context.addNotification({
@@ -23,7 +30,7 @@ const useNotification = () => {
       duration,
     });
   };
-  
+
   const showError = (message: string, title?: string, duration?: number) => {
     context.addNotification({
       type: 'error',
@@ -32,7 +39,7 @@ const useNotification = () => {
       duration,
     });
   };
-  
+
   const showWarning = (message: string, title?: string, duration?: number) => {
     context.addNotification({
       type: 'warning',
@@ -41,7 +48,7 @@ const useNotification = () => {
       duration,
     });
   };
-  
+
   const showInfo = (message: string, title?: string, duration?: number) => {
     context.addNotification({
       type: 'info',
@@ -50,13 +57,24 @@ const useNotification = () => {
       duration,
     });
   };
-  
+
+  // Generic notification method
+  const showNotification = (options: NotificationOptions) => {
+    context.addNotification({
+      type: options.type,
+      title: options.title,
+      message: options.message,
+      duration: options.duration,
+    });
+  };
+
   return {
     ...context,
     showSuccess,
     showError,
     showWarning,
     showInfo,
+    showNotification,
   };
 };
 

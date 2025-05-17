@@ -11,6 +11,7 @@ import useNotification from '../hooks/useNotification.ts';
 import Button from '../components/common/Button.tsx';
 import { ROUTES } from '../constants/routes.ts';
 import { mockDb } from '../mockData/db.ts';
+import { validateForm, validationRules } from '../utils/validation.ts';
 
 interface LocationState {
   from?: {
@@ -19,8 +20,12 @@ interface LocationState {
 }
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    rememberMe: false
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const { showError, showSuccess } = useNotification();
@@ -30,21 +35,47 @@ const LoginPage: React.FC = () => {
   const locationState = location.state as LocationState;
   const from = locationState?.from?.pathname || ROUTES.DASHBOARD;
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      showError('Please enter both email and password');
+    // Validate form
+    const validationErrors = validateForm({
+      email: formData.email,
+      password: formData.password
+    }, {
+      email: [validationRules.required(), validationRules.email()],
+      password: [validationRules.required()]
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
     try {
       setIsLoading(true);
-      await login({ email, password });
+      await login({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.rememberMe
+      });
       showSuccess('Login successful');
       navigate(from, { replace: true });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to login';
+      const errorMessage = error.message || 'Failed to login';
       showError(errorMessage);
       console.error('Login error details:', error);
     } finally {
@@ -58,8 +89,12 @@ const LoginPage: React.FC = () => {
       mockDb.forceReset();
       showSuccess('Mock database has been reset. Please try logging in again.');
       // Clear form
-      setEmail('');
-      setPassword('');
+      setFormData({
+        email: '',
+        password: '',
+        rememberMe: false
+      });
+      setErrors({});
     } catch (error) {
       console.error('Error resetting mock database:', error);
       showError('Failed to reset mock database');
@@ -94,11 +129,14 @@ const LoginPage: React.FC = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`appearance-none block w-full px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                   placeholder="admin@connectchain.com"
                 />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
             </div>
 
@@ -113,23 +151,28 @@ const LoginPage: React.FC = () => {
                   type="password"
                   autoComplete="current-password"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`appearance-none block w-full px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                   placeholder="••••••••"
                 />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
-                  id="remember-me"
-                  name="remember-me"
+                  id="rememberMe"
+                  name="rememberMe"
                   type="checkbox"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
                   className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
                   Remember me
                 </label>
               </div>

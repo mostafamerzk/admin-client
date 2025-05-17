@@ -1,0 +1,179 @@
+/**
+ * Verifications Hook
+ * 
+ * This hook provides methods and state for working with verifications.
+ */
+
+import { useState, useCallback, useEffect } from 'react';
+import { Verification, VerificationUpdateData } from '../types/index.ts';
+import verificationsApi from '../api/verificationsApi.ts';
+import useNotification from '../../../hooks/useNotification.ts';
+
+export const useVerifications = () => {
+  const [verifications, setVerifications] = useState<Verification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { showNotification } = useNotification();
+
+  // Fetch all verifications
+  const fetchVerifications = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await verificationsApi.getVerifications();
+      setVerifications(data);
+    } catch (err) {
+      setError(err as Error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch verifications'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  // Get a verification by ID
+  const getVerificationById = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const verification = await verificationsApi.getVerificationById(id);
+      return verification;
+    } catch (err) {
+      setError(err as Error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: `Failed to fetch verification ${id}`
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  // Get verifications by status
+  const getVerificationsByStatus = useCallback(async (status: Verification['status']) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const filteredVerifications = await verificationsApi.getVerificationsByStatus(status);
+      return filteredVerifications;
+    } catch (err) {
+      setError(err as Error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: `Failed to fetch verifications with status ${status}`
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  // Update a verification
+  const updateVerification = useCallback(async (id: string, data: VerificationUpdateData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updatedVerification = await verificationsApi.updateVerification(id, data);
+      setVerifications(prevVerifications => 
+        prevVerifications.map(verification => verification.id === id ? updatedVerification : verification)
+      );
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'Verification updated successfully'
+      });
+      return updatedVerification;
+    } catch (err) {
+      setError(err as Error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update verification'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  // Approve a verification
+  const approveVerification = useCallback(async (id: string, notes: string = '') => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const approvedVerification = await verificationsApi.approveVerification(id, notes);
+      setVerifications(prevVerifications => 
+        prevVerifications.map(verification => verification.id === id ? approvedVerification : verification)
+      );
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'Verification approved successfully'
+      });
+      return approvedVerification;
+    } catch (err) {
+      setError(err as Error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to approve verification'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  // Reject a verification
+  const rejectVerification = useCallback(async (id: string, notes: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const rejectedVerification = await verificationsApi.rejectVerification(id, notes);
+      setVerifications(prevVerifications => 
+        prevVerifications.map(verification => verification.id === id ? rejectedVerification : verification)
+      );
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'Verification rejected successfully'
+      });
+      return rejectedVerification;
+    } catch (err) {
+      setError(err as Error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to reject verification'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  // Load verifications on mount
+  useEffect(() => {
+    fetchVerifications();
+  }, [fetchVerifications]);
+
+  return {
+    verifications,
+    isLoading,
+    error,
+    fetchVerifications,
+    getVerificationById,
+    getVerificationsByStatus,
+    updateVerification,
+    approveVerification,
+    rejectVerification
+  };
+};
+
+export default useVerifications;

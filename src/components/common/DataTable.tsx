@@ -1,6 +1,6 @@
 /**
  * DataTable Component
- * 
+ *
  * A reusable data table component with sorting, filtering, pagination, and row selection.
  */
 
@@ -8,7 +8,7 @@ import React, { useState, useMemo, memo } from 'react';
 import { MagnifyingGlassIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { CONFIG } from '../../constants/config.ts';
 
-export interface Column<T = any> {
+export interface Column<T = Record<string, any>> {
   key: string;
   label: string;
   sortable?: boolean;
@@ -18,7 +18,7 @@ export interface Column<T = any> {
   className?: string;
 }
 
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T = Record<string, any>> {
   columns: Column<T>[];
   data: T[];
   onRowClick?: (row: T) => void;
@@ -68,7 +68,7 @@ function DataTable<T extends Record<string, any>>({
     key: string;
     direction: 'asc' | 'desc';
   } | null>(initialSortKey ? { key: initialSortKey, direction: initialSortDirection } : null);
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
@@ -89,19 +89,19 @@ function DataTable<T extends Record<string, any>>({
     return [...data].sort((a, b) => {
       const aValue = a[sortConfig.key];
       const bValue = b[sortConfig.key];
-      
+
       // Handle null or undefined values
       if (aValue == null && bValue == null) return 0;
       if (aValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
       if (bValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
-      
+
       // Handle different data types
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortConfig.direction === 'asc' 
+        return sortConfig.direction === 'asc'
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
-      
+
       if (aValue < bValue) {
         return sortConfig.direction === 'asc' ? -1 : 1;
       }
@@ -121,7 +121,7 @@ function DataTable<T extends Record<string, any>>({
         // Skip filtering on complex objects
         if (value === null || value === undefined) return false;
         if (typeof value === 'object') return false;
-        
+
         return String(value).toLowerCase().includes(searchTerm.toLowerCase());
       })
     );
@@ -143,16 +143,16 @@ function DataTable<T extends Record<string, any>>({
     event.stopPropagation();
 
     const newSelectedRows = [...selectedRows];
-    
+
     if (selectedRows.includes(index)) {
       const idx = newSelectedRows.indexOf(index);
       newSelectedRows.splice(idx, 1);
     } else {
       newSelectedRows.push(index);
     }
-    
+
     setSelectedRows(newSelectedRows);
-    
+
     if (onSelectionChange) {
       const selectedItems = newSelectedRows.map(idx => paginatedData[idx]);
       onSelectionChange(selectedItems);
@@ -160,12 +160,12 @@ function DataTable<T extends Record<string, any>>({
   };
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newSelectedRows = event.target.checked 
+    const newSelectedRows = event.target.checked
       ? Array.from({ length: paginatedData.length }, (_, i) => i)
       : [];
-    
+
     setSelectedRows(newSelectedRows);
-    
+
     if (onSelectionChange) {
       const selectedItems = newSelectedRows.map(idx => paginatedData[idx]);
       onSelectionChange(selectedItems);
@@ -178,14 +178,14 @@ function DataTable<T extends Record<string, any>>({
 
     if (typeof status === 'string') {
       const statusLower = status.toLowerCase();
-      
-      if (statusLower.includes('active') || statusLower.includes('approved') || 
-          statusLower.includes('verified') || statusLower.includes('completed') || 
+
+      if (statusLower.includes('active') || statusLower.includes('approved') ||
+          statusLower.includes('verified') || statusLower.includes('completed') ||
           statusLower.includes('success')) {
         bgColor = 'bg-green-100 text-green-800';
       } else if (statusLower.includes('pending') || statusLower.includes('processing')) {
         bgColor = 'bg-yellow-100 text-yellow-800';
-      } else if (statusLower.includes('rejected') || statusLower.includes('banned') || 
+      } else if (statusLower.includes('rejected') || statusLower.includes('banned') ||
                 statusLower.includes('failed') || statusLower.includes('error')) {
         bgColor = 'bg-red-100 text-red-800';
       } else if (statusLower.includes('inactive')) {
@@ -201,7 +201,7 @@ function DataTable<T extends Record<string, any>>({
   };
 
   return (
-    <div 
+    <div
       className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md ${className}`}
       data-testid={testId}
     >
@@ -350,8 +350,8 @@ function DataTable<T extends Record<string, any>>({
                 ))
               ) : (
                 <tr>
-                  <td 
-                    colSpan={columns.length + (selectable ? 1 : 0)} 
+                  <td
+                    colSpan={columns.length + (selectable ? 1 : 0)}
                     className="px-6 py-10 text-center text-gray-500"
                     data-testid={`${testId}-empty-message`}
                   >
@@ -430,4 +430,4 @@ function DataTable<T extends Record<string, any>>({
   );
 }
 
-export default memo(DataTable);
+export default memo(DataTable) as typeof DataTable;

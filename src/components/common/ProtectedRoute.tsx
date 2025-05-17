@@ -1,12 +1,13 @@
 /**
  * ProtectedRoute Component
- * 
+ *
  * A route component that protects routes from unauthorized access.
  */
 
 import React, { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth.ts';
+import { hasAnyRole } from '../../features/auth/utils/authUtils.ts';
 import { ROUTES } from '../../constants/routes.ts';
 
 interface ProtectedRouteProps {
@@ -20,7 +21,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
-  
+
   // Show loading state
   if (isLoading) {
     return (
@@ -29,22 +30,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       </div>
     );
   }
-  
+
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
   }
-  
+
   // Check role-based access if requiredRoles is provided
   if (requiredRoles && requiredRoles.length > 0 && user) {
-    const hasRequiredRole = requiredRoles.includes(user.type as any);
-    
+    const hasRequiredRole = hasAnyRole(user.type, requiredRoles);
+
     if (!hasRequiredRole) {
       // Redirect to dashboard with unauthorized message
       return <Navigate to={ROUTES.DASHBOARD} replace />;
     }
   }
-  
+
   // Render children if authenticated and authorized
   return <>{children}</>;
 };

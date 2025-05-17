@@ -1,37 +1,45 @@
 /**
  * Application Configuration
- * 
+ *
  * This file contains configuration values for the application.
  */
 
 // Environment-specific configuration
-const ENV = process.env.NODE_ENV || 'development';
-const IS_DEV = ENV === 'development';
-const IS_PROD = ENV === 'production';
-const IS_TEST = ENV === 'test';
+export const ENV = process.env.NODE_ENV || 'development';
+export const IS_DEV = ENV === 'development';
+export const IS_PROD = ENV === 'production';
+export const IS_TEST = ENV === 'test';
 
 // API configuration
-const API_URL = process.env.REACT_APP_API_URL || 'https://api.connectchain.com';
-const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true' || IS_DEV;
+export const API_URL = process.env.REACT_APP_API_URL || 'https://api.connectchain.com';
+export const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true' || IS_DEV;
 
 // Authentication configuration
-const AUTH_TOKEN_KEY = 'auth_token';
-const USER_DATA_KEY = 'user_data';
-const TOKEN_EXPIRY_MARGIN = 5 * 60 * 1000; // 5 minutes in milliseconds
+export const AUTH_TOKEN_KEY = 'auth_token';
+export const USER_DATA_KEY = 'user_data';
+export const TOKEN_EXPIRY_MARGIN = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // UI configuration
-const SIDEBAR_BREAKPOINT = 768; // in pixels
-const NOTIFICATION_DURATION = 5000; // in milliseconds
-const ANIMATION_DURATION = 300; // in milliseconds
-const DEFAULT_PAGE_SIZE = 10;
-const DEFAULT_DEBOUNCE_DELAY = 300; // in milliseconds
+export const SIDEBAR_BREAKPOINT = 768; // in pixels
+export const NOTIFICATION_DURATION = 5000; // in milliseconds
+export const ANIMATION_DURATION = 300; // in milliseconds
+export const DEFAULT_PAGE_SIZE = 10;
+export const DEFAULT_DEBOUNCE_DELAY = 300; // in milliseconds
 
 // Date formats
-const DATE_FORMAT = 'MMM d, yyyy';
-const DATE_TIME_FORMAT = 'MMM d, yyyy h:mm a';
-const TIME_FORMAT = 'h:mm a';
+export const DATE_FORMAT = 'MMM d, yyyy';
+export const DATE_TIME_FORMAT = 'MMM d, yyyy h:mm a';
+export const TIME_FORMAT = 'h:mm a';
 
-// Export configuration
+// Feature flags
+export const FEATURES = {
+  ENABLE_NOTIFICATIONS: true,
+  ENABLE_DARK_MODE: false,
+  ENABLE_ANALYTICS: IS_PROD,
+  ENABLE_EXPORT: true,
+};
+
+// Export all configuration as a single object for backward compatibility
 export const CONFIG = {
   ENV,
   IS_DEV,
@@ -50,12 +58,5 @@ export const CONFIG = {
   DATE_FORMAT,
   DATE_TIME_FORMAT,
   TIME_FORMAT,
-  
-  // Feature flags
-  FEATURES: {
-    ENABLE_NOTIFICATIONS: true,
-    ENABLE_DARK_MODE: false,
-    ENABLE_ANALYTICS: IS_PROD,
-    ENABLE_EXPORT: true,
-  },
+  FEATURES,
 };

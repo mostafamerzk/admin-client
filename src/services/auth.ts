@@ -1,11 +1,12 @@
 /**
  * Authentication Service
- * 
+ *
  * This file provides methods for handling authentication-related operations
  * such as login, logout, and retrieving the current user.
  */
 
 import api from './api.ts';
+import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../constants/config.ts';
 
 export interface AuthUser {
   id: string;
@@ -26,9 +27,6 @@ export interface LoginCredentials {
   password: string;
 }
 
-const AUTH_TOKEN_KEY = 'auth_token';
-const USER_DATA_KEY = 'user_data';
-
 const authService = {
   /**
    * Login with email and password
@@ -37,18 +35,18 @@ const authService = {
     try {
       const response = await api.post('/auth/login', credentials);
       const { user, token, expiresIn } = response.data;
-      
+
       // Store token and user data
       localStorage.setItem(AUTH_TOKEN_KEY, token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
-      
+
       return { user, token, expiresIn };
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   },
-  
+
   /**
    * Logout the current user
    */
@@ -64,7 +62,7 @@ const authService = {
       localStorage.removeItem(USER_DATA_KEY);
     }
   },
-  
+
   /**
    * Get the current authenticated user
    */
@@ -73,23 +71,23 @@ const authService = {
       // First check if we have user data in localStorage
       const userData = localStorage.getItem(USER_DATA_KEY);
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      
+
       if (!token) {
         return null;
       }
-      
+
       if (userData) {
         // If we have user data, return it
         return JSON.parse(userData);
       }
-      
+
       // If no user data but we have a token, fetch the user
       const response = await api.get('/auth/me');
       const user = response.data;
-      
+
       // Store user data
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
-      
+
       return user;
     } catch (error) {
       console.error('Get current user error:', error);
@@ -99,14 +97,14 @@ const authService = {
       return null;
     }
   },
-  
+
   /**
    * Check if the user is authenticated
    */
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem(AUTH_TOKEN_KEY);
   },
-  
+
   /**
    * Get the authentication token
    */

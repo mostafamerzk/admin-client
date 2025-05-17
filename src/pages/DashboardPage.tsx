@@ -1,31 +1,19 @@
 /**
- * DashboardPage Component
+ * Dashboard Page
  *
  * The main dashboard page for the ConnectChain admin panel.
  */
 
-import React, { useState, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  BarElement,
-} from 'chart.js';
-import { Line, Pie, Bar } from 'react-chartjs-2';
+import React, { useState, useEffect, useRef } from 'react';
+import { Pie } from 'react-chartjs-2';
 import PageHeader from '../components/layout/PageHeader.tsx';
 import Card from '../components/common/Card.tsx';
 import Button from '../components/common/Button.tsx';
-import DataTable from '../components/common/DataTable.tsx';
-import Badge from '../components/common/Badge.tsx';
 import { formatCurrency } from '../utils/formatters.ts';
 import { mockDb } from '../mockData/db.ts';
 import { DashboardStats } from '../mockData/entities/dashboard.ts';
+import { defaultPieChartOptions, destroyChart } from '../utils/chartConfig.ts';
+import { Chart as ChartJS } from 'chart.js';
 import {
   UsersIcon,
   ShoppingCartIcon,
@@ -33,27 +21,22 @@ import {
   CurrencyDollarIcon,
   ArrowDownTrayIcon,
   DocumentChartBarIcon,
-  ArrowPathIcon,
-  EllipsisHorizontalIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
+// Import dashboard feature components
+import {
+  StatCard,
+  SalesChart,
+  UserGrowthChart,
+  RecentOrders
+} from '../features/dashboard/index.ts';
 
 const DashboardPage: React.FC = () => {
-  const [activeTimeRange, setActiveTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
+  const [, setActiveTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
+  const pieChartRef = useRef<ChartJS | null>(null);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -68,6 +51,11 @@ const DashboardPage: React.FC = () => {
     };
 
     fetchData();
+
+    // Cleanup chart instances when component unmounts
+    return () => {
+      destroyChart(pieChartRef.current);
+    };
   }, []);
 
   // Handle refresh
@@ -80,60 +68,6 @@ const DashboardPage: React.FC = () => {
       setIsRefreshing(false);
     }, 1500);
   };
-
-  // Chart options
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-    },
-  };
-
-  // Recent orders columns
-  const orderColumns = [
-    { key: 'orderNumber', label: 'Order ID', sortable: true },
-    { key: 'customerName', label: 'Customer', sortable: true },
-    { key: 'date', label: 'Date', sortable: true },
-    {
-      key: 'amount',
-      label: 'Amount',
-      sortable: true,
-      render: (value: number) => formatCurrency(value)
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      render: (value: string) => (
-        <Badge
-          variant={
-            value === 'completed' || value === 'approved' ? 'success' :
-            value === 'pending' ? 'warning' :
-            value === 'rejected' ? 'danger' : 'gray'
-          }
-        >
-          {value.charAt(0).toUpperCase() + value.slice(1)}
-        </Badge>
-      )
-    },
-  ];
 
   // If data is not loaded yet
   if (!dashboardData) {
@@ -176,163 +110,82 @@ const DashboardPage: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <Card
-          hoverable
-          className="transform transition-all duration-300 hover:scale-105"
-          onClick={() => console.log('Users card clicked')}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{dashboardData.summary.totalUsers.toLocaleString()}</p>
-            </div>
-            <div className="p-3 bg-primary bg-opacity-10 rounded-lg">
-              <UsersIcon className="w-6 h-6 text-primary" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm text-green-500 font-medium">↑ 12%</span>
-            <span className="text-sm text-gray-500 ml-2">from last month</span>
-          </div>
-        </Card>
+        <StatCard
+          title="Total Users"
+          value={dashboardData.summary.totalUsers.toLocaleString()}
+          icon={<UsersIcon className="w-6 h-6 text-primary" />}
+          change={{ value: 12, isPositive: true }}
+          // onClick={() => console.log('Card clicked')}
+        />
 
-        <Card
-          hoverable
-          className="transform transition-all duration-300 hover:scale-105"
-          onClick={() => console.log('Orders card clicked')}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{dashboardData.summary.totalOrders.toLocaleString()}</p>
-            </div>
-            <div className="p-3 bg-blue-500 bg-opacity-10 rounded-lg">
-              <ShoppingCartIcon className="w-6 h-6 text-blue-500" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm text-green-500 font-medium">↑ 8%</span>
-            <span className="text-sm text-gray-500 ml-2">from last month</span>
-          </div>
-        </Card>
+        <StatCard
+          title="Total Orders"
+          value={dashboardData.summary.totalOrders.toLocaleString()}
+          icon={<ShoppingCartIcon className="w-6 h-6 text-blue-500" />}
+          change={{ value: 8, isPositive: true }}
+        />
 
-        <Card
-          hoverable
-          className="transform transition-all duration-300 hover:scale-105"
-          onClick={() => console.log('Pending verifications card clicked')}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Pending Verifications</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{dashboardData.summary.pendingVerifications}</p>
-            </div>
-            <div className="p-3 bg-yellow-500 bg-opacity-10 rounded-lg">
-              <ClockIcon className="w-6 h-6 text-yellow-500" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm text-red-500 font-medium">↑ 3%</span>
-            <span className="text-sm text-gray-500 ml-2">from last month</span>
-          </div>
-        </Card>
+        <StatCard
+          title="Pending Verifications"
+          value={dashboardData.summary.pendingVerifications}
+          icon={<ClockIcon className="w-6 h-6 text-yellow-500" />}
+          change={{ value: 3, isPositive: false }}
+        />
 
-        <Card
-          hoverable
-          className="transform transition-all duration-300 hover:scale-105"
-          onClick={() => console.log('Revenue card clicked')}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Revenue</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(dashboardData.summary.totalRevenue)}</p>
-            </div>
-            <div className="p-3 bg-green-500 bg-opacity-10 rounded-lg">
-              <CurrencyDollarIcon className="w-6 h-6 text-green-500" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm text-green-500 font-medium">↑ 15%</span>
-            <span className="text-sm text-gray-500 ml-2">from last month</span>
-          </div>
-        </Card>
+        <StatCard
+          title="Revenue"
+          value={formatCurrency(dashboardData.summary.totalRevenue)}
+          icon={<CurrencyDollarIcon className="w-6 h-6 text-green-500" />}
+          change={{ value: 15, isPositive: true }}
+        />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card
-          title="Revenue Trend"
-          icon={
-            <div className="flex space-x-2">
-              {['day', 'week', 'month', 'year'].map((range) => (
-                <button
-                  key={range}
-                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                    activeTimeRange === range
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                  onClick={() => setActiveTimeRange(range as any)}
-                >
-                  {range.charAt(0).toUpperCase() + range.slice(1)}
-                </button>
-              ))}
-              <button className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
-                <EllipsisHorizontalIcon className="h-5 w-5" />
-              </button>
-            </div>
-          }
-        >
-          <div className="h-80">
-            <Line
-              data={{
-                labels: dashboardData.revenueData.labels,
-                datasets: dashboardData.revenueData.datasets
-              }}
-              options={chartOptions}
-            />
-          </div>
-        </Card>
+        <SalesChart
+          data={dashboardData.revenueData.datasets[0].data.map((value, index) => ({
+            date: dashboardData.revenueData.labels[index],
+            amount: value as number
+          }))}
+          onPeriodChange={(period) => setActiveTimeRange(period)}
+        />
 
-        <Card
-          title="User Growth"
-          icon={
-            <button className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
-              <EllipsisHorizontalIcon className="h-5 w-5" />
-            </button>
-          }
-        >
-          <div className="h-80">
-            <Line
-              data={{
-                labels: dashboardData.userGrowth.labels,
-                datasets: dashboardData.userGrowth.datasets
-              }}
-              options={chartOptions}
-            />
-          </div>
-        </Card>
+        <UserGrowthChart
+          data={dashboardData.userGrowth.datasets[0].data.map((value, index) => ({
+            date: dashboardData.userGrowth.labels[index],
+            users: value as number
+          }))}
+          onPeriodChange={(period) => setActiveTimeRange(period)}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <DataTable
-            title="Recent Orders"
-            description="Latest orders from customers"
-            columns={orderColumns}
-            data={dashboardData.recentOrders}
-            onRowClick={(order) => console.log('Order clicked:', order)}
-            pagination={false}
+          <RecentOrders
+            orders={dashboardData.recentOrders.map(order => ({
+              id: order.orderNumber,
+              customer: order.customerName,
+              amount: order.amount,
+              status: order.status as any,
+              date: order.date
+            }))}
+            onViewOrder={(orderId) => console.log('Order clicked:', orderId)}
           />
         </div>
 
         <Card title="Category Distribution">
           <div className="h-80">
             <Pie
+              ref={(ref) => {
+                if (ref) {
+                  pieChartRef.current = ref;
+                }
+              }}
               data={{
                 labels: dashboardData.categoryDistribution.labels,
                 datasets: dashboardData.categoryDistribution.datasets
               }}
-              options={chartOptions}
+              options={defaultPieChartOptions}
             />
           </div>
           <div className="mt-4 space-y-2">

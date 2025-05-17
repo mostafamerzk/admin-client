@@ -1,6 +1,6 @@
 /**
  * Card Component
- * 
+ *
  * A reusable card component for displaying content in a contained box.
  */
 
@@ -43,30 +43,30 @@ const Card: React.FC<CardProps> = ({
 }) => {
   // Base classes
   const cardClasses = `
-    bg-white rounded-xl ${bordered ? 'border border-gray-100' : ''} overflow-hidden transition-all duration-300 
+    bg-white rounded-xl ${bordered ? 'border border-gray-100' : ''} overflow-hidden transition-all duration-300
     ${hoverable ? 'hover:shadow-md hover:border-gray-200 transform hover:-translate-y-1' : 'shadow-sm'}
     ${onClick ? 'cursor-pointer' : ''}
     ${className}
   `;
-  
+
   // Header classes
   const headerClasses = `
     px-6 py-4 border-b border-gray-100 flex items-center justify-between
     ${headerClassName}
   `;
-  
+
   // Body classes
   const bodyClasses = `
-    ${noPadding ? '' : 'p-6'} 
+    ${noPadding ? '' : 'p-6'}
     ${bodyClassName}
   `;
-  
+
   // Footer classes
   const footerClasses = `
     px-6 py-4 bg-gray-50 border-t border-gray-100
     ${footerClassName}
   `;
-  
+
   // Loading skeleton
   if (loading) {
     return (
@@ -80,11 +80,11 @@ const Card: React.FC<CardProps> = ({
             {icon && <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>}
           </div>
         )}
-        
+
         <div className={bodyClasses}>
           <div className="h-24 bg-gray-200 rounded animate-pulse"></div>
         </div>
-        
+
         {footer && (
           <div className={footerClasses}>
             <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse"></div>
@@ -93,9 +93,9 @@ const Card: React.FC<CardProps> = ({
       </div>
     );
   }
-  
+
   return (
-    <div 
+    <div
       className={cardClasses}
       onClick={onClick}
       data-testid={testId}
@@ -104,7 +104,7 @@ const Card: React.FC<CardProps> = ({
         <div className={headerClasses}>
           <div>
             {typeof title === 'string' ? (
-              <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+              <h3 className="text-lg font-semibold text-primary">{title}</h3>
             ) : (
               title
             )}
@@ -117,9 +117,9 @@ const Card: React.FC<CardProps> = ({
           {icon && <div className="text-primary">{icon}</div>}
         </div>
       )}
-      
+
       <div className={bodyClasses}>{children}</div>
-      
+
       {footer && (
         <div className={footerClasses}>
           {footer}
