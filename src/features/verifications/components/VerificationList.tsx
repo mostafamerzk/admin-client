@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import DataTable, { Column } from '../../../components/common/DataTable.tsx';
-import { Verification } from '../types/index.ts';
+import DataTable, { type Column } from '../../../components/common/DataTable.tsx';
+import { type Verification } from '../types/index.ts';
 import Badge from '../../../components/common/Badge.tsx';
 import Button from '../../../components/common/Button.tsx';
 import { CheckIcon, XMarkIcon, EyeIcon } from '@heroicons/react/24/outline';

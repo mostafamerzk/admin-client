@@ -6,7 +6,7 @@
 
 import React from 'react';
 import Card from '../../../components/common/Card.tsx';
-import { CategoryDistribution } from '../types/index.ts';
+import type { CategoryDistribution } from '../types/index.ts';
 
 interface PieChartProps {
   title: string;
@@ -23,9 +23,9 @@ const PieChart: React.FC<PieChartProps> = ({
         <div className="w-full h-full">
           <div className="flex justify-center items-center h-full">
             <div className="w-64 h-64 rounded-full border-8 border-gray-200 relative">
-              {data.datasets[0].data.map((value, index) => {
-                const color = data.datasets[0].backgroundColor[index];
-                const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+              {data.datasets[0]?.data.map((value, index) => {
+                const color = data.datasets[0]?.backgroundColor[index];
+                const total = data.datasets[0]?.data.reduce((a, b) => a + b, 0) || 1  ;
                 const percentage = (value / total) * 100;
 
                 return (
@@ -59,7 +59,7 @@ const PieChart: React.FC<PieChartProps> = ({
             <div key={index} className="flex items-center">
               <div
                 className="w-3 h-3 rounded-full mr-2"
-                style={{ backgroundColor: data.datasets[0].backgroundColor[index] }}
+                style={{ backgroundColor: data.datasets[0]?.backgroundColor[index] }}
               ></div>
               <span className="text-sm text-gray-700">{label}</span>
             </div>

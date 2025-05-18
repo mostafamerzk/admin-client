@@ -5,7 +5,7 @@
  * It intercepts API requests and returns mock data.
  */
 
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import type{ AxiosRequestConfig, AxiosResponse } from 'axios';
 import { handlers } from '../mockData/handlers.ts';
 
 // Mock API implementation
@@ -65,7 +65,10 @@ const mockApi = {
 
         case 'auth':
           if (action === 'me') {
-            response = await handlers.auth.getCurrentUser();
+            // Extract token from Authorization header
+            const authHeader = config?.headers?.Authorization || '';
+            const token = authHeader.replace('Bearer ', '');
+            response = await handlers.auth.getCurrentUser(token);
           } else {
             response = { error: `Unknown auth action: ${action}` };
           }
@@ -76,10 +79,14 @@ const mockApi = {
       }
 
       // Check if the response is an error
-      if (response && response.error) {
+      if (response && 'error' in response) {
+        const errorStatus = typeof response.error === 'object' && response.error !== null && 'status' in response.error 
+          ? response.error.status 
+          : 500;
+          
         return Promise.reject({
           response: {
-            status: response.error.status || 500,
+            status: errorStatus,
             data: response.error
           }
         });
@@ -146,10 +153,14 @@ const mockApi = {
       }
 
       // Check if the response is an error
-      if (response && response.error) {
+      if (response && 'error' in response) {
+        const errorStatus = typeof response.error === 'object' && response.error !== null && 'status' in response.error 
+          ? response.error.status 
+          : 500;
+          
         return Promise.reject({
           response: {
-            status: response.error.status || 500,
+            status: errorStatus,
             data: response.error
           }
         });
@@ -222,10 +233,14 @@ const mockApi = {
       }
 
       // Check if the response is an error
-      if (response && response.error) {
+      if (response && 'error' in response) {
+        const errorStatus = typeof response.error === 'object' && response.error !== null && 'status' in response.error 
+          ? response.error.status 
+          : 500;
+          
         return Promise.reject({
           response: {
-            status: response.error.status || 500,
+            status: errorStatus,
             data: response.error
           }
         });
@@ -298,10 +313,14 @@ const mockApi = {
       }
 
       // Check if the response is an error
-      if (response && response.error) {
+      if (response && 'error' in response) {
+        const errorStatus = typeof response.error === 'object' && response.error !== null && 'status' in response.error 
+          ? response.error.status 
+          : 500;
+          
         return Promise.reject({
           response: {
-            status: response.error.status || 500,
+            status: errorStatus,
             data: response.error
           }
         });
@@ -328,3 +347,6 @@ const mockApi = {
 };
 
 export default mockApi;
+
+
+

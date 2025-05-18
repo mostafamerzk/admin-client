@@ -5,28 +5,26 @@
  */
 
 import React from 'react';
-import DataTable from '../../../components/common/DataTable.tsx';
-import { Order } from '../types/index.ts';
-import { formatCurrency } from '../../../utils/formatters.ts';
-import { 
-  CheckCircleIcon, 
-  ClockIcon, 
-  XCircleIcon,
-  TruckIcon
-} from '@heroicons/react/24/outline';
+import BaseEntityList from '../../../components/common/EntityList/BaseEntityList';
+import StatusBadge from '../../../components/common/StatusBadge';
+import type { Column } from '../../../components/common/DataTable';
+import type { Order } from '../types';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface OrderListProps {
   orders: Order[];
   onOrderClick: (order: Order) => void;
   title?: string;
+  loading?: boolean;
 }
 
 const OrderList: React.FC<OrderListProps> = ({
   orders,
   onOrderClick,
-  title = 'Orders'
+  title = 'Orders',
+  loading = false
 }) => {
-  const columns = [
+  const columns: Column<Order>[] = [
     { 
       key: 'id', 
       label: 'Order ID', 
@@ -43,54 +41,30 @@ const OrderList: React.FC<OrderListProps> = ({
       sortable: true,
       render: (value: number) => formatCurrency(value)
     },
-    { 
-      key: 'status', 
-      label: 'Status', 
+    {
+      key: 'status',
+      label: 'Status',
       sortable: true,
-      render: (value: string) => {
-        let icon;
-        let colorClass;
-        
-        switch(value) {
-          case 'pending':
-            icon = <ClockIcon className="w-4 h-4 text-yellow-500 mr-1" />;
-            colorClass = 'bg-yellow-100 text-yellow-800';
-            break;
-          case 'approved':
-            icon = <CheckCircleIcon className="w-4 h-4 text-blue-500 mr-1" />;
-            colorClass = 'bg-blue-100 text-blue-800';
-            break;
-          case 'completed':
-            icon = <TruckIcon className="w-4 h-4 text-green-500 mr-1" />;
-            colorClass = 'bg-green-100 text-green-800';
-            break;
-          case 'rejected':
-            icon = <XCircleIcon className="w-4 h-4 text-red-500 mr-1" />;
-            colorClass = 'bg-red-100 text-red-800';
-            break;
-        }
-        
-        return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-            {icon}
-            {value.charAt(0).toUpperCase() + value.slice(1)}
-          </span>
-        );
-      }
+      render: (value: string) => (
+        <StatusBadge status={value} type="order" />
+      )
     },
     { key: 'orderDate', label: 'Order Date', sortable: true },
     { key: 'deliveryDate', label: 'Delivery Date', sortable: true },
   ];
 
   return (
-    <DataTable
-      columns={columns}
+    <BaseEntityList<Order>
       data={orders}
+      columns={columns}
       onRowClick={onOrderClick}
       title={title}
       pagination={true}
+      loading={loading}
+      emptyMessage="No orders found"
     />
   );
 };
 
 export default OrderList;
+

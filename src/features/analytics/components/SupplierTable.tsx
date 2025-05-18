@@ -6,7 +6,7 @@
 
 import React from 'react';
 import Card from '../../../components/common/Card.tsx';
-import { Supplier } from '../types/index.ts';
+import type{ Supplier } from '../types/index.ts';
 
 interface SupplierTableProps {
   title: string;

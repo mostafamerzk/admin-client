@@ -1,160 +1,101 @@
+// src/features/users/hooks/useUsers.ts
 /**
  * Users Hook
  * 
  * This hook provides methods and state for working with users.
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import type { User, UserFormData } from '../types/index.ts';
-import usersApi from '../api/usersApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import { useCallback } from 'react';
+import { useEntityData } from '../../../hooks/useEntityData';
+import usersApi from '../api/usersApi';
+import type { User, UserFormData } from '../types';
+import useNotification from '../../../hooks/useNotification';
 
-export const useUsers = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export const useUsers = (options = { initialFetch: true }) => {
+  // Create an adapter that maps usersApi methods to what useEntityData expects
+  const apiAdapter = {
+    getAll: usersApi.getUsers,
+    getById: usersApi.getUserById,
+    create: usersApi.createUser,
+    update: usersApi.updateUser,
+    delete: usersApi.deleteUser
+  };
+  
+  const baseHook = useEntityData<User>(apiAdapter, {
+    entityName: 'users',
+    initialFetch: options.initialFetch
+  });
+  
   const { showNotification } = useNotification();
-
-  // Fetch all users
-  const fetchUsers = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await usersApi.getUsers();
-      setUsers(data);
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch users'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Create a new user
-  const createUser = useCallback(async (userData: UserFormData) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const newUser = await usersApi.createUser(userData);
-      setUsers(prevUsers => [...prevUsers, newUser]);
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'User created successfully'
-      });
-      return newUser;
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to create user'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Update a user
-  const updateUser = useCallback(async (id: string, userData: Partial<UserFormData>) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const updatedUser = await usersApi.updateUser(id, userData);
-      setUsers(prevUsers => 
-        prevUsers.map(user => user.id === id ? updatedUser : user)
-      );
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'User updated successfully'
-      });
-      return updatedUser;
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to update user'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Delete a user
-  const deleteUser = useCallback(async (id: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await usersApi.deleteUser(id);
-      setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'User deleted successfully'
-      });
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to delete user'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Toggle user status
+  
+  // User-specific methods
   const toggleUserStatus = useCallback(async (id: string, status: 'active' | 'banned') => {
-    setIsLoading(true);
-    setError(null);
     try {
       const updatedUser = await usersApi.toggleUserStatus(id, status);
-      setUsers(prevUsers => 
-        prevUsers.map(user => user.id === id ? updatedUser : user)
-      );
+      // Update the local state if the user exists in the current list
+      baseHook.entities.forEach((user, index) => {
+        if ((user as User).id === id) {
+          const updatedEntities = [...baseHook.entities];
+          updatedEntities[index] = updatedUser;
+          // Use the setEntities method from baseHook if exposed, or implement a custom solution
+        }
+      });
+      
       showNotification({
         type: 'success',
         title: 'Success',
         message: `User ${status === 'active' ? 'activated' : 'banned'} successfully`
       });
+      
       return updatedUser;
-    } catch (err) {
-      setError(err as Error);
+    } catch (error) {
       showNotification({
         type: 'error',
         title: 'Error',
         message: `Failed to ${status === 'active' ? 'activate' : 'ban'} user`
       });
-      throw err;
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
-  }, [showNotification]);
-
-  // Load users on mount
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
+  }, [baseHook.entities, showNotification]);
+  
+  // Add updateUser method
+  const updateUser = useCallback(async (id: string, userData: UserFormData) => {
+    try {
+      const updatedUser = await usersApi.updateUser(id, userData);
+      
+      // Update the local state if the user exists in the current list
+      const updatedEntities = [...baseHook.entities];
+      const userIndex = updatedEntities.findIndex((user) => (user as User).id === id);
+      
+      if (userIndex !== -1) {
+        updatedEntities[userIndex] = updatedUser;
+        // If baseHook exposes a setEntities method, use it here
+      }
+      
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'User updated successfully'
+      });
+      
+      return updatedUser;
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update user'
+      });
+      throw error;
+    }
+  }, [baseHook.entities, showNotification]);
+  
   return {
-    users,
-    isLoading,
-    error,
-    fetchUsers,
-    createUser,
-    updateUser,
-    deleteUser,
-    toggleUserStatus
+    ...baseHook,
+    users: baseHook.entities as User[], // Rename for clarity
+    fetchUsers: baseHook.fetchEntities, // Rename for clarity
+    getUserById: baseHook.getEntityById, // Rename for clarity
+    toggleUserStatus,
+    updateUser // Add the new method to the return object
   };
 };
 

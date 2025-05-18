@@ -5,7 +5,8 @@
  * It handles sidebar state, notifications, and other UI-related state.
  */
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 interface UIContextType {
   isSidebarOpen: boolean;

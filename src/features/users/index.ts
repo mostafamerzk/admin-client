@@ -6,8 +6,10 @@
 
 // Components
 export { default as AddUserForm } from './components/AddUserForm.tsx';
+export { default as EditUserForm } from './components/EditUserForm.tsx';
 export { default as UserDetails } from './components/UserDetails.tsx';
 export { default as UserList } from './components/UserList.tsx';
+export { default as UserAnalytics } from './components/UserAnalytics.tsx';
 
 // Hooks
 export { default as useUsers } from './hooks/useUsers.ts';

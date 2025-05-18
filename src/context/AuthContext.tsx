@@ -5,14 +5,15 @@
  * It handles user authentication, login, logout, and loading states.
  */
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
+import{
   authApi,
-  AuthUser,
-  LoginCredentials,
-  ForgotPasswordRequest,
-  ResetPasswordRequest
+  type AuthUser,
+  type LoginCredentials,
+  type ForgotPasswordRequest,
+  type ResetPasswordRequest
 } from '../features/auth/index.ts';
 import useNotification from '../hooks/useNotification.ts';
 import { ROUTES } from '../constants/routes.ts';
@@ -128,11 +129,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await authApi.forgotPassword(request);
+      await authApi.forgotPassword(request);
       showNotification({
         type: 'success',
         title: 'Success',
-        message: response.message || 'Password reset instructions sent to your email'
+        message:  'Password reset instructions sent to your email'
       });
     } catch (err: any) {
       console.error('Forgot password error:', err);
@@ -153,11 +154,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await authApi.resetPassword(request);
+      await authApi.resetPassword(request);
       showNotification({
         type: 'success',
         title: 'Success',
-        message: response.message || 'Password reset successfully'
+        message:'Password reset successfully'
       });
       // The navigation will be handled by the component that calls resetPassword
       navigate(ROUTES.LOGIN);

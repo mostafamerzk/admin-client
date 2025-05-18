@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { Order, OrderUpdateData } from '../types/index.ts';
+import type { Order, OrderUpdateData } from '../types/index.ts';
 import ordersApi from '../api/ordersApi.ts';
 import useNotification from '../../../hooks/useNotification.ts';
 
@@ -87,7 +87,7 @@ export const useOrders = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const cancelledOrder = await ordersApi.cancelOrder(id);
+      const cancelledOrder = await ordersApi.updateOrderStatus(id, 'rejected');
       setOrders(prevOrders => 
         prevOrders.map(order => order.id === id ? cancelledOrder : order)
       );
@@ -169,3 +169,4 @@ export const useOrders = () => {
 };
 
 export default useOrders;
+

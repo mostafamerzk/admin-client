@@ -11,7 +11,7 @@ import {
   InformationCircleIcon, 
   XMarkIcon 
 } from '@heroicons/react/24/outline';
-import { Notification, NotificationType } from '../../context/NotificationContext.tsx';
+import type { Notification, NotificationType } from '../../context/NotificationContext.tsx';
 
 interface NotificationToastProps {
   notification: Notification;
@@ -34,12 +34,12 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     if (notification.duration === Infinity) return;
     
     const startTime = Date.now();
-    const endTime = startTime + notification.duration;
+    const endTime = startTime + (notification.duration || 0);
     
     const timer = setInterval(() => {
       const now = Date.now();
       const remaining = endTime - now;
-      const newProgress = (remaining / notification.duration) * 100;
+      const newProgress = (remaining / (notification.duration || 0)) * 100;
       
       setProgress(Math.max(0, newProgress));
       

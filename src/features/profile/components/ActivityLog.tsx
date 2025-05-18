@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { ActivityLogItem } from '../types/index.ts';
+import type{ ActivityLogItem } from '../types/index.ts';
 import {
   UserCircleIcon,
   KeyIcon,

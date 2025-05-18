@@ -7,7 +7,7 @@
 import React from 'react';
 import Modal from '../../../components/common/Modal.tsx';
 import Button from '../../../components/common/Button.tsx';
-import { RecentOrder } from '../types/index.ts';
+import type { RecentOrder } from '../types/index.ts';
 import { 
   CheckCircleIcon, 
   ClockIcon, 

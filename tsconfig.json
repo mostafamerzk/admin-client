@@ -36,7 +36,7 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": true,
-    "noPropertyAccessFromIndexSignature": true,
+    "noPropertyAccessFromIndexSignature": false,
     "noErrorTruncation": true,
     "preserveWatchOutput": true,
     "verbatimModuleSyntax": true,

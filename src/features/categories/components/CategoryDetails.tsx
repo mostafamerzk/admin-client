@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Category } from '../types/index.ts';
+import type{ Category } from '../types/index.ts';
 import { formatDate } from '../../../utils/formatters.ts';
 import { 
   CheckCircleIcon, 

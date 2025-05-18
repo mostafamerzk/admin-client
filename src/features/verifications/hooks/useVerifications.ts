@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { Verification, VerificationUpdateData } from '../types/index.ts';
+import type{ Verification, VerificationUpdateData } from '../types/index.ts';
 import verificationsApi from '../api/verificationsApi.ts';
 import useNotification from '../../../hooks/useNotification.ts';
 

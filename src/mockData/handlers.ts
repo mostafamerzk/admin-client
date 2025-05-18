@@ -6,11 +6,11 @@
  */
 
 import { mockDb } from './db.ts';
-import { User } from './entities/users.ts';
-import { Supplier } from './entities/suppliers.ts';
-import { Category } from './entities/categories.ts';
-import { Order } from './entities/orders.ts';
-import { DashboardStats } from './entities/dashboard.ts';
+import type{ User } from './entities/users.ts';
+import type{ Supplier } from './entities/suppliers.ts';
+import type{ Category } from './entities/categories.ts';
+import type{ Order } from './entities/orders.ts';
+import type{ DashboardStats } from './entities/dashboard.ts';
 
 // Helper to simulate network delay
 const delay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));
@@ -248,7 +248,80 @@ export const handlers = {
       return suppliers;
     },
 
-    // Add other supplier methods similar to users...
+    getById: async (id: string) => {
+      await delay(500);
+      
+      const supplier = mockDb.getById<Supplier, 'suppliers'>('suppliers', id);
+      
+      if (!supplier) {
+        return errorResponse('Supplier not found', 404);
+      }
+      
+      return supplier;
+    },
+
+    create: async (supplierData: Partial<Supplier>) => {
+      await delay(1000);
+
+      if (!supplierData.companyName || !supplierData.email) {
+        return errorResponse('Company name and email are required', 400);
+      }
+
+      // Check if email already exists
+      const suppliers = mockDb.getAll<Supplier, 'suppliers'>('suppliers');
+      const existingSupplier = suppliers.find(s => s.email.toLowerCase() === supplierData.email?.toLowerCase());
+
+      if (existingSupplier) {
+        return errorResponse('Email already in use', 409);
+      }
+
+      const newSupplier: Supplier = {
+        id: `${Date.now()}`,
+        companyName: supplierData.companyName,
+        contactPerson: supplierData.contactPerson || '',
+        email: supplierData.email,
+        phone: supplierData.phone || '',
+        status: supplierData.status || 'pending',
+        verificationDate: new Date().toISOString(),
+        productCount: 0,
+        rating: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...supplierData
+      };
+
+      return mockDb.create<Supplier, 'suppliers'>('suppliers', newSupplier);
+    },
+
+    update: async (id: string, supplierData: Partial<Supplier>) => {
+      await delay(800);
+
+      const supplier = mockDb.getById<Supplier, 'suppliers'>('suppliers', id);
+
+      if (!supplier) {
+        return errorResponse('Supplier not found', 404);
+      }
+
+      const updatedSupplier = {
+        ...supplier,
+        ...supplierData,
+        updatedAt: new Date().toISOString()
+      };
+
+      return mockDb.update<Supplier, 'suppliers'>('suppliers', updatedSupplier);
+    },
+
+    delete: async (id: string) => {
+      await delay(700);
+
+      const success = mockDb.delete('suppliers', id);
+
+      if (!success) {
+        return errorResponse('Supplier not found', 404);
+      }
+
+      return { success: true };
+    }
   },
 
   // Categories
@@ -274,6 +347,69 @@ export const handlers = {
       }
 
       return categories;
+    },
+
+    getById: async (id: string) => {
+      await delay(550);
+      
+      const category = mockDb.getById<Category, 'categories'>('categories', id);
+      
+      if (!category) {
+        return errorResponse('Category not found', 404);
+      }
+      
+      return category;
+    },
+
+    create: async (categoryData: Partial<Category>) => {
+      await delay(800);
+
+      if (!categoryData.name) {
+        return errorResponse('Category name is required', 400);
+      }
+
+      const newCategory: Category = {
+        id: `${Date.now()}`,
+        name: categoryData.name,
+        description: categoryData.description || '',
+        productCount: 0,
+        status: categoryData.status || 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...categoryData
+      };
+
+      return mockDb.create<Category, 'categories'>('categories', newCategory);
+    },
+
+    update: async (id: string, categoryData: Partial<Category>) => {
+      await delay(750);
+
+      const category = mockDb.getById<Category, 'categories'>('categories', id);
+
+      if (!category) {
+        return errorResponse('Category not found', 404);
+      }
+
+      const updatedCategory = {
+        ...category,
+        ...categoryData,
+        updatedAt: new Date().toISOString()
+      };
+
+      return mockDb.update<Category, 'categories'>('categories', updatedCategory);
+    },
+
+    delete: async (id: string) => {
+      await delay(700);
+
+      const success = mockDb.delete('categories', id);
+
+      if (!success) {
+        return errorResponse('Category not found', 404);
+      }
+
+      return { success: true };
     },
 
     // Add other category methods...
@@ -305,7 +441,82 @@ export const handlers = {
       return orders;
     },
 
-    // Add other order methods...
+    getById: async (id: string) => {
+      await delay(800);
+      
+      const order = mockDb.getById<Order, 'orders'>('orders', id);
+      
+      if (!order) {
+        return errorResponse('Order not found', 404);
+      }
+      
+      return order;
+    },
+
+    create: async (orderData: Partial<Order>) => {
+      await delay(1000);
+
+      if (!orderData.customerName || !orderData.supplierName) {
+        return errorResponse('Customer name and supplier name are required', 400);
+      }
+
+      const newOrder: Order = {
+        id: `${Date.now()}`,
+        customerId: orderData.customerId || `cust-${Date.now()}`,
+        customerName: orderData.customerName,
+        supplierId: orderData.supplierId || `supp-${Date.now()}`,
+        supplierName: orderData.supplierName,
+        orderNumber: orderData.orderNumber || `ORD-${Date.now().toString().substring(7)}`,
+        totalAmount: orderData.totalAmount || 0,
+        status: orderData.status || 'pending',
+        paymentStatus: orderData.paymentStatus || 'pending',
+        paymentMethod: orderData.paymentMethod || 'credit_card',
+        shippingAddress: orderData.shippingAddress || {
+          street: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          country: ''
+        },
+        items: orderData.items || [],
+        orderDate: orderData.orderDate || new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...orderData
+      };
+
+      return mockDb.create<Order, 'orders'>('orders', newOrder);
+    },
+
+    update: async (id: string, orderData: Partial<Order>) => {
+      await delay(900);
+
+      const order = mockDb.getById<Order, 'orders'>('orders', id);
+
+      if (!order) {
+        return errorResponse('Order not found', 404);
+      }
+
+      const updatedOrder = {
+        ...order,
+        ...orderData,
+        updatedAt: new Date().toISOString()
+      };
+
+      return mockDb.update<Order, 'orders'>('orders', updatedOrder);
+    },
+
+    delete: async (id: string) => {
+      await delay(800);
+
+      const success = mockDb.delete('orders', id);
+
+      if (!success) {
+        return errorResponse('Order not found', 404);
+      }
+
+      return { success: true };
+    }
   },
 
   // Dashboard
@@ -318,3 +529,7 @@ export const handlers = {
     }
   }
 };
+
+
+
+

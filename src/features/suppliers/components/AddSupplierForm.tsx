@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import Button from '../../../components/common/Button.tsx';
-import { SupplierFormData } from '../types/index.ts';
+import type{ SupplierFormData } from '../types/index.ts';
 import { validateForm, validationRules } from '../../../utils/validation.ts';
 
 interface AddSupplierFormProps {
@@ -47,8 +47,8 @@ const AddSupplierForm: React.FC<AddSupplierFormProps> = ({
     const selectedCategories: string[] = [];
     
     for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selectedCategories.push(options[i].value);
+      if (options[i]?.selected) {
+        selectedCategories.push(options[i]?.value || '');
       }
     }
     

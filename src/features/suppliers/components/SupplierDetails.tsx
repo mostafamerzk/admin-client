@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Supplier } from '../types/index.ts';
+import type{ Supplier } from '../types/index.ts';
 import {
   BuildingOffice2Icon,
   CheckCircleIcon,

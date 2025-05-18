@@ -4,18 +4,18 @@
  * This component displays a list of users in a data table.
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DataTable from '../../../components/common/DataTable.tsx';
-import type { Column } from '../../../components/common/DataTable.tsx';
-import type { User } from '../types/index.ts';
+import BaseEntityList from '../../../components/common/EntityList/BaseEntityList';
+import type { Column } from '../../../components/common/DataTable';
+import type { User } from '../types';
 import {
   EnvelopeIcon,
   PencilIcon,
   TrashIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { ROUTES } from '../../../constants/routes.ts';
+import { ROUTES } from '../../../constants/routes';
 
 interface UserListProps {
   users: User[];
@@ -24,6 +24,7 @@ interface UserListProps {
   onDeleteUser: (user: User) => void;
   onUserClick: (user: User) => void;
   title?: string;
+  loading?: boolean;
 }
 
 const UserList: React.FC<UserListProps> = ({
@@ -32,9 +33,12 @@ const UserList: React.FC<UserListProps> = ({
   onEditUser,
   onDeleteUser,
   onUserClick,
-  title = 'Users'
+  title = 'Users',
+  loading = false
 }) => {
   const navigate = useNavigate();
+  
+  // Define user-specific columns
   const columns: Column<User>[] = [
     {
       key: 'name',
@@ -92,7 +96,6 @@ const UserList: React.FC<UserListProps> = ({
             className="p-1 text-gray-500 hover:text-blue-600 rounded-full hover:bg-gray-100"
             onClick={(e) => {
               e.stopPropagation();
-              // Navigate to edit page instead of using the onEditUser callback
               navigate(ROUTES.getUserEditRoute(user.id));
             }}
           >
@@ -113,16 +116,19 @@ const UserList: React.FC<UserListProps> = ({
   ];
 
   return (
-    <DataTable<User>
-      columns={columns}
+    <BaseEntityList<User>
       data={users}
+      columns={columns}
       onRowClick={onUserClick}
       title={title}
       pagination={true}
+      loading={loading}
+      emptyMessage="No users found"
     />
   );
 };
 
 export default UserList;
+
 
 

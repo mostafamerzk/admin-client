@@ -5,8 +5,8 @@
  * such as login, logout, and retrieving the current user.
  */
 
-import api from './api.ts';
-import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../constants/config.ts';
+import apiClient from '../api';
+import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../constants/config';
 
 export interface AuthUser {
   id: string;
@@ -33,8 +33,9 @@ const authService = {
    */
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
-      const response = await api.post('/auth/login', credentials);
-      const { user, token, expiresIn } = response.data;
+      const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+      if (!response.data) throw new Error('No response data received');
+      const { user, token, expiresIn } = response.data as LoginResponse;
 
       // Store token and user data
       localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -53,7 +54,7 @@ const authService = {
   logout: async (): Promise<void> => {
     try {
       // Call logout endpoint
-      await api.post('/auth/logout', {});
+      await apiClient.post('/auth/logout', {});
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -82,7 +83,7 @@ const authService = {
       }
 
       // If no user data but we have a token, fetch the user
-      const response = await api.get('/auth/me');
+      const response = await apiClient.get<AuthUser>('/auth/me');
       const user = response.data;
 
       // Store user data
@@ -114,3 +115,7 @@ const authService = {
 };
 
 export default authService;
+
+
+
+

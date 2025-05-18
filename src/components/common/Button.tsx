@@ -4,7 +4,8 @@
  * A reusable button component with various styles and states.
  */
 
-import React, { ReactNode, memo } from 'react';
+import React, { memo } from 'react';
+import type { ReactNode } from 'react';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'success' | 'text' | 'link';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';

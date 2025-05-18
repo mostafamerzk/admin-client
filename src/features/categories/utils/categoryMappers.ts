@@ -4,7 +4,7 @@
  * Utility functions to map between different category data formats
  */
 
-import { Category, Subcategory } from '../types/index.ts';
+import type{ Category, Subcategory } from '../types/index.ts';
 import { categories as mockCategories } from '../../../mockData/entities/categories.ts';
 
 /**
@@ -78,3 +78,5 @@ export default {
   getAllMockCategories,
   getMockCategoryById
 };
+
+

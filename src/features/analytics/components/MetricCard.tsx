@@ -6,7 +6,7 @@
 
 import React from 'react';
 import Card from '../../../components/common/Card.tsx';
-import { MetricData } from '../types/index.ts';
+import type { MetricData } from '../types/index.ts';
 
 // Helper function to get appropriate background class for icon
 const getIconBackgroundClass = (icon: React.ReactNode): string => {

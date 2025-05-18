@@ -161,7 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
             <div className="flex items-center space-x-3">
               <Avatar 
-                src={user?.avatar} 
+                src={user?.avatar || ''} 
                 name={user?.name || 'Admin User'} 
                 size="sm" 
               />

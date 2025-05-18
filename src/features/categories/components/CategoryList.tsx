@@ -6,7 +6,7 @@
 
 import React from 'react';
 import DataTable from '../../../components/common/DataTable.tsx';
-import { Category } from '../types/index.ts';
+import type{ Category } from '../types/index.ts';
 import { 
   CheckCircleIcon, 
   XCircleIcon,

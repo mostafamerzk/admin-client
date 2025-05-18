@@ -7,7 +7,7 @@
 import React from 'react';
 import Modal from '../../../components/common/Modal.tsx';
 import Button from '../../../components/common/Button.tsx';
-import { Verification } from '../types/index.ts';
+import type{ Verification } from '../types/index.ts';
 
 interface RejectVerificationModalProps {
   isOpen: boolean;

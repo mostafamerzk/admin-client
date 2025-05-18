@@ -7,6 +7,29 @@ import { authMiddleware, loggingMiddleware } from './middlewares.ts';
 import { CacheManager } from './cache.ts';
 import { setupInterceptors } from './interceptors';
 
+// Add auth middleware to the default middlewares
+const defaultMiddlewares: MiddlewareConfig[] = [
+  {
+    onRequest: async (config) => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    onResponse: async (response) => response,
+    onError: async (error) => {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
+  },
+  authMiddleware,
+  loggingMiddleware,
+];
+
 export class ApiClient {
   private instance: AxiosInstance;
   private middlewares: MiddlewareConfig[];
@@ -15,8 +38,7 @@ export class ApiClient {
 
   constructor(baseURL: string = API_URL, middlewares: MiddlewareConfig[] = []) {
     this.middlewares = [
-      authMiddleware,
-      loggingMiddleware,
+      ...defaultMiddlewares,
       ...middlewares,
     ];
 
@@ -171,4 +193,19 @@ export class ApiClient {
   public removeMiddleware(middleware: MiddlewareConfig): void {
     this.middlewares = this.middlewares.filter(m => m !== middleware);
   }
-} 
+}
+
+// Define createApiClient function after ApiClient class is fully defined
+export const createApiClient = (
+  baseURL: string = API_URL,
+  middlewares: MiddlewareConfig[] = [],
+  config: {
+    cache?: Partial<CacheConfig>;
+    retry?: Partial<RetryConfig>;
+  } = {}
+) => {
+  return new ApiClient(baseURL, [...defaultMiddlewares, ...middlewares]);
+};
+
+// Export a default instance after both ApiClient and createApiClient are defined
+export const defaultApiClient = createApiClient();

@@ -5,7 +5,8 @@
  * It includes the sidebar, header, and main content area.
  */
 
-import React, { ReactNode, memo } from 'react';
+import React, { memo } from 'react';
+import type { ReactNode } from 'react';
 import Sidebar from './Sidebar.tsx';
 import Header from './Header.tsx';
 import useUI from '../../hooks/useUI.ts';

@@ -185,7 +185,7 @@ const Header: React.FC<HeaderProps> = ({
             aria-haspopup="true"
           >
             <Avatar 
-              src={user?.avatar} 
+              src={user?.avatar || ''} 
               name={user?.name || 'User'} 
               size="sm" 
             />

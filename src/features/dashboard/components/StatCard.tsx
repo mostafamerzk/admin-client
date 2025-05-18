@@ -6,7 +6,7 @@ const getIconBackgroundClass = (icon: React.ReactNode): string => {
   if (!React.isValidElement(icon)) return 'bg-primary bg-opacity-10';
 
   // Get the className from the icon props
-  const className = icon.props.className || '';
+  const className = icon.props?.className || '';
 
   // Debug the className to see what we're working with
   console.log('Icon className:', className);
@@ -51,7 +51,7 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <Card
       className="transition-transform duration-300 hover:scale-105"
-      onClick={onClick}
+      {...(onClick ? { onClick: () => onClick() } : {})}
       hoverable={hoverable}
     >
       <div className="flex items-center justify-between">
@@ -94,3 +94,6 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 export default StatCard;
+
+
+

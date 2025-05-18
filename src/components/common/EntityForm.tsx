@@ -7,8 +7,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from './Button.tsx';
-import { User } from '../../features/users/types/index.ts';
-import { Supplier } from '../../features/suppliers/types/index.ts';
+import type{ User } from '../../features/users/types/index.ts';
+import type{ Supplier } from '../../features/suppliers/types/index.ts';
 
 export type EntityType = 'user' | 'supplier';
 
@@ -42,9 +42,9 @@ const EntityForm: React.FC<EntityFormProps> = ({
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData((prev: any) => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
 
     // Clear error when field is edited

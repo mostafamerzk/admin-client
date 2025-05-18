@@ -66,12 +66,14 @@ const Avatar: React.FC<AvatarProps> = ({
   const getInitials = () => {
     if (!name) return '';
     
-    const nameParts = name.split(' ').filter(Boolean);
+    const nameParts = name?.split(' ').filter(Boolean);
     
     if (nameParts.length === 0) return '';
-    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    if (nameParts.length === 1) return nameParts[0]?.charAt(0).toUpperCase() || '';
     
-    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+    const firstInitial = nameParts[0]?.charAt(0) || '';
+    const lastInitial = nameParts[nameParts.length - 1]?.charAt(0) || '';
+    return (firstInitial + lastInitial).toUpperCase();
   };
   
   // Generate background color based on name
@@ -148,3 +150,5 @@ const Avatar: React.FC<AvatarProps> = ({
 };
 
 export default memo(Avatar);
+
+

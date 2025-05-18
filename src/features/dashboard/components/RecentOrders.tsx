@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Card from '../../../components/common/Card.tsx';
-import { RecentOrder } from '../types/index.ts';
+import type { RecentOrder } from '../types/index.ts';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { ROUTES } from '../../../constants/routes.ts';
 import OrderDetailsModal from './OrderDetailsModal.tsx';

@@ -10,6 +10,10 @@ export { default as VerificationDetails } from './components/VerificationDetails
 export { default as ApproveVerificationModal } from './components/ApproveVerificationModal.tsx';
 export { default as RejectVerificationModal } from './components/RejectVerificationModal.tsx';
 
+// Utils
+// export { default as verificationMappers } from './utils/verificationMappers.ts';
+// export { getMockVerifications } from './utils/verificationMappers.ts';
+
 // Hooks
 export { default as useVerifications } from './hooks/useVerifications.ts';
 

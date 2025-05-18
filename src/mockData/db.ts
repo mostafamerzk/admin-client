@@ -6,11 +6,12 @@
  * basic CRUD operations.
  */
 
-import { User, users } from './entities/users.ts';
-import { Supplier, suppliers } from './entities/suppliers.ts';
-import { Category, categories } from './entities/categories.ts';
-import { Order, orders } from './entities/orders.ts';
-import { DashboardStats, dashboardStats } from './entities/dashboard.ts';
+import type { User } from './entities/users.ts';  
+import { users } from './entities/users.ts';  
+import { suppliers, type Supplier } from './entities/suppliers.ts';
+import { categories, type Category } from './entities/categories.ts';
+import { orders, type Order } from './entities/orders.ts';
+import { dashboardStats, type DashboardStats } from './entities/dashboard.ts';
 
 // Define database structure
 interface Database {

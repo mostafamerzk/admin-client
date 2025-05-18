@@ -4,7 +4,8 @@
  * A consistent header component for pages with title, description, and actions.
  */
 
-import React, { ReactNode, memo } from 'react';
+import React, { memo } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, HomeIcon } from '@heroicons/react/24/outline';
 

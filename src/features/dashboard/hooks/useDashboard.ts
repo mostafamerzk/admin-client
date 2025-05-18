@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { DashboardStats } from '../types/index.ts';
+import type { DashboardStats } from '../types/index.ts';
 import dashboardApi from '../api/dashboardApi.ts';
 import useNotification from '../../../hooks/useNotification.ts';
 
@@ -20,7 +20,7 @@ export const useDashboard = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await dashboardApi.getStats();
+      const data = await dashboardApi.getDashboardStats();
       setStats(data);
     } catch (err) {
       setError(err as Error);
@@ -90,3 +90,4 @@ export const useDashboard = () => {
 };
 
 export default useDashboard;
+

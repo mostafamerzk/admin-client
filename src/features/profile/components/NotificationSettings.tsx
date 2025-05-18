@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { UserProfile } from '../types/index.ts';
+import type{ UserProfile } from '../types/index.ts';
 import ToggleSwitch from '../../../components/common/ToggleSwitch.tsx';
 
 interface NotificationSettingsProps {

@@ -4,7 +4,8 @@
  * A reusable modal dialog component.
  */
 
-import React, { Fragment, ReactNode, useEffect, useRef, memo } from 'react';
+import React, { Fragment, useEffect, useRef, memo } from 'react';
+import type { ReactNode } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { createPortal } from 'react-dom';
 

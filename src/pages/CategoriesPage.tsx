@@ -4,148 +4,107 @@
  * This page displays and manages categories in the system.
  */
 
-import React, { useState } from 'react';
-import Card from '../components/common/Card.tsx';
-import Button from '../components/common/Button.tsx';
-import Modal from '../components/common/Modal.tsx';
-import PageHeader from '../components/layout/PageHeader.tsx';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/layout/PageHeader';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import Modal from '../components/common/Modal';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import {
-  CategoryList,
-  CategoryDetails,
-  CategoryFilter,
+import { 
+  CategoryList, 
+  CategoryTree,
+  CategoryDetails, 
   AddCategoryForm,
-  Category,
-  CategoryFormData,
-  getMockCategories
-} from '../features/categories/index.ts';
+  useCategories,
+  Category
+} from '../features/categories';
+import { ROUTES } from '../constants/routes';
+import useNotification from '../hooks/useNotification';
 
 const CategoriesPage: React.FC = () => {
-  // In a real implementation, we would use the useCategories hook
-  // const { categories, isLoading, createCategory, updateCategory, deleteCategory } = useCategories();
-
-  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { categories, isLoading, fetchCategories, getCategoryHierarchy } = useCategories();
+  const { showNotification } = useNotification();
+  
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [isCategoryDetailsModalOpen, setIsCategoryDetailsModalOpen] = useState(false);
-
-  // Use mock data from the centralized mock data file
-  const [categories, setCategories] = useState<Category[]>(getMockCategories());
-
-  const filteredCategories = categories.filter(category => {
-    if (activeFilter === 'all') return true;
-    return category.status === activeFilter;
-  });
-
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'tree'>('list');
+  
   const handleCategoryClick = (category: Category) => {
     setSelectedCategory(category);
-    setIsCategoryDetailsModalOpen(true);
+    navigate(ROUTES.getCategoryDetailsRoute(category.id));
   };
-
-  const handleViewCategory = (category: Category) => {
-    setSelectedCategory(category);
-    setIsCategoryDetailsModalOpen(true);
-  };
-
-  const handleEditCategory = (category: Category) => {
-    console.log('Edit category:', category);
-  };
-
-  const handleDeleteCategory = (category: Category) => {
-    if (window.confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
-      setCategories(categories.filter(c => c.id !== category.id));
+  
+  const handleAddCategory = async (categoryData: any) => {
+    try {
+      // Implementation
+      setIsAddCategoryModalOpen(false);
+      await fetchCategories();
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'Category added successfully'
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to add category'
+      });
     }
   };
-
-  const handleAddCategory = (categoryData: CategoryFormData) => {
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      // Create new category with form data
-      const newCategory: Category = {
-        id: (categories.length + 1).toString(),
-        name: categoryData.name,
-        description: categoryData.description,
-        productCount: 0,
-        status: categoryData.status,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-
-      // Add to categories array
-      setCategories([...categories, newCategory]);
-
-      // Reset state
-      setIsLoading(false);
-      setIsAddCategoryModalOpen(false);
-    }, 1500);
-  };
-
+  
   return (
     <div className="space-y-6">
       <PageHeader
         title="Categories"
         description="Manage product categories"
         actions={
-          <Button
-            icon={<PlusIcon className="h-5 w-5" />}
-            onClick={() => setIsAddCategoryModalOpen(true)}
-          >
-            Add Category
-          </Button>
+          <div className="flex space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setViewMode(viewMode === 'list' ? 'tree' : 'list')}
+            >
+              {viewMode === 'list' ? 'Tree View' : 'List View'}
+            </Button>
+            <Button
+              icon={<PlusIcon className="h-5 w-5" />}
+              onClick={() => setIsAddCategoryModalOpen(true)}
+            >
+              Add Category
+            </Button>
+          </div>
         }
       />
-
+      
       <Card>
-        <CategoryFilter
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
-
-        <CategoryList
-          categories={filteredCategories}
-          onCategoryClick={handleCategoryClick}
-          onViewCategory={handleViewCategory}
-          onEditCategory={handleEditCategory}
-          onDeleteCategory={handleDeleteCategory}
-          title={`${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Categories (${filteredCategories.length})`}
-        />
+        {viewMode === 'list' ? (
+          <CategoryList
+            categories={categories}
+            onCategoryClick={handleCategoryClick}
+            loading={isLoading}
+          />
+        ) : (
+          <CategoryTree
+            categories={categories}
+            onCategorySelect={handleCategoryClick}
+            selectedCategoryId={selectedCategory?.id}
+          />
+        )}
       </Card>
-
-      {/* Add Category Modal */}
+      
       <Modal
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
-        title="Add New Category"
-        size="md"
+        title="Add Category"
       >
         <AddCategoryForm
           onSubmit={handleAddCategory}
           onCancel={() => setIsAddCategoryModalOpen(false)}
-          isLoading={isLoading}
+          parentCategories={categories.filter(c => !c.parentId)}
         />
       </Modal>
-
-      {/* Category Details Modal */}
-      {selectedCategory && (
-        <Modal
-          isOpen={isCategoryDetailsModalOpen}
-          onClose={() => setIsCategoryDetailsModalOpen(false)}
-          title="Category Details"
-          size="md"
-          footer={
-            <Button
-              variant="outline"
-              onClick={() => setIsCategoryDetailsModalOpen(false)}
-            >
-              Close
-            </Button>
-          }
-        >
-          <CategoryDetails category={selectedCategory} />
-        </Modal>
-      )}
     </div>
   );
 };

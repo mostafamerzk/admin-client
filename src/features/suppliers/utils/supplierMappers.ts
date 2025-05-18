@@ -4,7 +4,7 @@
  * Utility functions to map between different supplier data formats
  */
 
-import { Supplier } from '../types/index.ts';
+import type{ Supplier } from '../types/index.ts';
 import { suppliers as mockSuppliers } from '../../../mockData/entities/suppliers.ts';
 
 /**

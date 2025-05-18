@@ -4,150 +4,64 @@
  * This hook provides methods and state for working with categories.
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { Category, CategoryFormData } from '../types/index.ts';
-import categoriesApi from '../api/categoriesApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import { useCallback } from 'react';
+import { useEntityData } from '../../../hooks/useEntityData';
+import categoriesApi from '../api/categoriesApi';
+import type { Category, CategoryFormData } from '../types';
+import useNotification from '../../../hooks/useNotification';
 
-export const useCategories = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export const useCategories = (options = { initialFetch: true }) => {
+  const baseHook = useEntityData({
+    getAll: categoriesApi.getCategories,
+    getById: categoriesApi.getCategoryById,
+    create: categoriesApi.createCategory,
+    update: categoriesApi.updateCategory,
+    delete: categoriesApi.deleteCategory
+  }, {
+    entityName: 'categories',
+    initialFetch: options.initialFetch
+  });
+  
   const { showNotification } = useNotification();
+  
+  // Category-specific methods
+  const getCategoryHierarchy = useCallback(() => {
+    // Get parent categories (those without parentId)
+    const parentCategories = (baseHook.entities as Category[]).filter(
+      (category) => !category.parentId
+    );
+    
+    // Create a map for quick lookup
+    const categoryMap = new Map<string, Category & { subcategories: Category[] }>();
+    
+    // Initialize parent categories with empty subcategories array
+    parentCategories.forEach(category => {
+      categoryMap.set(category.id, { ...category as Category, subcategories: [] });
+    });
 
-  // Fetch all categories
-  const fetchCategories = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await categoriesApi.getCategories();
-      setCategories(data);
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch categories'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Create a new category
-  const createCategory = useCallback(async (categoryData: CategoryFormData) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const newCategory = await categoriesApi.createCategory(categoryData);
-      setCategories(prevCategories => [...prevCategories, newCategory]);
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Category created successfully'
-      });
-      return newCategory;
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to create category'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Update a category
-  const updateCategory = useCallback(async (id: string, categoryData: Partial<CategoryFormData>) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const updatedCategory = await categoriesApi.updateCategory(id, categoryData);
-      setCategories(prevCategories => 
-        prevCategories.map(category => category.id === id ? updatedCategory : category)
-      );
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Category updated successfully'
-      });
-      return updatedCategory;
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to update category'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Delete a category
-  const deleteCategory = useCallback(async (id: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await categoriesApi.deleteCategory(id);
-      setCategories(prevCategories => prevCategories.filter(category => category.id !== id));
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Category deleted successfully'
-      });
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to delete category'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Get subcategories for a category
-  const getSubcategories = useCallback(async (parentId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const subcategories = await categoriesApi.getSubcategories(parentId);
-      return subcategories;
-    } catch (err) {
-      setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch subcategories'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showNotification]);
-
-  // Load categories on mount
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
+    // Add subcategories to their parents
+    (baseHook.entities as Category[]).forEach((category) => {
+      if (category.parentId) {
+        const parent = categoryMap.get(category.parentId);
+        if (parent) {
+          parent.subcategories.push(category);
+        }
+      }
+    });
+    
+    return Array.from(categoryMap.values());
+  }, [baseHook.entities]);
+  
   return {
-    categories,
-    isLoading,
-    error,
-    fetchCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    getSubcategories
+    ...baseHook,
+    categories: baseHook.entities as Category[],
+    fetchCategories: baseHook.fetchEntities,
+    getCategoryById: baseHook.getEntityById,
+    getCategoryHierarchy
   };
 };
 
 export default useCategories;
+
+
+

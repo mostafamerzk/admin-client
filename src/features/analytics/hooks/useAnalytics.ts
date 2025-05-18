@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import {
+import type {
   AnalyticsData,
   AnalyticsSummary,
   SalesTrendData,
@@ -20,11 +20,11 @@ import {
   MetricData,
   CategoryDistribution,
   Supplier
-} from '../types/index.ts';
+} from '../types';
 import analyticsApi from '../api/analyticsApi.ts';
 import useNotification from '../../../hooks/useNotification.ts';
 import { mockDb } from '../../../mockData/db.ts';
-import { DashboardStats } from '../../../mockData/entities/dashboard.ts';
+import type { DashboardStats } from '../../../mockData/entities/dashboard.ts';
 
 export const useAnalytics = (defaultTimeRange: AnalyticsTimeRange = 'month') => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -118,8 +118,8 @@ export const useAnalytics = (defaultTimeRange: AnalyticsTimeRange = 'month') => 
         revenueData,
         usersData,
         ordersData,
-        categoryDistribution: dashboardStats.categoryDistribution as unknown as CategoryDistribution,
-        topSuppliers: dashboardStats.topSuppliers as unknown as Supplier[]
+        categoryDistribution: dashboardStats?.categoryDistribution as unknown as CategoryDistribution || [],
+        topSuppliers: dashboardStats?.topSuppliers as unknown as Supplier[] || []
       };
 
       setAnalyticsData(mockAnalyticsData as unknown as AnalyticsData);

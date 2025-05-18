@@ -9,6 +9,7 @@ export { default as CategoryList } from './components/CategoryList.tsx';
 export { default as CategoryDetails } from './components/CategoryDetails.tsx';
 export { default as CategoryFilter } from './components/CategoryFilter.tsx';
 export { default as AddCategoryForm } from './components/AddCategoryForm.tsx';
+export { default as CategoryTree } from './components/CategoryTree.tsx';
 
 // Hooks
 export { default as useCategories } from './hooks/useCategories.ts';

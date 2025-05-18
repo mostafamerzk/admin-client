@@ -5,7 +5,8 @@
  * It handles displaying, adding, and removing notifications.
  */
 
-import React, { createContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 

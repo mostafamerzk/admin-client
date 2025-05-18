@@ -1,159 +1,106 @@
-/**
- * User Edit Page
- *
- * This page allows editing of user details.
- */
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Card from '../components/common/Card.tsx';
-import EntityForm from '../components/common/EntityForm.tsx';
+import { useParams } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader.tsx';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { User } from '../features/users/types/index.ts';
-import { ROUTES } from '../constants/routes.ts';
-import useNotification from '../hooks/useNotification.ts';
+import Tabs from '../components/common/Tabs.tsx';
+import { UserDetails, EditUserForm, UserAnalytics, useUsers } from '../features/users/index.ts';
+import { useOrders } from '../features/orders/index.ts';
+import LoadingSpinner from '../components/common/LoadingSpinner.tsx';
+import type { User } from '../features/users/types';
 
 const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { showNotification } = useNotification();
+  const userId = id || ''; // Default to empty string if undefined
+  const { getUserById, updateUser } = useUsers({ initialFetch: false });
+  const { getOrdersByCustomer } = useOrders();
+  
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Fetch user data
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('details');
+  
   useEffect(() => {
-    const fetchUser = async () => {
-      setIsLoading(true);
+    const fetchUserData = async () => {
       try {
-        // In a real app, this would be an API call
-        // For now, we'll use mock data
-        const mockUsers: User[] = [
-          {
-            id: '1',
-            name: 'John Doe',
-            email: 'john@example.com',
-            type: 'customer',
-            status: 'active',
-            lastLogin: '2024-01-15',
-            avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-          },
-          {
-            id: '2',
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            type: 'supplier',
-            status: 'active',
-            lastLogin: '2024-01-14',
-            avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-          },
-          {
-            id: '3',
-            name: 'Robert Johnson',
-            email: 'robert@example.com',
-            type: 'customer',
-            status: 'banned',
-            lastLogin: '2024-01-10',
-            avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-          },
-        ];
-
-        const foundUser = mockUsers.find(u => u.id === id);
-        if (foundUser) {
-          setUser(foundUser);
-        } else {
-          showNotification({
-            type: 'error',
-            title: 'Error',
-            message: 'User not found'
-          });
-          navigate(ROUTES.USERS);
-        }
+        setIsLoading(true);
+        const userData = await getUserById(userId);
+        setUser(userData);
+        
+        const orders = await getOrdersByCustomer(userId);
+        setUserOrders(orders);
       } catch (error) {
-        console.error('Error fetching user:', error);
-        showNotification({
-          type: 'error',
-          title: 'Error',
-          message: 'Failed to fetch user details'
-        });
+        console.error('Error fetching user data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
-    if (id) {
-      fetchUser();
+    
+    if (userId) {
+      fetchUserData();
     }
-  }, [id, navigate, showNotification]);
-
-  const handleSubmit = async (userData: User) => {
-    setIsSaving(true);
-    try {
-      // In a real app, this would be an API call
-      // For now, we'll simulate an API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update the user state
-      setUser(userData);
-      
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'User updated successfully'
-      });
-      
-      // Navigate back to users page
-      navigate(ROUTES.USERS);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to update user'
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    navigate(ROUTES.USERS);
-  };
-
+  }, [userId, getUserById, getOrdersByCustomer]);
+  
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
-
+  
+  if (!user) {
+    return <div>User not found</div>;
+  }
+  
+  // Calculate analytics data
+  const userAnalyticsData = {
+    totalOrders: userOrders.length,
+    totalSpent: userOrders.reduce((sum, order) => sum + order.totalAmount, 0),
+    averageOrderValue: userOrders.length > 0 
+      ? userOrders.reduce((sum, order) => sum + order.totalAmount, 0) / userOrders.length 
+      : 0,
+    orderFrequency: 0, // Would calculate based on date ranges in a real app
+    orderHistory: userOrders.map(order => ({
+      date: order.orderDate,
+      amount: order.totalAmount
+    }))
+  };
+  
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Edit User"
-        description={`Edit details for ${user?.name || 'user'}`}
-        actions={
-          <button
-            onClick={handleCancel}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-          >
-            <ArrowLeftIcon className="-ml-1 mr-2 h-5 w-5 text-gray-500" />
-            Back to Users
-          </button>
-        }
+        title={`User: ${user.name}`}
+        description="View and edit user details"
+        breadcrumbs={[
+          { label: 'Users', path: '/users' },
+          { label: user.name }
+        ]}
       />
-
-      <Card>
-        <EntityForm
-          entity={user}
-          entityType="user"
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isLoading={isSaving}
+      
+      <Tabs
+        tabs={[
+          { id: 'details', label: 'Details' },
+          { id: 'edit', label: 'Edit' },
+          { id: 'analytics', label: 'Analytics' }
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+      
+      {activeTab === 'details' && (
+        <UserDetails user={user} userOrders={userOrders} />
+      )}
+      
+      {activeTab === 'edit' && (
+        <EditUserForm
+          user={user}
+          onSubmit={async (userData) => {
+            // Implementation
+          }}
         />
-      </Card>
+      )}
+      
+      {activeTab === 'analytics' && (
+        <UserAnalytics
+          userId={userId}
+          userData={userAnalyticsData}
+        />
+      )}
     </div>
   );
 };

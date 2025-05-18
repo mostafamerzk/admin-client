@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Order, OrderItem } from '../types/index.ts';
+import type{ Order, OrderItem } from '../types/index.ts';
 import { formatCurrency, formatDate } from '../../../utils/formatters.ts';
 import { 
   CheckCircleIcon, 

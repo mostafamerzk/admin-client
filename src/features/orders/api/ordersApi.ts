@@ -114,7 +114,24 @@ export const ordersApi = {
       console.error(`Error fetching orders with status ${status}:`, error);
       throw error;
     }
+  },
+
+  /**
+   * Get orders by customer
+   */
+  getOrdersByCustomer: async (customerId: string): Promise<Order[]> => {
+    try {
+      const response = await apiClient.get<Order[]>('/orders', { params: { customerId } });
+      if (!response.data) {
+        throw new Error(`No orders found for customer: ${customerId}`);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching orders for customer ${customerId}:`, error);
+      throw error;
+    }
   }
 };
 
 export default ordersApi;
+

@@ -6,7 +6,7 @@
 
 import React from 'react';
 import DataTable from '../../../components/common/DataTable.tsx';
-import { Supplier } from '../types/index.ts';
+import type{ Supplier } from '../types/index.ts';
 import {
   BuildingOffice2Icon,
   BuildingStorefrontIcon,

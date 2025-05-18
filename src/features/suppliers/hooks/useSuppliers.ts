@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { Supplier, SupplierFormData } from '../types/index.ts';
+import type{ Supplier, SupplierFormData } from '../types/index.ts';
 import suppliersApi from '../api/suppliersApi.ts';
 import useNotification from '../../../hooks/useNotification.ts';
 

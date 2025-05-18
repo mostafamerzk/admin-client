@@ -4,7 +4,8 @@
  * A reusable card component for displaying content in a contained box.
  */
 
-import React, { ReactNode, memo } from 'react';
+import React, { memo } from 'react';
+import type { ReactNode } from 'react';
 
 export interface CardProps {
   title?: string | ReactNode;

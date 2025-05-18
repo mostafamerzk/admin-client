@@ -4,8 +4,8 @@
  * Utility functions to map between different order data formats
  */
 
-import { Order, OrderItem } from '../types/index.ts';
-import { orders as mockOrders, OrderItem as MockOrderItem } from '../../../mockData/entities/orders.ts';
+import type{ Order, OrderItem } from '../types/index.ts';
+import { orders as mockOrders, type OrderItem as MockOrderItem } from '../../../mockData/entities/orders.ts';
 
 /**
  * Maps a mock order item to the application order item format
@@ -26,7 +26,9 @@ const mapMockOrderItemToOrderItem = (mockItem: MockOrderItem): OrderItem => {
 export const mapMockOrderToOrder = (mockOrder: any): Order => {
   return {
     id: mockOrder.orderNumber || mockOrder.id,
+    customerId: mockOrder.customerId,
     customerName: mockOrder.customerName,
+    supplierId: mockOrder.supplierId,
     supplierName: mockOrder.supplierName,
     totalAmount: mockOrder.totalAmount,
     status: mockOrder.status === 'cancelled' ? 'rejected' : mockOrder.status, // Map 'cancelled' to 'rejected' for compatibility

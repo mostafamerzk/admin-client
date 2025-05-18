@@ -1,28 +1,29 @@
 /**
  * Validation Utilities
  * 
- * This file provides form validation utility functions.
+ * This file provides a comprehensive form validation utility with both function-based
+ * and rule-based validation approaches.
  */
 
-/**
- * Email validation
- */
+// Type definitions
+export type ValidationRule = {
+  validator: (value: any, formData?: any) => boolean;
+  message: string;
+};
+
+export type ValidationRules = Record<string, ValidationRule | ValidationRule[]>;
+
+// Individual validation functions
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
 };
 
-/**
- * Phone number validation
- */
 export const isValidPhone = (phone: string): boolean => {
   const phoneRegex = /^\+?[0-9]{10,15}$/;
   return phoneRegex.test(phone);
 };
 
-/**
- * URL validation
- */
 export const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
@@ -32,9 +33,6 @@ export const isValidUrl = (url: string): boolean => {
   }
 };
 
-/**
- * Required field validation
- */
 export const isRequired = (value: any): boolean => {
   if (value === null || value === undefined) return false;
   if (typeof value === 'string') return value.trim().length > 0;
@@ -42,149 +40,155 @@ export const isRequired = (value: any): boolean => {
   return true;
 };
 
-/**
- * Minimum length validation
- */
 export const minLength = (value: string, min: number): boolean => {
   return value.length >= min;
 };
 
-/**
- * Maximum length validation
- */
 export const maxLength = (value: string, max: number): boolean => {
   return value.length <= max;
 };
 
-/**
- * Numeric value validation
- */
 export const isNumeric = (value: string): boolean => {
   return /^[0-9]+$/.test(value);
 };
 
-/**
- * Decimal value validation
- */
 export const isDecimal = (value: string): boolean => {
   return /^[0-9]+(\.[0-9]+)?$/.test(value);
 };
 
-/**
- * Alphanumeric validation
- */
 export const isAlphanumeric = (value: string): boolean => {
   return /^[a-zA-Z0-9]+$/.test(value);
 };
 
-/**
- * Date validation
- */
 export const isValidDate = (dateString: string): boolean => {
   const date = new Date(dateString);
   return !isNaN(date.getTime());
 };
 
-/**
- * Password match validation
- */
 export const doPasswordsMatch = (password: string, confirmPassword: string): boolean => {
   return password === confirmPassword;
 };
 
-/**
- * Validate form fields
- * 
- * @param values Form values object
- * @param validationRules Validation rules object
- * @returns Object with validation errors
- */
+export const isStrongPassword = (password: string): boolean => {
+  // Password must be at least 8 characters long
+  if (password.length < 8) return false;
+  
+  // Password must contain at least one uppercase letter
+  if (!/[A-Z]/.test(password)) return false;
+  
+  // Password must contain at least one lowercase letter
+  if (!/[a-z]/.test(password)) return false;
+  
+  // Password must contain at least one number
+  if (!/[0-9]/.test(password)) return false;
+  
+  // Password must contain at least one special character
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) return false;
+  
+  return true;
+};
+
+// Field validation
+export const validateField = (
+  name: string,
+  value: any,
+  rules: ValidationRule | ValidationRule[],
+  formData?: any
+): string => {
+  const ruleArray = Array.isArray(rules) ? rules : [rules];
+  
+  for (const rule of ruleArray) {
+    if (!rule.validator(value, formData)) {
+      return rule.message;
+    }
+  }
+  
+  return '';
+};
+
+// Form validation
 export const validateForm = <T extends Record<string, any>>(
   values: T,
-  validationRules: Record<keyof T, Array<{
-    validator: (value: any, allValues?: T) => boolean;
-    message: string;
-  }>>
+  validationRules: ValidationRules
 ): Partial<Record<keyof T, string>> => {
   const errors: Partial<Record<keyof T, string>> = {};
-
-  Object.keys(validationRules).forEach((fieldName) => {
+  
+  Object.entries(validationRules).forEach(([fieldName, rules]) => {
     const key = fieldName as keyof T;
-    const value = values[key];
-    const rules = validationRules[key];
-
-    for (const rule of rules) {
-      if (!rule.validator(value, values)) {
-        errors[key] = rule.message;
-        break;
-      }
+    const error = validateField(fieldName, values[key], rules, values);
+    if (error) {
+      errors[key] = error;
     }
   });
-
+  
   return errors;
 };
 
-/**
- * Common validation rules
- */
+// Common validation rules
 export const validationRules = {
-  required: (message: string = 'This field is required') => ({
+  required: (message: string = 'This field is required'): ValidationRule => ({
     validator: isRequired,
     message
   }),
   
-  email: (message: string = 'Please enter a valid email address') => ({
+  email: (message: string = 'Please enter a valid email address'): ValidationRule => ({
     validator: isValidEmail,
     message
   }),
   
-  phone: (message: string = 'Please enter a valid phone number') => ({
+  phone: (message: string = 'Please enter a valid phone number'): ValidationRule => ({
     validator: isValidPhone,
     message
   }),
   
-  url: (message: string = 'Please enter a valid URL') => ({
+  url: (message: string = 'Please enter a valid URL'): ValidationRule => ({
     validator: isValidUrl,
     message
   }),
   
-  minLength: (min: number, message?: string) => ({
+  minLength: (min: number, message?: string): ValidationRule => ({
     validator: (value: string) => minLength(value, min),
     message: message || `Must be at least ${min} characters`
   }),
   
-  maxLength: (max: number, message?: string) => ({
+  maxLength: (max: number, message?: string): ValidationRule => ({
     validator: (value: string) => maxLength(value, max),
     message: message || `Must be no more than ${max} characters`
   }),
   
-  numeric: (message: string = 'Please enter a numeric value') => ({
+  numeric: (message: string = 'Please enter a numeric value'): ValidationRule => ({
     validator: isNumeric,
     message
   }),
   
-  decimal: (message: string = 'Please enter a valid decimal number') => ({
+  decimal: (message: string = 'Please enter a valid decimal number'): ValidationRule => ({
     validator: isDecimal,
     message
   }),
   
-  alphanumeric: (message: string = 'Please use only letters and numbers') => ({
+  alphanumeric: (message: string = 'Please use only letters and numbers'): ValidationRule => ({
     validator: isAlphanumeric,
     message
   }),
   
-  date: (message: string = 'Please enter a valid date') => ({
+  date: (message: string = 'Please enter a valid date'): ValidationRule => ({
     validator: isValidDate,
     message
   }),
   
-  passwordMatch: (message: string = 'Passwords do not match') => ({
-    validator: (value: string, allValues?: any) => doPasswordsMatch(value, allValues?.confirmPassword),
+  password: (message: string = 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character'): ValidationRule => ({
+    validator: isStrongPassword,
     message
   }),
   
-  confirmPasswordMatch: (message: string = 'Passwords do not match') => ({
-    validator: (value: string, allValues?: any) => doPasswordsMatch(value, allValues?.password),
+  passwordMatch: (message: string = 'Passwords do not match'): ValidationRule => ({
+    validator: (value: string, formData?: any) => doPasswordsMatch(value, formData?.confirmPassword),
+    message
+  }),
+  
+  confirmPasswordMatch: (message: string = 'Passwords do not match'): ValidationRule => ({
+    validator: (value: string, formData?: any) => doPasswordsMatch(value, formData?.password),
     message
   })
 };
+

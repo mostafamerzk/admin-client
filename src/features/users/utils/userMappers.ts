@@ -4,7 +4,7 @@
  * Utility functions to map between different user data formats
  */
 
-import { User } from '../types/index.ts';
+import type{ User } from '../types/index.ts';
 import { users as mockUsers } from '../../../mockData/entities/users.ts';
 
 /**
@@ -13,7 +13,7 @@ import { users as mockUsers } from '../../../mockData/entities/users.ts';
 export const mapMockUserToUser = (mockUser: any): User => {
   // Filter out admin users as they're not part of the regular user interface
   if (mockUser.type === 'admin') {
-    return null;
+    return null as unknown as User;
   }
   
   return {

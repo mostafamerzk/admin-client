@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import Button from '../../../components/common/Button.tsx';
-import { CategoryFormData } from '../types/index.ts';
+import type { CategoryFormData } from '../types/index.ts';
 import { validateForm, validationRules } from '../../../utils/validation.ts';
 
 interface AddCategoryFormProps {

@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import type { 
   AuthUser, 
   LoginCredentials, 
   RegisterCredentials,
@@ -128,13 +128,12 @@ export const useAuth = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await authApi.forgotPassword(request);
+      await authApi.forgotPassword(request);
       showNotification({
         type: 'success',
         title: 'Success',
-        message: response.message || 'Password reset instructions sent to your email'
+        message:  'Password reset instructions sent to your email'
       });
-      return response;
     } catch (err) {
       setError(err as Error);
       showNotification({
@@ -153,13 +152,12 @@ export const useAuth = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await authApi.resetPassword(request);
+      await authApi.resetPassword(request);
       showNotification({
         type: 'success',
         title: 'Success',
-        message: response.message || 'Password reset successfully'
+        message: 'Password reset successfully'
       });
-      return response;
     } catch (err) {
       setError(err as Error);
       showNotification({

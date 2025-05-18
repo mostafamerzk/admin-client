@@ -4,7 +4,8 @@
  * A route component that protects routes from unauthorized access.
  */
 
-import React, { ReactNode } from 'react';
+import React from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth.ts';
 import { hasAnyRole } from '../../features/auth/utils/authUtils.ts';

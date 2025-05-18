@@ -5,7 +5,7 @@
  */
 
 import { useContext } from 'react';
-import { NotificationContext } from '../context/NotificationContext.tsx';
+import { NotificationContext } from '../context/NotificationContext.tsx'; 
 
 export interface NotificationOptions {
   type: 'success' | 'error' | 'warning' | 'info';
@@ -26,8 +26,8 @@ const useNotification = () => {
     context.addNotification({
       type: 'success',
       message,
-      title,
-      duration,
+      title: title || 'Success',
+      duration: duration !== undefined ? duration : 5000, // Default to 5000ms if undefined
     });
   };
 
@@ -35,8 +35,8 @@ const useNotification = () => {
     context.addNotification({
       type: 'error',
       message,
-      title,
-      duration,
+      title: title || 'Error',
+      duration: duration !== undefined ? duration : 5000, // Default to 5000ms if undefined
     });
   };
 
@@ -44,8 +44,8 @@ const useNotification = () => {
     context.addNotification({
       type: 'warning',
       message,
-      title,
-      duration,
+      title: title || 'Warning',
+      duration: duration !== undefined ? duration : 5000, // Default to 5000ms if undefined
     });
   };
 
@@ -53,8 +53,8 @@ const useNotification = () => {
     context.addNotification({
       type: 'info',
       message,
-      title,
-      duration,
+      title: title || 'Info',
+      duration: duration !== undefined ? duration : 5000, // Default to 5000ms if undefined
     });
   };
 
@@ -64,7 +64,7 @@ const useNotification = () => {
       type: options.type,
       title: options.title,
       message: options.message,
-      duration: options.duration,
+      duration: options.duration !== undefined ? options.duration : 5000,
     });
   };
 
@@ -79,3 +79,6 @@ const useNotification = () => {
 };
 
 export default useNotification;
+
+
+

@@ -21,7 +21,7 @@ export interface Column<T = Record<string, any>> {
 export interface DataTableProps<T = Record<string, any>> {
   columns: Column<T>[];
   data: T[];
-  onRowClick?: (row: T) => void;
+  onRowClick?: ((row: T) => void) | undefined;
   title?: string | React.ReactNode;
   description?: string | React.ReactNode;
   loading?: boolean;
@@ -154,7 +154,9 @@ function DataTable<T extends Record<string, any>>({
     setSelectedRows(newSelectedRows);
 
     if (onSelectionChange) {
-      const selectedItems = newSelectedRows.map(idx => paginatedData[idx]);
+      const selectedItems = newSelectedRows
+        .map(idx => paginatedData[idx])
+        .filter((item): item is T => item !== undefined);
       onSelectionChange(selectedItems);
     }
   };
@@ -167,7 +169,9 @@ function DataTable<T extends Record<string, any>>({
     setSelectedRows(newSelectedRows);
 
     if (onSelectionChange) {
-      const selectedItems = newSelectedRows.map(idx => paginatedData[idx]);
+      const selectedItems = newSelectedRows
+        .map(idx => paginatedData[idx])
+        .filter((item): item is T => item !== undefined);
       onSelectionChange(selectedItems);
     }
   };
@@ -431,3 +435,7 @@ function DataTable<T extends Record<string, any>>({
 }
 
 export default memo(DataTable) as typeof DataTable;
+
+
+
+
