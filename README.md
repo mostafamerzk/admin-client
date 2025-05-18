@@ -20,7 +20,7 @@ A modern, feature-rich admin panel for the ConnectChain platform, built with Rea
 - **State Management**: React Context API
 - **Routing**: React Router
 - **Charts**: Chart.js with React-Chartjs-2
-- **UI Components**: Custom component library
+- **UI Components**: Custom component library, Headless UI
 - **Icons**: Heroicons
 - **HTTP Client**: Axios with enhanced features
 
@@ -30,12 +30,19 @@ The project follows a feature-based architecture:
 
 ```
 src/
+├── api/                        # Enhanced API client architecture
+│   └── client/                 # API client implementation
+│       ├── cache.ts            # API response caching
+│       ├── index.ts            # Main ApiClient class
+│       ├── interceptors.ts     # Request/response interceptors
+│       ├── middlewares.ts      # API middleware system
+│       └── types.ts            # API type definitions
 ├── assets/                     # Images, fonts, static resources
 ├── components/                 # Reusable UI components
 │   ├── common/                 # Generic components (Button, Table, Modal)
 │   │   ├── PageLoader.tsx      # Enhanced loading component
 │   │   ├── ErrorBoundary.tsx   # Error handling component
-│   │   └── NotificationsContainer.tsx
+│   │   └── NotificationsContainer.tsx # Global notification system
 │   ├── layout/                 # Sidebar, Navbar, structural components
 ├── features/                   # Feature-specific modules
 │   ├── dashboard/              # Dashboard components, hooks, API
@@ -44,14 +51,22 @@ src/
 │   ├── verifications/          # Supplier verifications
 │   ├── categories/             # Category management
 │   ├── orders/                 # Order management
+│   ├── analytics/              # Analytics components and hooks
+│   │   ├── api/                # Analytics API services
+│   │   ├── components/         # Analytics-specific components
+│   │   ├── hooks/              # Analytics custom hooks
+│   │   └── types/              # Analytics type definitions
 │   ├── settings/               # Platform settings
-├── hooks/                      # Custom hooks (useAuth, useFetch, etc.)
+├── hooks/                      # Custom hooks (useAuth, useFetch, useApi, etc.)
 ├── pages/                      # Top-level page components
 ├── services/                   # API and authentication logic
 │   ├── api.ts                  # Enhanced API service
 │   └── mockApi.ts              # Mock API implementation
 ├── utils/                      # Utility functions and helpers
-│   └── routePreloader.ts       # Route preloading utilities
+│   ├── routePreloader.ts       # Route preloading utilities
+│   ├── formatters.ts           # Data formatting utilities
+│   ├── errorHandling.ts        # Error handling utilities
+│   └── chartConfig.ts          # Chart.js configuration
 ├── context/                    # React Context providers for global state
 ├── styles/                     # Tailwind configuration and global CSS
 ├── constants/                  # Routes, API endpoints, config values
@@ -113,6 +128,7 @@ For development, you can use the following credentials:
 - **Avatar**: Component for displaying user avatars
 - **PageLoader**: Enhanced loading component with accessibility features
 - **ErrorBoundary**: Component for graceful error handling
+- **NotificationsContainer**: Global notification system for displaying alerts and messages
 
 ### Layout Components
 
@@ -120,6 +136,14 @@ For development, you can use the following credentials:
 - **Sidebar**: Navigation sidebar component
 - **Header**: Top header component with user profile and notifications
 - **PageHeader**: Page header component with title, description, and actions
+
+### Analytics Components
+
+- **TimeRangeSelector**: Component for selecting time ranges for analytics data
+- **MetricCard**: Card component for displaying key metrics with growth indicators
+- **BarChart**: Component for displaying bar charts using Chart.js
+- **PieChart**: Component for displaying pie charts using Chart.js
+- **SupplierTable**: Table component for displaying supplier performance data
 
 ### Context Providers
 
@@ -133,26 +157,42 @@ For development, you can use the following credentials:
 - **useFetch**: Hook for data fetching with loading and error states
 - **useNotification**: Hook for displaying notifications
 - **useUI**: Hook for UI state and methods
+- **useApi**: Enhanced hook for API interactions with TypeScript support
+- **useAnalytics**: Hook for working with analytics data
 
 ### Enhanced API Service
 
-The application includes an enhanced API service with the following features:
+The application includes an enhanced API client architecture with the following features:
 
 ```typescript
-import api from '@/services/api';
+import { defaultApiClient } from '@/api/client';
 
 // GET request with caching
-const data = await api.get('/endpoint');
+const data = await defaultApiClient.get('/endpoint');
 
 // POST request with retry logic
-const response = await api.post('/endpoint', data);
+const response = await defaultApiClient.post('/endpoint', data);
 
 // Configure cache settings
-api.setCacheConfig({ ttl: 10 * 60 * 1000 }); // 10 minutes
+defaultApiClient.setCacheConfig({ ttl: 10 * 60 * 1000 }); // 10 minutes
 
 // Configure retry settings
-api.setRetryConfig({ maxRetries: 5 });
+defaultApiClient.setRetryConfig({ maxRetries: 5 });
+
+// Create custom API client with specific middleware
+const customClient = createApiClient(baseURL, [
+  customMiddleware,
+  loggingMiddleware
+]);
 ```
+
+The API client architecture includes:
+
+- **Middleware System**: Extensible middleware for request/response processing
+- **Caching**: Automatic caching of GET requests with configurable TTL
+- **Retry Logic**: Automatic retry for failed requests with exponential backoff
+- **Error Handling**: Comprehensive error handling and transformation
+- **Interceptors**: Request and response interceptors for global processing
 
 ### Route Preloading
 
