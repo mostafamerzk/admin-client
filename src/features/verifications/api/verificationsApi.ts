@@ -5,7 +5,7 @@
  */
 
 import apiClient from '../../../api';
-import type { Verification, VerificationRequest } from '../types';
+import type { Verification, VerificationRequest, VerificationUpdateData } from '../types';
 
 export const verificationsApi = {
   /**
@@ -100,6 +100,54 @@ export const verificationsApi = {
       return response.data;
     } catch (error) {
       console.error(`Error fetching verifications for user ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update verification
+   */
+  updateVerification: async (id: string, data: VerificationUpdateData): Promise<Verification> => {
+    try {
+      const response = await apiClient.put<Verification>(`/verifications/${id}`, data);
+      if (!response.data) {
+        throw new Error(`Failed to update verification for ID: ${id}`);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating verification ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Approve verification
+   */
+  approveVerification: async (id: string, notes?: string): Promise<Verification> => {
+    try {
+      const response = await apiClient.put<Verification>(`/verifications/${id}/approve`, { notes });
+      if (!response.data) {
+        throw new Error(`Failed to approve verification for ID: ${id}`);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Error approving verification ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Reject verification
+   */
+  rejectVerification: async (id: string, notes?: string): Promise<Verification> => {
+    try {
+      const response = await apiClient.put<Verification>(`/verifications/${id}/reject`, { notes });
+      if (!response.data) {
+        throw new Error(`Failed to reject verification for ID: ${id}`);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Error rejecting verification ${id}:`, error);
       throw error;
     }
   }

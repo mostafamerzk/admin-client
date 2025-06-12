@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { defaultApiClient, createApiClient } from '../api/client';
+import { defaultApiClient } from '../api/client';
 import type { ApiResponse } from '../api/client/types';
 
 interface UseApiOptions<T> {

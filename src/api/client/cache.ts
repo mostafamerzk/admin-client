@@ -1,5 +1,5 @@
-import type { AxiosRequestConfig } from './types.ts';
-import type { CacheConfig, CacheEntry } from './types.ts';
+import type { AxiosRequestConfig } from './types';
+import type { CacheConfig, CacheEntry } from './types';
 
 export class CacheManager {
   private cache: Map<string, CacheEntry>;

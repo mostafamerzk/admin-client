@@ -5,7 +5,7 @@
  * This hook provides methods and state for working with users.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { useEntityData } from '../../../hooks/useEntityData';
 import usersApi from '../api/usersApi';
 import type { User, UserFormData } from '../types';
@@ -20,13 +20,21 @@ export const useUsers = (options = { initialFetch: true }) => {
     update: usersApi.updateUser,
     delete: usersApi.deleteUser
   };
-  
+
   const baseHook = useEntityData<User>(apiAdapter, {
     entityName: 'users',
     initialFetch: options.initialFetch
   });
-  
+
   const { showNotification } = useNotification();
+
+  // Use ref to avoid dependency issues
+  const showNotificationRef = useRef(showNotification);
+
+  // Update ref when showNotification changes
+  useEffect(() => {
+    showNotificationRef.current = showNotification;
+  });
   
   // User-specific methods
   const toggleUserStatus = useCallback(async (id: string, status: 'active' | 'banned') => {
@@ -40,54 +48,54 @@ export const useUsers = (options = { initialFetch: true }) => {
           // Use the setEntities method from baseHook if exposed, or implement a custom solution
         }
       });
-      
-      showNotification({
+
+      showNotificationRef.current({
         type: 'success',
         title: 'Success',
         message: `User ${status === 'active' ? 'activated' : 'banned'} successfully`
       });
-      
+
       return updatedUser;
     } catch (error) {
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: `Failed to ${status === 'active' ? 'activate' : 'ban'} user`
       });
       throw error;
     }
-  }, [baseHook.entities, showNotification]);
+  }, [baseHook.entities]);
   
   // Add updateUser method
   const updateUser = useCallback(async (id: string, userData: UserFormData) => {
     try {
       const updatedUser = await usersApi.updateUser(id, userData);
-      
+
       // Update the local state if the user exists in the current list
       const updatedEntities = [...baseHook.entities];
       const userIndex = updatedEntities.findIndex((user) => (user as User).id === id);
-      
+
       if (userIndex !== -1) {
         updatedEntities[userIndex] = updatedUser;
         // If baseHook exposes a setEntities method, use it here
       }
-      
-      showNotification({
+
+      showNotificationRef.current({
         type: 'success',
         title: 'Success',
         message: 'User updated successfully'
       });
-      
+
       return updatedUser;
     } catch (error) {
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to update user'
       });
       throw error;
     }
-  }, [baseHook.entities, showNotification]);
+  }, [baseHook.entities]);
   
   return {
     ...baseHook,

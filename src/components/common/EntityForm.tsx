@@ -6,9 +6,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import Button from './Button.tsx';
-import type{ User } from '../../features/users/types/index.ts';
-import type{ Supplier } from '../../features/suppliers/types/index.ts';
+import Button from './Button';
+import type{ User } from '../../features/users/types/index';
+import type{ Supplier } from '../../features/suppliers/types/index';
+import useErrorHandler from '../../hooks/useErrorHandler';
+import { handleValidationError } from '../../utils/errorHandling';
 
 export type EntityType = 'user' | 'supplier';
 
@@ -29,6 +31,14 @@ const EntityForm: React.FC<EntityFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<any>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Error handling
+  const {
+    clearError
+  } = useErrorHandler({
+    enableNotifications: false, // We'll handle validation errors locally
+    enableReporting: false
+  });
 
   // Initialize form data when entity changes
   useEffect(() => {
@@ -55,37 +65,49 @@ const EntityForm: React.FC<EntityFormProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
-    // Common validations for all entity types
-    if (!formData.name?.trim()) {
-      newErrors.name = 'Name is required';
-    }
-    
-    if (!formData.email?.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-    
-    // Entity-specific validations
-    if (entityType === 'user') {
-      // User-specific validations
-      if (formData.password && formData.password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
+    clearError();
+
+    try {
+      // Common validations for all entity types
+      if (!formData.name?.trim()) {
+        const validationError = handleValidationError('name', 'Name is required', 'REQUIRED');
+        newErrors.name = validationError.message;
       }
-    } else if (entityType === 'supplier') {
-      // Supplier-specific validations
-      if (!formData.contactPerson?.trim()) {
-        newErrors.contactPerson = 'Contact person is required';
+
+      if (!formData.email?.trim()) {
+        const validationError = handleValidationError('email', 'Email is required', 'REQUIRED');
+        newErrors.email = validationError.message;
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        const validationError = handleValidationError('email', 'Email is invalid', 'INVALID_FORMAT');
+        newErrors.email = validationError.message;
       }
-      
-      if (!formData.phone?.trim()) {
-        newErrors.phone = 'Phone number is required';
+
+      // Entity-specific validations
+      if (entityType === 'user') {
+        // User-specific validations
+        if (formData.password && formData.password.length < 8) {
+          const validationError = handleValidationError('password', 'Password must be at least 8 characters', 'MIN_LENGTH');
+          newErrors.password = validationError.message;
+        }
+      } else if (entityType === 'supplier') {
+        // Supplier-specific validations
+        if (!formData.contactPerson?.trim()) {
+          const validationError = handleValidationError('contactPerson', 'Contact person is required', 'REQUIRED');
+          newErrors.contactPerson = validationError.message;
+        }
+
+        if (!formData.phone?.trim()) {
+          const validationError = handleValidationError('phone', 'Phone number is required', 'REQUIRED');
+          newErrors.phone = validationError.message;
+        }
       }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    } catch (error) {
+      console.error('Form validation error:', error);
+      return false;
     }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {

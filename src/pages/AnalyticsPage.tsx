@@ -5,17 +5,17 @@
  */
 
 import React from 'react';
-import PageHeader from '../components/layout/PageHeader.tsx';
+import PageHeader from '../components/layout/PageHeader';
 import { CurrencyDollarIcon, UsersIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
+import StatCard from '../features/dashboard/components/StatCard';
 import {
   TimeRangeSelector,
-  MetricCard,
   BarChart,
   PieChart,
   SupplierTable,
   useAnalytics,
   TimeRange
-} from '../features/analytics/index.ts';
+} from '../features/analytics/index';
 
 const AnalyticsPage: React.FC = () => {
   const {
@@ -61,23 +61,34 @@ const AnalyticsPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <MetricCard
+        <StatCard
           title="Total Revenue"
-          data={analyticsData.revenueData}
+          value={formatCurrency(analyticsData.revenueData.total)}
           icon={<CurrencyDollarIcon className="h-6 w-6 text-primary" />}
-          formatValue={formatCurrency}
+          change={{
+            value: Math.abs(analyticsData.revenueData.growth),
+            isPositive: analyticsData.revenueData.growth >= 0
+          }}
         />
 
-        <MetricCard
+        <StatCard
           title="New Users"
-          data={analyticsData.usersData}
+          value={analyticsData.usersData.total.toString()}
           icon={<UsersIcon className="h-6 w-6 text-blue-600" />}
+          change={{
+            value: Math.abs(analyticsData.usersData.growth),
+            isPositive: analyticsData.usersData.growth >= 0
+          }}
         />
 
-        <MetricCard
+        <StatCard
           title="Total Orders"
-          data={analyticsData.ordersData}
+          value={analyticsData.ordersData.total.toString()}
           icon={<ShoppingCartIcon className="h-6 w-6 text-green-600" />}
+          change={{
+            value: Math.abs(analyticsData.ordersData.growth),
+            isPositive: analyticsData.ordersData.growth >= 0
+          }}
         />
       </div>
 

@@ -18,6 +18,16 @@ export interface UserProfile {
     push: boolean;
     sms: boolean;
   };
+  adminNotifications?: {
+    newUsers: boolean;
+    newOrders: boolean;
+    supplierVerifications: boolean;
+  };
+  preferences?: {
+    theme: 'light' | 'dark' | 'system';
+    language: string;
+    timezone: string;
+  };
   lastLogin: string;
   lastIp: string;
 }
@@ -37,6 +47,11 @@ export interface NotificationUpdateRequest {
   email?: boolean;
   push?: boolean;
   sms?: boolean;
+  adminNotifications?: {
+    newUsers?: boolean;
+    newOrders?: boolean;
+    supplierVerifications?: boolean;
+  };
 }
 
 export interface PasswordChangeRequest {
@@ -54,3 +69,8 @@ export interface ActivityLogItem {
 }
 
 export type ProfileTab = 'profile' | 'security' | 'notifications' | 'activity';
+
+// Type aliases for backward compatibility and consistency
+export type Profile = UserProfile;
+export type ProfileUpdateData = ProfileUpdateRequest;
+export type PasswordChangeData = PasswordChangeRequest;

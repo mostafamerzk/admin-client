@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import Button from '../../../components/common/Button.tsx';
-import type{ TimeRange } from '../types/index.ts';
+import Button from '../../../components/common/Button';
+import type{ TimeRange } from '../types/index';
 
 interface TimeRangeSelectorProps {
   timeRange: TimeRange;

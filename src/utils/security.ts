@@ -4,7 +4,7 @@
  * This file provides security-related utility functions.
  */
 
-import { TOKEN_EXPIRY_MARGIN } from '../constants/config.ts';
+import { TOKEN_EXPIRY_MARGIN } from '../constants/config';
 
 /**
  * Sanitize user input to prevent XSS attacks

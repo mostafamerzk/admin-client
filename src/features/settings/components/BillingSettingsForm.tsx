@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { BillingSettings } from '../types/index.ts';
-import Button from '../../../components/common/Button.tsx';
+import { BillingSettings } from '../types/index';
+import Button from '../../../components/common/Button';
 
 interface BillingSettingsFormProps {
   settings: BillingSettings;

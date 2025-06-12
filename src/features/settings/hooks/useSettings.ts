@@ -11,9 +11,9 @@ import {
   NotificationSettings, 
   SecuritySettings, 
   AppearanceSettings 
-} from '../types/index.ts';
-import settingsApi from '../api/settingsApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+} from '../types/index';
+import settingsApi from '../api/settingsApi';
+import useNotification from '../../../hooks/useNotification';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<Settings | null>(null);

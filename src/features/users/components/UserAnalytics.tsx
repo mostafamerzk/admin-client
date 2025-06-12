@@ -21,7 +21,7 @@ interface UserAnalyticsProps {
 }
 
 const UserAnalytics: React.FC<UserAnalyticsProps> = ({
-  userId,
+  userId: _userId,
   userData
 }) => {
   // Prepare metrics

@@ -5,18 +5,18 @@
  */
 
 import React, { useState } from 'react';
-import PageHeader from '../components/layout/PageHeader.tsx';
-import Card from '../components/common/Card.tsx';
-import Modal from '../components/common/Modal.tsx';
-import useNotification from '../hooks/useNotification.ts';
+import PageHeader from '../components/layout/PageHeader';
+import Card from '../components/common/Card';
+import Modal from '../components/common/Modal';
+import useNotification from '../hooks/useNotification';
 import {
   VerificationList,
   VerificationDetails,
   ApproveVerificationModal,
   RejectVerificationModal,
   Verification,
-  useVerifications
-} from '../features/verifications/index.ts';
+
+} from '../features/verifications/index';
 
 const VerificationsPage: React.FC = () => {
   // In a real implementation, we would use the useVerifications hook

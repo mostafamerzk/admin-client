@@ -4,8 +4,8 @@
  * Utility functions to map between different category data formats
  */
 
-import type{ Category, Subcategory } from '../types/index.ts';
-import { categories as mockCategories } from '../../../mockData/entities/categories.ts';
+import type{ Category, Subcategory } from '../types/index';
+import { categories as mockCategories } from '../../../mockData/entities/categories';
 
 /**
  * Maps a mock category to the application category format
@@ -18,7 +18,7 @@ export const mapMockCategoryToCategory = (mockCategory: any): Category => {
     description: mockCategory.description,
     productCount: mockCategory.productCount,
     status: mockCategory.status,
-    createdAt: mockCategory.createdAt ? new Date(mockCategory.createdAt).toISOString().split('T')[0] : '-',
+    createdAt: mockCategory.createdAt ? (new Date(mockCategory.createdAt).toISOString().split('T')[0] || new Date().toISOString().split('T')[0]!) : new Date().toISOString().split('T')[0]!,
     image: mockCategory.image
   };
 
@@ -78,5 +78,3 @@ export default {
   getAllMockCategories,
   getMockCategoryById
 };
-
-

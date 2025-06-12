@@ -5,9 +5,9 @@
  */
 
 import React, { useState } from 'react';
-import Button from '../../../components/common/Button.tsx';
-import type{ SupplierFormData } from '../types/index.ts';
-import { validateForm, validationRules } from '../../../utils/validation.ts';
+import Button from '../../../components/common/Button';
+import type{ SupplierFormData } from '../types/index';
+import { validateForm, validationRules } from '../../../utils/validation';
 
 interface AddSupplierFormProps {
   onSubmit: (supplierData: SupplierFormData) => void;

@@ -5,7 +5,7 @@ import type { Category } from '../types';
 interface CategoryTreeProps {
   categories: Category[];
   onCategorySelect: (category: Category) => void;
-  selectedCategoryId?: string;
+  selectedCategoryId?: string | undefined;
   className?: string;
 }
 
@@ -68,7 +68,7 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
     <TreeView
       data={treeData}
       onNodeSelect={handleNodeSelect}
-      selectedNodeId={selectedCategoryId ?? ''}
+      selectedNodeId={selectedCategoryId || ''}
       className={className}
     />
   );

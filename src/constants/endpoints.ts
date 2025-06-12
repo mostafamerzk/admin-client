@@ -20,6 +20,7 @@ export const ENDPOINTS = {
     DETAILS: (id: string) => `/users/${id}`,
     BAN: (id: string) => `/users/${id}/ban`,
     UNBAN: (id: string) => `/users/${id}/unban`,
+    UPLOAD_IMAGE: '/users/upload-image',
   },
   
   // Supplier endpoints
@@ -36,6 +37,11 @@ export const ENDPOINTS = {
     BASE: '/categories',
     DETAILS: (id: string) => `/categories/${id}`,
     PRODUCTS: (id: string) => `/categories/${id}/products`,
+  },
+
+  // Business Types endpoints
+  BUSINESS_TYPES: {
+    BASE: '/business-types',
   },
   
   // Order endpoints

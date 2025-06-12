@@ -7,16 +7,17 @@
 
 import React, { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import MainLayout from './components/layout/MainLayout.tsx';
-import NotificationsContainer from './components/common/NotificationsContainer.tsx';
-import ProtectedRoute from './components/common/ProtectedRoute.tsx';
-import ErrorBoundary from './components/common/ErrorBoundary.tsx';
-import PageLoader from './components/common/PageLoader.tsx';
-import { ROUTES } from './constants/routes.ts';
-import { preloadRoutes } from './utils/routePreloader.ts';
-import { AuthProvider } from './context/AuthContext.tsx';
-import { UIProvider } from './context/UIContext.tsx';
-import { NotificationProvider } from './context/NotificationContext.tsx';
+import MainLayout from './components/layout/MainLayout';
+import NotificationsContainer from './components/common/NotificationsContainer';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import PageLoader from './components/common/PageLoader';
+import { ROUTES } from './constants/routes';
+import { preloadRoutes } from './utils/routePreloader';
+import { AuthProvider } from './context/AuthContext';
+import { UIProvider } from './context/UIContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { setupGlobalErrorHandlers } from './utils/errorHandling';
 
 // Lazy-loaded page components
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -24,9 +25,11 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 const UserEditPage = lazy(() => import('./pages/UserEditPage'));
 const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
+const SupplierProfilePage = lazy(() => import('./pages/SupplierProfilePage'));
 const SupplierEditPage = lazy(() => import('./pages/SupplierEditPage'));
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
+const OrderDetailsPage = lazy(() => import('./pages/OrderDetailsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const VerificationsPage = lazy(() => import('./pages/VerificationsPage'));
@@ -34,6 +37,11 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const App: React.FC = () => {
+  // Setup global error handlers
+  useEffect(() => {
+    setupGlobalErrorHandlers();
+  }, []);
+
   // Preload routes
   useEffect(() => {
     preloadRoutes([
@@ -41,9 +49,11 @@ const App: React.FC = () => {
       { importFn: () => import('./pages/UsersPage'), name: 'users' },
       { importFn: () => import('./pages/UserEditPage'), name: 'user-edit' },
       { importFn: () => import('./pages/SuppliersPage'), name: 'suppliers' },
+      { importFn: () => import('./pages/SupplierProfilePage'), name: 'supplier-profile' },
       { importFn: () => import('./pages/SupplierEditPage'), name: 'supplier-edit' },
       { importFn: () => import('./pages/CategoriesPage'), name: 'categories' },
       { importFn: () => import('./pages/OrdersPage'), name: 'orders' },
+      { importFn: () => import('./pages/OrderDetailsPage'), name: 'order-details' },
       { importFn: () => import('./pages/ProfilePage'), name: 'profile' },
       { importFn: () => import('./pages/SettingsPage'), name: 'settings' },
       { importFn: () => import('./pages/VerificationsPage'), name: 'verifications' },
@@ -69,9 +79,11 @@ const App: React.FC = () => {
                       <Route path={ROUTES.USERS} element={<UsersPage />} />
                       <Route path={ROUTES.USER_EDIT} element={<UserEditPage />} />
                       <Route path={ROUTES.SUPPLIERS} element={<SuppliersPage />} />
+                      <Route path={ROUTES.SUPPLIER_PROFILE} element={<SupplierProfilePage />} />
                       <Route path={ROUTES.SUPPLIER_EDIT} element={<SupplierEditPage />} />
                       <Route path={ROUTES.CATEGORIES} element={<CategoriesPage />} />
                       <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
+                      <Route path={ROUTES.ORDER_DETAILS} element={<OrderDetailsPage />} />
                       <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
                       <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
                       <Route path={ROUTES.VERIFICATIONS} element={<VerificationsPage />} />

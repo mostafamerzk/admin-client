@@ -26,6 +26,10 @@ export const ANIMATION_DURATION = 300; // in milliseconds
 export const DEFAULT_PAGE_SIZE = 10;
 export const DEFAULT_DEBOUNCE_DELAY = 300; // in milliseconds
 
+// Avatar configuration
+export const DEFAULT_AVATAR_URL = 'https://ui-avatars.com/api/?name=Admin+User&background=3b82f6&color=fff&size=128';
+export const AVATAR_PLACEHOLDER_SERVICE = 'https://ui-avatars.com/api/';
+
 // Date formats
 export const DATE_FORMAT = 'MMM d, yyyy';
 export const DATE_TIME_FORMAT = 'MMM d, yyyy h:mm a';
@@ -55,6 +59,8 @@ export const CONFIG = {
   ANIMATION_DURATION,
   DEFAULT_PAGE_SIZE,
   DEFAULT_DEBOUNCE_DELAY,
+  DEFAULT_AVATAR_URL,
+  AVATAR_PLACEHOLDER_SERVICE,
   DATE_FORMAT,
   DATE_TIME_FORMAT,
   TIME_FORMAT,

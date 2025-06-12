@@ -4,8 +4,8 @@
  * This file provides utility functions for authentication.
  */
 
-import { isTokenExpired, parseJwt } from '../../../utils/security.ts';
-import { AUTH_TOKEN_KEY } from '../../../constants/config.ts';
+import { isTokenExpired, parseJwt } from '../../../utils/security';
+import { AUTH_TOKEN_KEY } from '../../../constants/config';
 
 /**
  * Check if the current user has a specific role

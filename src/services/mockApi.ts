@@ -6,7 +6,7 @@
  */
 
 import type{ AxiosRequestConfig, AxiosResponse } from 'axios';
-import { handlers } from '../mockData/handlers.ts';
+import { handlers } from '../mockData/handlers';
 
 // Mock API implementation
 const mockApi = {
@@ -117,8 +117,8 @@ const mockApi = {
 
     const urlParts = url.split('/').filter(Boolean);
     const resource = urlParts[0];
-    const id = urlParts[1];
-    const action = urlParts[2];
+    // const _id = urlParts[1];
+    // const _action = urlParts[2];
 
     try {
       let response;

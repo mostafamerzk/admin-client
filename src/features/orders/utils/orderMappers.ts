@@ -4,8 +4,8 @@
  * Utility functions to map between different order data formats
  */
 
-import type{ Order, OrderItem } from '../types/index.ts';
-import { orders as mockOrders, type OrderItem as MockOrderItem } from '../../../mockData/entities/orders.ts';
+import type{ Order, OrderItem } from '../types/index';
+import { orders as mockOrders, type OrderItem as MockOrderItem } from '../../../mockData/entities/orders';
 
 /**
  * Maps a mock order item to the application order item format
@@ -24,24 +24,29 @@ const mapMockOrderItemToOrderItem = (mockItem: MockOrderItem): OrderItem => {
  * Maps a mock order to the application order format
  */
 export const mapMockOrderToOrder = (mockOrder: any): Order => {
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return new Date().toISOString().split('T')[0]!;
+    return new Date(dateString).toISOString().split('T')[0]!;
+  };
+
   return {
     id: mockOrder.orderNumber || mockOrder.id,
-    customerId: mockOrder.customerId,
     customerName: mockOrder.customerName,
-    supplierId: mockOrder.supplierId,
     supplierName: mockOrder.supplierName,
     totalAmount: mockOrder.totalAmount,
     status: mockOrder.status === 'cancelled' ? 'rejected' : mockOrder.status, // Map 'cancelled' to 'rejected' for compatibility
-    orderDate: mockOrder.orderDate ? new Date(mockOrder.orderDate).toISOString().split('T')[0] : '-',
-    deliveryDate: mockOrder.deliveryDate ? new Date(mockOrder.deliveryDate).toISOString().split('T')[0] : '-',
+    orderDate: formatDate(mockOrder.orderDate),
+    deliveryDate: formatDate(mockOrder.deliveryDate),
     items: mockOrder.items ? mockOrder.items.map(mapMockOrderItemToOrderItem) : [],
-    shippingAddress: mockOrder.shippingAddress ? {
-      street: mockOrder.shippingAddress.street,
-      city: mockOrder.shippingAddress.city,
-      state: mockOrder.shippingAddress.state,
-      postalCode: mockOrder.shippingAddress.zipCode,
-      country: mockOrder.shippingAddress.country
-    } : undefined,
+    ...(mockOrder.shippingAddress && {
+      shippingAddress: {
+        street: mockOrder.shippingAddress.street,
+        city: mockOrder.shippingAddress.city,
+        state: mockOrder.shippingAddress.state,
+        postalCode: mockOrder.shippingAddress.zipCode,
+        country: mockOrder.shippingAddress.country
+      }
+    }),
     notes: mockOrder.notes
   };
 };

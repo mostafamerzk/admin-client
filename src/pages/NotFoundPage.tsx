@@ -5,10 +5,10 @@
  */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+
 import { HomeIcon } from '@heroicons/react/24/outline';
-import Button from '../components/common/Button.tsx';
-import { ROUTES } from '../constants/routes.ts';
+import Button from '../components/common/Button';
+import { ROUTES } from '../constants/routes';
 
 const NotFoundPage: React.FC = () => {
   return (

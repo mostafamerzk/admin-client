@@ -5,12 +5,12 @@
  * It provides mock implementations for all API endpoints used in the application.
  */
 
-import { mockDb } from './db.ts';
-import type{ User } from './entities/users.ts';
-import type{ Supplier } from './entities/suppliers.ts';
-import type{ Category } from './entities/categories.ts';
-import type{ Order } from './entities/orders.ts';
-import type{ DashboardStats } from './entities/dashboard.ts';
+import { mockDb } from './db';
+import type{ User } from './entities/users';
+import type{ Supplier } from './entities/suppliers';
+import type{ Category } from './entities/categories';
+import type{ Order } from './entities/orders';
+import type{ DashboardStats } from './entities/dashboard';
 
 // Helper to simulate network delay
 const delay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));

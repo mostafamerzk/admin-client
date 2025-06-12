@@ -138,11 +138,35 @@ export const usersApi = {
    */
   getUsersByType: async (type: 'customer' | 'supplier' | 'admin'): Promise<User[]> => {
     try {
-      const response = await apiClient.get<User[]>('/users', { 
-        params: { type } 
+      const response = await apiClient.get<User[]>('/users', {
+        params: { type }
       });
       if (!response.data) {
         throw new Error('No users data received');
+      }
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  /**
+   * Upload user image
+   * @param file - The image file to upload
+   * @returns Promise resolving to the uploaded image URL
+   */
+  uploadUserImage: async (file: File): Promise<{ imageUrl: string }> => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await apiClient.post<{ imageUrl: string }>('/users/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      if (!response.data) {
+        throw new Error('Failed to upload user image');
       }
       return response.data;
     } catch (error) {
@@ -152,15 +176,16 @@ export const usersApi = {
 };
 
 // Export individual methods for more flexible importing
-export const { 
-  getUsers, 
-  getUserById, 
-  createUser, 
-  updateUser, 
-  deleteUser, 
+export const {
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
   toggleUserStatus,
   searchUsers,
-  getUsersByType
+  getUsersByType,
+  uploadUserImage
 } = usersApi;
 
 export default usersApi;

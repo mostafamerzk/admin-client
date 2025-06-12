@@ -1,4 +1,4 @@
-import type { MiddlewareConfig, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from './types.ts';
+import type { MiddlewareConfig } from './types';
 
 export const authMiddleware: MiddlewareConfig = {
   onRequest: async (config) => {

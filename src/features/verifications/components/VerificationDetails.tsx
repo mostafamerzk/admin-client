@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import type{ Verification } from '../types/index.ts';
-import Button from '../../../components/common/Button.tsx';
+import type{ Verification } from '../types/index';
+import Button from '../../../components/common/Button';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface VerificationDetailsProps {

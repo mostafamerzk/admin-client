@@ -5,9 +5,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type{ Supplier, SupplierFormData } from '../types/index.ts';
-import suppliersApi from '../api/suppliersApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import type{ Supplier, SupplierFormData } from '../types/index';
+import suppliersApi from '../api/suppliersApi';
+import useNotification from '../../../hooks/useNotification';
 
 export const useSuppliers = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -113,13 +113,33 @@ export const useSuppliers = () => {
     }
   }, [showNotification]);
 
+  // Get supplier by ID
+  const getSupplierById = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const supplier = await suppliersApi.getSupplierById(id);
+      return supplier;
+    } catch (err) {
+      setError(err as Error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch supplier details'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
   // Update supplier verification status
   const updateVerificationStatus = useCallback(async (id: string, status: 'verified' | 'pending' | 'rejected') => {
     setIsLoading(true);
     setError(null);
     try {
       const updatedSupplier = await suppliersApi.updateVerificationStatus(id, status);
-      setSuppliers(prevSuppliers => 
+      setSuppliers(prevSuppliers =>
         prevSuppliers.map(supplier => supplier.id === id ? updatedSupplier : supplier)
       );
       showNotification({
@@ -151,6 +171,7 @@ export const useSuppliers = () => {
     isLoading,
     error,
     fetchSuppliers,
+    getSupplierById,
     createSupplier,
     updateSupplier,
     deleteSupplier,

@@ -7,10 +7,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS } from 'chart.js';
-import Card from '../../../components/common/Card.tsx';
-import Button from '../../../components/common/Button.tsx';
-import type { SalesData } from '../types/index.ts';
-import { defaultLineChartOptions, destroyChart } from '../../../utils/chartConfig.ts';
+import Card from '../../../components/common/Card';
+import Button from '../../../components/common/Button';
+import type { SalesData } from '../types/index';
+import { defaultLineChartOptions, destroyChart } from '../../../utils/chartConfig';
 
 interface SalesChartProps {
   data: SalesData[];

@@ -38,9 +38,7 @@
     "exactOptionalPropertyTypes": true,
     "noPropertyAccessFromIndexSignature": false,
     "noErrorTruncation": true,
-    "preserveWatchOutput": true,
-    "verbatimModuleSyntax": true,
-    "allowImportingTsExtensions": true
+    "preserveWatchOutput": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "build", "dist", "scripts", "acceptance-tests", "webpack", "jest", "src/setupTests.ts"]

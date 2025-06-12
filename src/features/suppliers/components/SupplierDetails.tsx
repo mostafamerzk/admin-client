@@ -5,9 +5,9 @@
  */
 
 import React from 'react';
-import type{ Supplier } from '../types/index.ts';
+import Avatar from '../../../components/common/Avatar';
+import type{ Supplier } from '../types/index';
 import {
-  BuildingOffice2Icon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon
@@ -22,9 +22,12 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 rounded-full bg-primary bg-opacity-10 text-primary flex items-center justify-center">
-            <BuildingOffice2Icon className="w-8 h-8" />
-          </div>
+          <Avatar
+            {...(supplier.logo && { src: supplier.logo })}
+            alt={supplier.name}
+            name={supplier.name}
+            size="xl"
+          />
           <div>
             <h3 className="text-lg font-medium text-gray-900">{supplier.name}</h3>
             <p className="text-sm text-gray-500">ID: {supplier.id}</p>

@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import Card from '../../../components/common/Card.tsx';
-import type { MetricData } from '../types/index.ts';
+import Card from '../../../components/common/Card';
+import type { MetricData } from '../types/index';
 
 // Helper function to get appropriate background class for icon
 const getIconBackgroundClass = (icon: React.ReactNode): string => {
@@ -14,9 +14,6 @@ const getIconBackgroundClass = (icon: React.ReactNode): string => {
 
   // Get the className from the icon props
   const className = icon.props.className || '';
-
-  // Debug the className to see what we're working with
-  console.log('MetricCard Icon className:', className);
 
   // Extract color from text-{color} class with more specific matching
   if (className.includes('text-primary')) return 'bg-primary bg-opacity-10';
@@ -51,13 +48,20 @@ const MetricCard: React.FC<MetricCardProps> = ({
       <div className="flex items-center">
         <div className={`p-3 rounded-full ${getIconBackgroundClass(icon)}`}>
           {/* Ensure consistent icon styling while preserving color */}
-          {React.isValidElement(icon) ?
-            React.cloneElement(icon as React.ReactElement, {
-              className: `w-6 h-6 ${(icon as React.ReactElement).props.className?.match(/text-[a-z0-9-]+/) ?
-                (icon as React.ReactElement).props.className?.match(/text-[a-z0-9-]+/)[0] : 'text-primary'}`
-            }) :
+          {React.isValidElement(icon) ? (
+            (() => {
+              const iconElement = icon as React.ReactElement;
+              const existingClassName = iconElement.props.className || '';
+              const colorMatch = existingClassName.match(/text-[a-z0-9-]+/);
+              const colorClass = colorMatch ? colorMatch[0] : 'text-primary';
+
+              return React.cloneElement(iconElement, {
+                className: `w-6 h-6 ${colorClass}`
+              });
+            })()
+          ) : (
             icon
-          }
+          )}
         </div>
         <div className="ml-4">
           <h3 className="text-lg font-semibold text-gray-700">{title}</h3>

@@ -5,16 +5,16 @@
  */
 
 // Components
-export { default as StatCard } from './components/StatCard.tsx';
-export { default as SalesChart } from './components/SalesChart.tsx';
-export { default as UserGrowthChart } from './components/UserGrowthChart.tsx';
-export { default as RecentOrders } from './components/RecentOrders.tsx';
+export { default as StatCard } from './components/StatCard';
+export { default as SalesChart } from './components/SalesChart';
+export { default as UserGrowthChart } from './components/UserGrowthChart';
+export { default as RecentOrders } from './components/RecentOrders';
 
 // Hooks
-export { default as useDashboard } from './hooks/useDashboard.ts';
+export { default as useDashboard } from './hooks/useDashboard';
 
 // API
-export { default as dashboardApi } from './api/dashboardApi.ts';
+export { default as dashboardApi } from './api/dashboardApi';
 
 // Types
-export * from './types/index.ts';
+export * from './types/index';

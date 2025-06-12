@@ -5,20 +5,22 @@
  */
 
 import React, { useState } from 'react';
-import Button from '../../../components/common/Button.tsx';
-import type { CategoryFormData } from '../types/index.ts';
-import { validateForm, validationRules } from '../../../utils/validation.ts';
+import Button from '../../../components/common/Button';
+import type { CategoryFormData, Category } from '../types/index';
+import { validateForm, validationRules } from '../../../utils/validation';
 
 interface AddCategoryFormProps {
   onSubmit: (categoryData: CategoryFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  parentCategories?: Category[];
 }
 
-const AddCategoryForm: React.FC<AddCategoryFormProps> = ({ 
-  onSubmit, 
-  onCancel, 
-  isLoading = false 
+const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
+  onSubmit,
+  onCancel,
+  isLoading = false,
+  parentCategories = []
 }) => {
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
@@ -125,9 +127,11 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
           >
             <option value="">None (Top Level Category)</option>
-            <option value="1">Electronics</option>
-            <option value="2">Office Supplies</option>
-            <option value="3">Furniture</option>
+            {parentCategories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>

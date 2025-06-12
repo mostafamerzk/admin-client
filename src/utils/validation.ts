@@ -90,7 +90,7 @@ export const isStrongPassword = (password: string): boolean => {
 
 // Field validation
 export const validateField = (
-  name: string,
+  _name: string,
   value: any,
   rules: ValidationRule | ValidationRule[],
   formData?: any

@@ -7,7 +7,7 @@
 import { useCallback } from 'react';
 import { useEntityData } from '../../../hooks/useEntityData';
 import categoriesApi from '../api/categoriesApi';
-import type { Category, CategoryFormData } from '../types';
+import type { Category } from '../types';
 import useNotification from '../../../hooks/useNotification';
 
 export const useCategories = (options = { initialFetch: true }) => {
@@ -22,7 +22,7 @@ export const useCategories = (options = { initialFetch: true }) => {
     initialFetch: options.initialFetch
   });
   
-  const { showNotification } = useNotification();
+  const { showNotification: _showNotification } = useNotification();
   
   // Category-specific methods
   const getCategoryHierarchy = useCallback(() => {

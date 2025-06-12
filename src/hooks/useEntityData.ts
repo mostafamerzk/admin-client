@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import useNotification from './useNotification';
 
 export interface EntityApi<T, IdType = string> {
@@ -23,54 +23,94 @@ export const useEntityData = <T, IdType = string>(
   const [error, setError] = useState<Error | null>(null);
   const { showNotification } = useNotification();
 
+  // Use refs to store current values and avoid stale closures
+  const apiServiceRef = useRef(apiService);
+  const showNotificationRef = useRef(showNotification);
+  const entityNameRef = useRef(options.entityName);
+  const hasInitialFetched = useRef(false);
+
+  // Update refs when values change
+  useEffect(() => {
+    apiServiceRef.current = apiService;
+    showNotificationRef.current = showNotification;
+    entityNameRef.current = options.entityName;
+  });
+
   const fetchEntities = useCallback(async (params?: any) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await apiService.getAll(params);
+      const data = await apiServiceRef.current.getAll(params);
       setEntities(data);
       return data;
     } catch (err) {
       const error = err as Error;
       setError(error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
-        message: `Failed to fetch ${options.entityName}`
+        message: `Failed to fetch ${entityNameRef.current}`
       });
       throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [apiService, options.entityName, showNotification]);
+  }, []); // No dependencies needed due to refs
 
   const getEntityById = useCallback(async (id: IdType) => {
     setIsLoading(true);
     setError(null);
     try {
-      const entity = await apiService.getById(id);
+      const entity = await apiServiceRef.current.getById(id);
       return entity;
     } catch (err) {
       const error = err as Error;
       setError(error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
-        message: `Failed to fetch ${options.entityName}`
+        message: `Failed to fetch ${entityNameRef.current}`
       });
       throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [apiService, options.entityName, showNotification]);
+  }, []); // No dependencies needed due to refs
 
   // Other common methods (create, update, delete)
-  
+
+  // Initial fetch effect - runs only once
   useEffect(() => {
-    if (options.initialFetch !== false) {
-      fetchEntities();
+    if (options.initialFetch !== false && !hasInitialFetched.current) {
+      console.log(`[useEntityData] Starting initial fetch for ${options.entityName}`);
+      hasInitialFetched.current = true;
+
+      const initialFetch = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          console.log(`[useEntityData] Calling API for ${options.entityName}`);
+          const data = await apiService.getAll();
+          console.log(`[useEntityData] Received data for ${options.entityName}:`, data);
+          setEntities(data);
+        } catch (err) {
+          const error = err as Error;
+          console.error(`[useEntityData] Error fetching ${options.entityName}:`, error);
+          setError(error);
+          showNotificationRef.current({
+            type: 'error',
+            title: 'Error',
+            message: `Failed to fetch ${options.entityName}`
+          });
+        } finally {
+          console.log(`[useEntityData] Finished fetch for ${options.entityName}`);
+          setIsLoading(false);
+        }
+      };
+
+      initialFetch();
     }
-  }, [fetchEntities, options.initialFetch]);
+  }, []); // Empty dependency array - runs only once on mount
 
   return {
     entities,

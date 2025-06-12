@@ -5,13 +5,13 @@
  */
 
 // Hooks
-export { default as useAuth } from './hooks/useAuth.ts';
+export { default as useAuth } from './hooks/useAuth';
 
 // API
-export { default as authApi } from './api/authApi.ts';
+export { default as authApi } from './api/authApi';
 
 // Types
-export * from './types/index.ts';
+export * from './types/index';
 
 // Utils
-export * from './utils/authUtils.ts';
+export * from './utils/authUtils';

@@ -28,3 +28,57 @@ export interface SupplierFormData {
   contactPerson: string;
   logo?: string;
 }
+
+// Product types for supplier products
+export interface SupplierProduct {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  price: number;
+  stock: number;
+  status: 'active' | 'inactive' | 'out_of_stock';
+  description?: string;
+  image?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Document types for verification documents
+export interface SupplierDocument {
+  id: string;
+  name: string;
+  type: 'business_license' | 'tax_certificate' | 'insurance' | 'certification' | 'other';
+  fileName: string;
+  fileSize: number;
+  uploadDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+  url: string;
+  notes?: string;
+}
+
+// Analytics types for supplier performance
+export interface SupplierAnalyticsData {
+  totalOrders: number;
+  totalRevenue: number;
+  productCount: number;
+  averageOrderValue: number;
+  revenueHistory: {
+    date: string;
+    amount: number;
+  }[];
+  salesByProduct: {
+    productName: string;
+    amount: number;
+    quantity: number;
+  }[];
+  orderTrends: {
+    date: string;
+    orders: number;
+  }[];
+  topCategories: {
+    category: string;
+    revenue: number;
+    percentage: number;
+  }[];
+}

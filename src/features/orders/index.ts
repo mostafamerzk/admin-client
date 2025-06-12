@@ -5,19 +5,19 @@
  */
 
 // Components
-export { default as OrderList } from './components/OrderList.tsx';
-export { default as OrderDetails } from './components/OrderDetails.tsx';
-export { default as OrderFilter } from './components/OrderFilter.tsx';
+export { default as OrderList } from './components/OrderList';
+export { default as OrderDetails } from './components/OrderDetails';
+export { default as OrderFilter } from './components/OrderFilter';
 
 // Hooks
-export { default as useOrders } from './hooks/useOrders.ts';
+export { default as useOrders } from './hooks/useOrders';
 
 // API
-export { default as ordersApi } from './api/ordersApi.ts';
+export { default as ordersApi } from './api/ordersApi';
 
 // Utils
-export { default as orderMappers } from './utils/orderMappers.ts';
-export { getMockOrders } from './utils/orderMappers.ts';
+export { default as orderMappers } from './utils/orderMappers';
+export { getMockOrders } from './utils/orderMappers';
 
 // Types
-export * from './types/index.ts';
+export * from './types/index';

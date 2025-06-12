@@ -12,6 +12,9 @@ export interface User {
   status: 'active' | 'banned';
   lastLogin: string;
   avatar?: string;
+  address?: string;
+  businessType?: string;
+  phone?: string;
 }
 
 export interface UserFormData {
@@ -19,4 +22,14 @@ export interface UserFormData {
   email: string;
   type: 'customer' | 'supplier';
   password?: string;
+  address?: string;
+  businessType?: string;
+  phone?: string;
+  image?: File | null;
+}
+
+export interface BusinessType {
+  id: string;
+  name: string;
+  description?: string;
 }

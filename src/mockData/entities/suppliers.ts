@@ -22,6 +22,8 @@ export interface Supplier {
   notes?: string;
   productCount: number;
   rating: number;
+  logo?: string;
+  categories?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +47,8 @@ export const suppliers: Supplier[] = [
     notes: 'Premium supplier with excellent service history.',
     productCount: 156,
     rating: 4.8,
+    logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=150&h=150&fit=crop&crop=center',
+    categories: ['Electronics', 'Technology', 'Hardware'],
     createdAt: '2023-09-15T14:30:00Z',
     updatedAt: '2024-01-10T09:30:00Z'
   },
@@ -66,6 +70,8 @@ export const suppliers: Supplier[] = [
     notes: 'Specializes in office furniture and supplies.',
     productCount: 243,
     rating: 4.5,
+    logo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=150&h=150&fit=crop&crop=center',
+    categories: ['Office Supplies', 'Furniture', 'Business Equipment'],
     createdAt: '2023-10-20T10:45:00Z',
     updatedAt: '2024-01-05T11:15:00Z'
   },
@@ -87,6 +93,8 @@ export const suppliers: Supplier[] = [
     notes: 'New supplier with competitive pricing on electronics.',
     productCount: 0,
     rating: 0,
+    logo: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=150&h=150&fit=crop&crop=center',
+    categories: ['Electronics', 'Consumer Electronics'],
     createdAt: '2024-01-12T16:20:00Z',
     updatedAt: '2024-01-12T16:20:00Z'
   },
@@ -108,6 +116,8 @@ export const suppliers: Supplier[] = [
     notes: 'Rejected due to incomplete documentation.',
     productCount: 0,
     rating: 0,
+    logo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=150&h=150&fit=crop&crop=center',
+    categories: ['Furniture', 'Home Decor'],
     createdAt: '2023-12-30T09:10:00Z',
     updatedAt: '2024-01-08T14:45:00Z'
   },
@@ -129,6 +139,8 @@ export const suppliers: Supplier[] = [
     notes: 'Specializes in organic food products.',
     productCount: 189,
     rating: 4.7,
+    logo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=150&h=150&fit=crop&crop=center',
+    categories: ['Food & Beverage', 'Organic Products'],
     createdAt: '2023-11-10T13:25:00Z',
     updatedAt: '2023-12-15T10:30:00Z'
   },
@@ -150,6 +162,8 @@ export const suppliers: Supplier[] = [
     notes: 'Awaiting verification of business license.',
     productCount: 0,
     rating: 0,
+    logo: '', // No logo for this supplier to test fallback
+    categories: ['Fashion', 'Apparel', 'Accessories'],
     createdAt: '2024-01-14T15:40:00Z',
     updatedAt: '2024-01-14T15:40:00Z'
   }

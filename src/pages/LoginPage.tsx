@@ -6,12 +6,15 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import useAuth from '../hooks/useAuth.ts';
-import useNotification from '../hooks/useNotification.ts';
-import Button from '../components/common/Button.tsx';
-import { ROUTES } from '../constants/routes.ts';
-import { mockDb } from '../mockData/db.ts';
-import { validateForm, validationRules } from '../utils/validation.ts';
+import useAuth from '../hooks/useAuth';
+import useNotification from '../hooks/useNotification';
+import Button from '../components/common/Button';
+import { ROUTES } from '../constants/routes';
+import { mockDb } from '../mockData/db';
+import { validateForm, validationRules } from '../utils/validation';
+import useErrorHandler from '../hooks/useErrorHandler';
+import { safeLocalStorage } from '../utils/errorHandling';
+import withErrorBoundary from '../components/common/withErrorBoundary';
 
 interface LocationState {
   from?: {
@@ -32,6 +35,16 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Error handling
+  const {
+    handleFormError,
+    withFormErrorHandling,
+    clearError
+  } = useErrorHandler({
+    enableNotifications: true,
+    enableReporting: true
+  });
+
   const locationState = location.state as LocationState;
   const from = locationState?.from?.pathname || ROUTES.DASHBOARD;
 
@@ -50,6 +63,7 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearError();
 
     // Validate form
     const validationErrors = validateForm({
@@ -65,39 +79,55 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    try {
-      setIsLoading(true);
+    setIsLoading(true);
+
+    const result = await withFormErrorHandling(async () => {
       await login({
         email: formData.email,
         password: formData.password,
         rememberMe: formData.rememberMe
       });
+
       showSuccess('Login successful');
       navigate(from, { replace: true });
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to login';
-      showError(errorMessage);
-      console.error('Login error details:', error);
-    } finally {
-      setIsLoading(false);
+      return true;
+    }, (field, message) => {
+      setErrors(prev => ({ ...prev, [field]: message }));
+    }, 'User Login');
+
+    setIsLoading(false);
+
+    if (!result) {
+      console.error('Login failed');
     }
   };
 
   // Reset the mock database (for development troubleshooting)
   const handleResetMockDb = () => {
-    try {
-      mockDb.forceReset();
-      showSuccess('Mock database has been reset. Please try logging in again.');
-      // Clear form
-      setFormData({
-        email: '',
-        password: '',
-        rememberMe: false
-      });
-      setErrors({});
-    } catch (error) {
-      console.error('Error resetting mock database:', error);
-      showError('Failed to reset mock database');
+    const success = safeLocalStorage.removeItem('mock_db_users');
+    const success2 = safeLocalStorage.removeItem('mock_db_suppliers');
+    const success3 = safeLocalStorage.removeItem('mock_db_categories');
+    const success4 = safeLocalStorage.removeItem('mock_db_orders');
+
+    if (success && success2 && success3 && success4) {
+      try {
+        mockDb.forceReset();
+        showSuccess('Mock database has been reset. Please try logging in again.');
+        // Clear form
+        setFormData({
+          email: '',
+          password: '',
+          rememberMe: false
+        });
+        setErrors({});
+        clearError();
+      } catch (error) {
+        handleFormError(error, (field, message) => {
+          setErrors(prev => ({ ...prev, [field]: message }));
+        });
+      }
+    } else {
+      showError('Failed to reset mock database - localStorage error');
     }
   };
 
@@ -234,4 +264,26 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+// Wrap with error boundary
+export default withErrorBoundary(LoginPage, {
+  fallback: ({ error, resetError }) => (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="text-red-500 text-4xl mb-4">🔐</div>
+          <h2 className="text-xl font-semibold mb-2">Login Page Error</h2>
+          <p className="text-gray-600 mb-4">
+            {error.message || 'An error occurred while loading the login page'}
+          </p>
+          <button
+            onClick={resetError}
+            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    </div>
+  ),
+  context: 'LoginPage'
+});

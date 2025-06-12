@@ -4,8 +4,8 @@
  * Utility functions to map between different user data formats
  */
 
-import type{ User } from '../types/index.ts';
-import { users as mockUsers } from '../../../mockData/entities/users.ts';
+import type{ User } from '../types/index';
+import { users as mockUsers } from '../../../mockData/entities/users';
 
 /**
  * Maps a mock user to the application user format
@@ -22,7 +22,7 @@ export const mapMockUserToUser = (mockUser: any): User => {
     email: mockUser.email,
     type: mockUser.type as 'customer' | 'supplier',
     status: mockUser.status === 'pending' ? 'active' : mockUser.status, // Map 'pending' to 'active' for compatibility
-    lastLogin: mockUser.lastLogin ? new Date(mockUser.lastLogin).toISOString().split('T')[0] : '-',
+    lastLogin: mockUser.lastLogin ? new Date(mockUser.lastLogin).toISOString().split('T')[0]! : new Date().toISOString().split('T')[0]!,
     avatar: mockUser.avatar || ''
   };
 };

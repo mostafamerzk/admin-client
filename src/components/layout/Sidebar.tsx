@@ -13,17 +13,17 @@ import {
   TagIcon,
   ShoppingCartIcon,
   Bars3Icon,
-  XMarkIcon,
+
   ChevronLeftIcon,
   UserCircleIcon,
   Cog6ToothIcon,
   ChartBarIcon,
   ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
-import useUI from '../../hooks/useUI.ts';
-import useAuth from '../../hooks/useAuth.ts';
-import { ROUTES } from '../../constants/routes.ts';
-import Avatar from '../common/Avatar.tsx';
+import useUI from '../../hooks/useUI';
+import useAuth from '../../hooks/useAuth';
+import { ROUTES } from '../../constants/routes';
+import Avatar from '../common/Avatar';
 
 interface SidebarProps {
   className?: string;

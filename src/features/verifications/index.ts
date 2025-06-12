@@ -5,20 +5,20 @@
  */
 
 // Components
-export { default as VerificationList } from './components/VerificationList.tsx';
-export { default as VerificationDetails } from './components/VerificationDetails.tsx';
-export { default as ApproveVerificationModal } from './components/ApproveVerificationModal.tsx';
-export { default as RejectVerificationModal } from './components/RejectVerificationModal.tsx';
+export { default as VerificationList } from './components/VerificationList';
+export { default as VerificationDetails } from './components/VerificationDetails';
+export { default as ApproveVerificationModal } from './components/ApproveVerificationModal';
+export { default as RejectVerificationModal } from './components/RejectVerificationModal';
 
 // Utils
-// export { default as verificationMappers } from './utils/verificationMappers.ts';
-// export { getMockVerifications } from './utils/verificationMappers.ts';
+// export { default as verificationMappers } from './utils/verificationMappers';
+// export { getMockVerifications } from './utils/verificationMappers';
 
 // Hooks
-export { default as useVerifications } from './hooks/useVerifications.ts';
+export { default as useVerifications } from './hooks/useVerifications';
 
 // API
-export { default as verificationsApi } from './api/verificationsApi.ts';
+export { default as verificationsApi } from './api/verificationsApi';
 
 // Types
-export * from './types/index.ts';
+export * from './types/index';

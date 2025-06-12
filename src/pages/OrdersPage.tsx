@@ -5,27 +5,26 @@
  */
 
 import React, { useState } from 'react';
-import Card from '../components/common/Card.tsx';
-import Button from '../components/common/Button.tsx';
-import Modal from '../components/common/Modal.tsx';
-import PageHeader from '../components/layout/PageHeader.tsx';
+import { useNavigate } from 'react-router-dom';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import PageHeader from '../components/layout/PageHeader';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ROUTES } from '../constants/routes';
 import {
   OrderList,
-  OrderDetails,
   OrderFilter,
   Order,
   getMockOrders
-} from '../features/orders/index.ts';
+} from '../features/orders/index';
 
 const OrdersPage: React.FC = () => {
+  const navigate = useNavigate();
   // In a real implementation, we would use the useOrders hook
   // const { orders, isLoading, updateOrderStatus, exportOrders } = useOrders();
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'approved' | 'completed' | 'rejected'>('all');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
 
   // Use mock data from the centralized mock data file
   const [orders] = useState<Order[]>(getMockOrders());
@@ -36,8 +35,7 @@ const OrdersPage: React.FC = () => {
   });
 
   const handleOrderClick = (order: Order) => {
-    setSelectedOrder(order);
-    setIsOrderDetailsModalOpen(true);
+    navigate(ROUTES.getOrderDetailsRoute(order.id));
   };
 
   const handleExportOrders = () => {
@@ -47,12 +45,6 @@ const OrdersPage: React.FC = () => {
       setIsLoading(false);
       console.log('Exporting orders...');
     }, 1500);
-  };
-
-  const handleUpdateOrderStatus = (orderId: string, newStatus: 'pending' | 'approved' | 'rejected' | 'completed') => {
-    // In a real implementation, we would call the updateOrderStatus function from the useOrders hook
-    console.log(`Updating order ${orderId} status to ${newStatus}`);
-    setIsOrderDetailsModalOpen(false);
   };
 
   return (
@@ -84,52 +76,6 @@ const OrdersPage: React.FC = () => {
           title={`${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Orders (${filteredOrders.length})`}
         />
       </Card>
-
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <Modal
-          isOpen={isOrderDetailsModalOpen}
-          onClose={() => setIsOrderDetailsModalOpen(false)}
-          title="Order Details"
-          size="lg"
-          footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setIsOrderDetailsModalOpen(false)}
-              >
-                Close
-              </Button>
-              {selectedOrder.status === 'pending' && (
-                <>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'rejected')}
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    variant="success"
-                    onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'approved')}
-                  >
-                    Approve
-                  </Button>
-                </>
-              )}
-              {selectedOrder.status === 'approved' && (
-                <Button
-                  variant="primary"
-                  onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
-                >
-                  Mark as Completed
-                </Button>
-              )}
-            </>
-          }
-        >
-          <OrderDetails order={selectedOrder} />
-        </Modal>
-      )}
     </div>
   );
 };

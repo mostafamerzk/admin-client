@@ -4,7 +4,7 @@
  * This component displays a list of users in a data table.
  */
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import BaseEntityList from '../../../components/common/EntityList/BaseEntityList';
 import type { Column } from '../../../components/common/DataTable';
@@ -30,13 +30,18 @@ interface UserListProps {
 const UserList: React.FC<UserListProps> = ({
   users,
   onViewUser,
-  onEditUser,
+  onEditUser: _onEditUser,
   onDeleteUser,
-  onUserClick,
+  onUserClick: _onUserClick, // Keep for interface compatibility but use navigation instead
   title = 'Users',
   loading = false
 }) => {
   const navigate = useNavigate();
+
+  // Handle row click to navigate to user edit page (which serves as details page)
+  const handleRowClick = (user: User) => {
+    navigate(ROUTES.getUserEditRoute(user.id));
+  };
   
   // Define user-specific columns
   const columns: Column<User>[] = [
@@ -44,7 +49,7 @@ const UserList: React.FC<UserListProps> = ({
       key: 'name',
       label: 'Name',
       sortable: true,
-      render: (value, user) => (
+      render: (_value, user) => (
         <div className="flex items-center">
           {user.avatar ? (
             <img
@@ -119,7 +124,7 @@ const UserList: React.FC<UserListProps> = ({
     <BaseEntityList<User>
       data={users}
       columns={columns}
-      onRowClick={onUserClick}
+      onRowClick={handleRowClick}
       title={title}
       pagination={true}
       loading={loading}

@@ -1,5 +1,5 @@
 import React from 'react';
-import MetricCard from '../../features/analytics/components/MetricCard.tsx';
+import MetricCard from '../../features/analytics/components/MetricCard';
 
 export interface Metric {
   title: string;

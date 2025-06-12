@@ -5,8 +5,8 @@
  */
 
 import React, { useState } from 'react';
-import { ApiSettings } from '../types/index.ts';
-import Button from '../../../components/common/Button.tsx';
+import { ApiSettings } from '../types/index';
+import Button from '../../../components/common/Button';
 
 interface ApiSettingsFormProps {
   settings: ApiSettings;

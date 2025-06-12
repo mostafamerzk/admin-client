@@ -6,13 +6,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Card from '../components/common/Card.tsx';
-import EntityForm from '../components/common/EntityForm.tsx';
-import PageHeader from '../components/layout/PageHeader.tsx';
+import Card from '../components/common/Card';
+import EntityForm from '../components/common/EntityForm';
+import PageHeader from '../components/layout/PageHeader';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { Supplier } from '../features/suppliers/types/index.ts';
-import { ROUTES } from '../constants/routes.ts';
-import useNotification from '../hooks/useNotification.ts';
+import { Supplier } from '../features/suppliers/types/index';
+import { ROUTES } from '../constants/routes';
+import useNotification from '../hooks/useNotification';
 
 const SupplierEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

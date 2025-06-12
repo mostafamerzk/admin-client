@@ -12,10 +12,10 @@ import {
   QuestionMarkCircleIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import useAuth from '../../hooks/useAuth.ts';
-import Avatar from '../common/Avatar.tsx';
-import Badge from '../common/Badge.tsx';
-import { ROUTES } from '../../constants/routes.ts';
+import useAuth from '../../hooks/useAuth';
+import Avatar from '../common/Avatar';
+import Badge from '../common/Badge';
+import { ROUTES } from '../../constants/routes';
 
 interface HeaderProps {
   className?: string;
@@ -213,7 +213,7 @@ const Header: React.FC<HeaderProps> = ({
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsProfileDropdownOpen(false)}
               >
-                Settings
+                App Settings
               </Link>
               <div className="border-t border-gray-100 my-1"></div>
               <button

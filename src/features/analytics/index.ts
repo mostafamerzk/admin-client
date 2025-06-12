@@ -5,17 +5,17 @@
  */
 
 // Components
-export { default as TimeRangeSelector } from './components/TimeRangeSelector.tsx';
-export { default as MetricCard } from './components/MetricCard.tsx';
-export { default as BarChart } from './components/BarChart.tsx';
-export { default as PieChart } from './components/PieChart.tsx';
-export { default as SupplierTable } from './components/SupplierTable.tsx';
+export { default as TimeRangeSelector } from './components/TimeRangeSelector';
+export { default as MetricCard } from './components/MetricCard';
+export { default as BarChart } from './components/BarChart';
+export { default as PieChart } from './components/PieChart';
+export { default as SupplierTable } from './components/SupplierTable';
 
 // Hooks
-export { default as useAnalytics } from './hooks/useAnalytics.ts';
+export { default as useAnalytics } from './hooks/useAnalytics';
 
 // API
-export { default as analyticsApi } from './api/analyticsApi.ts';
+export { default as analyticsApi } from './api/analyticsApi';
 
 // Types
-export * from './types/index.ts';
+export * from './types/index';

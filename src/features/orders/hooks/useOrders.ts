@@ -1,19 +1,27 @@
 /**
  * Orders Hook
- * 
+ *
  * This hook provides methods and state for working with orders.
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import type { Order, OrderUpdateData } from '../types/index.ts';
-import ordersApi from '../api/ordersApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import type { Order, OrderUpdateData } from '../types/index';
+import ordersApi from '../api/ordersApi';
+import useNotification from '../../../hooks/useNotification';
 
 export const useOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { showNotification } = useNotification();
+
+  // Use ref to avoid dependency issues
+  const showNotificationRef = useRef(showNotification);
+
+  // Update ref when showNotification changes
+  useEffect(() => {
+    showNotificationRef.current = showNotification;
+  });
 
   // Fetch all orders
   const fetchOrders = useCallback(async () => {
@@ -24,7 +32,7 @@ export const useOrders = () => {
       setOrders(data);
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to fetch orders'
@@ -32,7 +40,7 @@ export const useOrders = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Get an order by ID
   const getOrderById = useCallback(async (id: string) => {
@@ -43,7 +51,7 @@ export const useOrders = () => {
       return order;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: `Failed to fetch order ${id}`
@@ -52,7 +60,7 @@ export const useOrders = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Update an order
   const updateOrder = useCallback(async (id: string, orderData: OrderUpdateData) => {
@@ -60,10 +68,10 @@ export const useOrders = () => {
     setError(null);
     try {
       const updatedOrder = await ordersApi.updateOrder(id, orderData);
-      setOrders(prevOrders => 
+      setOrders(prevOrders =>
         prevOrders.map(order => order.id === id ? updatedOrder : order)
       );
-      showNotification({
+      showNotificationRef.current({
         type: 'success',
         title: 'Success',
         message: 'Order updated successfully'
@@ -71,7 +79,7 @@ export const useOrders = () => {
       return updatedOrder;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to update order'
@@ -80,7 +88,7 @@ export const useOrders = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Cancel an order
   const cancelOrder = useCallback(async (id: string) => {
@@ -88,10 +96,10 @@ export const useOrders = () => {
     setError(null);
     try {
       const cancelledOrder = await ordersApi.updateOrderStatus(id, 'rejected');
-      setOrders(prevOrders => 
+      setOrders(prevOrders =>
         prevOrders.map(order => order.id === id ? cancelledOrder : order)
       );
-      showNotification({
+      showNotificationRef.current({
         type: 'success',
         title: 'Success',
         message: 'Order cancelled successfully'
@@ -99,7 +107,7 @@ export const useOrders = () => {
       return cancelledOrder;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to cancel order'
@@ -108,7 +116,7 @@ export const useOrders = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Get orders by status
   const getOrdersByStatus = useCallback(async (status: Order['status']) => {
@@ -119,7 +127,7 @@ export const useOrders = () => {
       return filteredOrders;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: `Failed to fetch orders with status ${status}`
@@ -128,7 +136,7 @@ export const useOrders = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Get orders by customer
   const getOrdersByCustomer = useCallback(async (customerId: string) => {
@@ -139,7 +147,7 @@ export const useOrders = () => {
       return customerOrders;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: `Failed to fetch orders for customer ${customerId}`
@@ -148,7 +156,33 @@ export const useOrders = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
+
+  // Delete an order
+  const deleteOrder = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await ordersApi.deleteOrder(id);
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== id));
+      showNotificationRef.current({
+        type: 'success',
+        title: 'Success',
+        message: 'Order deleted successfully'
+      });
+    } catch (err) {
+      setError(err as Error);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete order';
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: errorMessage
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Load orders on mount
   useEffect(() => {
@@ -163,6 +197,7 @@ export const useOrders = () => {
     getOrderById,
     updateOrder,
     cancelOrder,
+    deleteOrder,
     getOrdersByStatus,
     getOrdersByCustomer
   };

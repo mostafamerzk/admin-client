@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { GeneralSettings } from '../types/index.ts';
-import Button from '../../../components/common/Button.tsx';
+import { GeneralSettings } from '../types/index';
+import Button from '../../../components/common/Button';
 
 interface GeneralSettingsFormProps {
   settings: GeneralSettings;

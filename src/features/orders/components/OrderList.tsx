@@ -30,7 +30,7 @@ const OrderList: React.FC<OrderListProps> = ({
       label: 'Order ID', 
       sortable: true,
       render: (value: string) => (
-        <span className="font-medium text-primary">{value}</span>
+        <span className="font-medium text-black">{value}</span>
       )
     },
     { key: 'customerName', label: 'Customer', sortable: true },

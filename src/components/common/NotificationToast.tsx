@@ -11,7 +11,7 @@ import {
   InformationCircleIcon, 
   XMarkIcon 
 } from '@heroicons/react/24/outline';
-import type { Notification, NotificationType } from '../../context/NotificationContext.tsx';
+import type { Notification, NotificationType } from '../../context/NotificationContext';
 
 interface NotificationToastProps {
   notification: Notification;

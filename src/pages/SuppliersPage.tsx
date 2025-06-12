@@ -5,20 +5,20 @@
  */
 
 import React, { useState } from 'react';
-import Button from '../components/common/Button.tsx';
-import Card from '../components/common/Card.tsx';
-import Modal from '../components/common/Modal.tsx';
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/common/Button';
+import Card from '../components/common/Card';
+import Modal from '../components/common/Modal';
 import { BuildingOffice2Icon } from '@heroicons/react/24/outline';
-import {
-  SupplierList,
-  SupplierDetails,
-  AddSupplierForm,
-  Supplier,
-  SupplierFormData,
-  getMockSuppliers
-} from '../features/suppliers/index.ts';
+import { ROUTES } from '../constants/routes';
+import SupplierList from '../features/suppliers/components/SupplierList';
+import SupplierDetails from '../features/suppliers/components/SupplierDetails';
+import AddSupplierForm from '../features/suppliers/components/AddSupplierForm';
+import type { Supplier, SupplierFormData } from '../features/suppliers/types';
+import { getMockSuppliers } from '../features/suppliers/utils/supplierMappers';
 
 const SuppliersPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'verified' | 'rejected'>('all');
   const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
   const [isAddingSupplier, setIsAddingSupplier] = useState(false);
@@ -45,6 +45,11 @@ const SuppliersPage: React.FC = () => {
     setIsSupplierDetailsModalOpen(true);
   };
 
+  const handleEditSupplier = (supplier: Supplier) => {
+    // Navigate to the supplier profile page
+    navigate(ROUTES.getSupplierProfileRoute(supplier.id));
+  };
+
   const handleDeleteSupplier = (supplier: Supplier) => {
     if (window.confirm(`Are you sure you want to delete ${supplier.name}?`)) {
       setSuppliers(suppliers.filter(s => s.id !== supplier.id));
@@ -65,7 +70,7 @@ const SuppliersPage: React.FC = () => {
         phone: supplierData.phone,
         status: 'active',
         verificationStatus: 'pending',
-        joinDate: new Date().toISOString().split('T')[0],
+        joinDate: new Date().toISOString().split('T')[0]!,
         address: supplierData.address,
         categories: supplierData.categories,
         logo: supplierData.logo || '',
@@ -87,7 +92,7 @@ const SuppliersPage: React.FC = () => {
         return {
           ...supplier,
           verificationStatus: newStatus,
-          joinDate: new Date().toISOString().split('T')[0]
+          joinDate: new Date().toISOString().split('T')[0]!
         };
       }
       return supplier;
@@ -146,7 +151,7 @@ const SuppliersPage: React.FC = () => {
           suppliers={filteredSuppliers}
           onSupplierClick={handleSupplierClick}
           onViewSupplier={handleViewSupplier}
-          onEditSupplier={(supplier) => console.log('Edit supplier:', supplier)}
+          onEditSupplier={handleEditSupplier}
           onDeleteSupplier={handleDeleteSupplier}
           title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Suppliers (${filteredSuppliers.length})`}
         />

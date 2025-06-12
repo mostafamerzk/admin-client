@@ -7,9 +7,9 @@
 
 import React, { memo } from 'react';
 import type { ReactNode } from 'react';
-import Sidebar from './Sidebar.tsx';
-import Header from './Header.tsx';
-import useUI from '../../hooks/useUI.ts';
+import Sidebar from './Sidebar';
+import Header from './Header';
+import useUI from '../../hooks/useUI';
 
 interface MainLayoutProps {
   children: ReactNode;

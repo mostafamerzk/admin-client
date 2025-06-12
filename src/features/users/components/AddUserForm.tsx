@@ -4,11 +4,13 @@
  * This component provides a form for adding new users.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../../../components/common/Button';
 import FormField from '../../../components/common/FormField';
+import ImageUpload from '../../../components/common/ImageUpload';
 import { validateForm, validationRules } from '../../../utils/validation';
-import type { UserFormData } from '../types';
+import { getBusinessTypes } from '../api/businessTypesApi';
+import type { UserFormData, BusinessType } from '../types';
 
 interface AddUserFormProps {
   onSubmit: (userData: UserFormData & { confirmPassword: string; sendInvite: boolean }) => void;
@@ -22,12 +24,35 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel, isLoading
     email: '',
     type: 'customer' as const,
     phone: '',
+    address: '',
+    businessType: '',
     password: '',
     confirmPassword: '',
-    sendInvite: true
+    sendInvite: true,
+    image: null as File | null
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
+  const [loadingBusinessTypes, setLoadingBusinessTypes] = useState(false);
+
+  // Load business types on component mount
+  useEffect(() => {
+    const loadBusinessTypes = async () => {
+      setLoadingBusinessTypes(true);
+      try {
+        const types = await getBusinessTypes();
+        setBusinessTypes(types);
+      } catch (error) {
+        console.error('Failed to load business types:', error);
+        // You might want to show a notification here
+      } finally {
+        setLoadingBusinessTypes(false);
+      }
+    };
+
+    loadBusinessTypes();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -45,6 +70,15 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel, isLoading
     }
   };
 
+  const handleImageChange = (file: File | null) => {
+    setFormData(prev => ({ ...prev, image: file }));
+
+    // Clear error when image is changed
+    if (errors.image) {
+      setErrors(prev => ({ ...prev, image: '' }));
+    }
+  };
+
   const validateUserForm = () => {
     const formValidationRules = {
       name: [validationRules.required('Name is required')],
@@ -52,8 +86,10 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel, isLoading
       type: [validationRules.required('User type is required')],
       password: [validationRules.required('Password is required'), validationRules.password()],
       confirmPassword: [validationRules.required('Confirm password is required'), validationRules.passwordMatch()],
+      address: [validationRules.required('Address is required')],
+      businessType: [validationRules.required('Business type is required')],
     };
-    
+
     const newErrors = validateForm(formData, formValidationRules);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -63,7 +99,12 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel, isLoading
     e.preventDefault();
 
     if (validateUserForm()) {
-      onSubmit(formData);
+      const submitData = {
+        ...formData,
+        // Include image field, even if null
+        image: formData.image
+      };
+      onSubmit(submitData);
     }
   };
 
@@ -110,6 +151,35 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel, isLoading
           onChange={handleChange}
           error={errors.phone}
         />
+
+        <FormField
+          label="Address"
+          name="address"
+          type="textarea"
+          value={formData.address}
+          onChange={handleChange}
+          error={errors.address}
+          required
+          placeholder="Enter full address"
+        />
+
+        <FormField
+          label="Business Type"
+          name="businessType"
+          type="select"
+          value={formData.businessType}
+          onChange={handleChange}
+          error={errors.businessType}
+          required
+          loading={loadingBusinessTypes}
+          options={[
+            { value: '', label: 'Select Business Type' },
+            ...businessTypes.map(type => ({
+              value: type.id,
+              label: type.name
+            }))
+          ]}
+        />
         
         <FormField
           label="Password"
@@ -131,7 +201,18 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel, isLoading
           required
         />
       </div>
-      
+
+      {/* Image Upload Field */}
+      <ImageUpload
+        label="Profile Picture"
+        name="image"
+        value={formData.image}
+        onChange={handleImageChange}
+        error={errors.image || undefined}
+        maxSize={5 * 1024 * 1024} // 5MB
+        allowedTypes={['image/jpeg', 'image/png', 'image/gif', 'image/webp']}
+      />
+
       <div className="flex items-center">
         <FormField
           label="Send invitation email"

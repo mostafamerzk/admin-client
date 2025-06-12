@@ -5,17 +5,17 @@
  */
 
 // Components
-export { default as ProfileTabs } from './components/ProfileTabs.tsx';
-export { default as ProfileInfo } from './components/ProfileInfo.tsx';
-export { default as SecuritySettings } from './components/SecuritySettings.tsx';
-export { default as NotificationSettings } from './components/NotificationSettings.tsx';
-export { default as ActivityLog } from './components/ActivityLog.tsx';
+export { default as ProfileTabs } from './components/ProfileTabs';
+export { default as ProfileInfo } from './components/ProfileInfo';
+export { default as SecuritySettings } from './components/SecuritySettings';
+export { default as NotificationSettings } from './components/NotificationSettings';
+export { default as ActivityLog } from './components/ActivityLog';
 
 // Hooks
-export { default as useProfile } from './hooks/useProfile.ts';
+export { default as useProfile } from './hooks/useProfile';
 
 // API
-export { default as profileApi } from './api/profileApi.ts';
+export { default as profileApi } from './api/profileApi';
 
 // Types
-export * from './types/index.ts';
+export * from './types/index';

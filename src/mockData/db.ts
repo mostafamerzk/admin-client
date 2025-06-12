@@ -6,12 +6,12 @@
  * basic CRUD operations.
  */
 
-import type { User } from './entities/users.ts';  
-import { users } from './entities/users.ts';  
-import { suppliers, type Supplier } from './entities/suppliers.ts';
-import { categories, type Category } from './entities/categories.ts';
-import { orders, type Order } from './entities/orders.ts';
-import { dashboardStats, type DashboardStats } from './entities/dashboard.ts';
+import type { User } from './entities/users';  
+import { users } from './entities/users';  
+import { suppliers, type Supplier } from './entities/suppliers';
+import { categories, type Category } from './entities/categories';
+import { orders, type Order } from './entities/orders';
+import { dashboardStats, type DashboardStats } from './entities/dashboard';
 
 // Define database structure
 interface Database {
@@ -31,13 +31,13 @@ const STORAGE_KEYS = {
 };
 
 // Type mapping for collections to their respective types
-type CollectionType<K extends keyof Database> =
-  K extends 'users' ? User[] :
-  K extends 'suppliers' ? Supplier[] :
-  K extends 'categories' ? Category[] :
-  K extends 'orders' ? Order[] :
-  K extends 'dashboardStats' ? DashboardStats :
-  never;
+// type _CollectionType<K extends keyof Database> =
+//   K extends 'users' ? User[] :
+//   K extends 'suppliers' ? Supplier[] :
+//   K extends 'categories' ? Category[] :
+//   K extends 'orders' ? Order[] :
+//   K extends 'dashboardStats' ? DashboardStats :
+//   never;
 
 // Helper to load data from localStorage
 const loadFromStorage = <T>(key: string, defaultData: T[]): T[] => {

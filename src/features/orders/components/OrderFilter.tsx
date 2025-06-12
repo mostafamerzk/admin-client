@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import Button from '../../../components/common/Button.tsx';
+import Button from '../../../components/common/Button';
 
 interface OrderFilterProps {
   activeFilter: 'all' | 'pending' | 'approved' | 'completed' | 'rejected';

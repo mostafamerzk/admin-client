@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { API_URL, USE_MOCK_API } from '../../constants/config.ts';
-import mockApi from '../../services/mockApi.ts';
-import type { AxiosInstance, AxiosRequestConfig } from './types.ts';
-import type { ApiResponse, MiddlewareConfig, CacheConfig, RetryConfig } from './types.ts';
-import { authMiddleware, loggingMiddleware } from './middlewares.ts';
-import { CacheManager } from './cache.ts';
+import { API_URL, USE_MOCK_API } from '../../constants/config';
+import mockApi from '../../services/mockApi';
+import type { AxiosInstance, AxiosRequestConfig } from './types';
+import type { ApiResponse, MiddlewareConfig, CacheConfig, RetryConfig } from './types';
+import { authMiddleware, loggingMiddleware } from './middlewares';
+import { CacheManager } from './cache';
 import { setupInterceptors } from './interceptors';
 
 // Add auth middleware to the default middlewares
@@ -36,7 +36,7 @@ export class ApiClient {
   private cacheManager: CacheManager;
   private retryConfig: RetryConfig;
 
-  constructor(baseURL: string = API_URL, middlewares: MiddlewareConfig[] = []) {
+  constructor(_baseURL: string = API_URL, middlewares: MiddlewareConfig[] = []) {
     this.middlewares = [
       ...defaultMiddlewares,
       ...middlewares,
@@ -199,7 +199,7 @@ export class ApiClient {
 export const createApiClient = (
   baseURL: string = API_URL,
   middlewares: MiddlewareConfig[] = [],
-  config: {
+  _config: {
     cache?: Partial<CacheConfig>;
     retry?: Partial<RetryConfig>;
   } = {}

@@ -5,9 +5,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { Profile, ProfileUpdateData, PasswordChangeData } from '../types/index.ts';
-import profileApi from '../api/profileApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import { Profile, ProfileUpdateData, PasswordChangeData } from '../types/index';
+import profileApi from '../api/profileApi';
+import useNotification from '../../../hooks/useNotification';
 
 export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -120,7 +120,7 @@ export const useProfile = () => {
   }, [showNotification]);
 
   // Update profile preferences
-  const updatePreferences = useCallback(async (preferences: Profile['preferences']) => {
+  const updatePreferences = useCallback(async (preferences: Profile['notificationsEnabled']) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -129,7 +129,7 @@ export const useProfile = () => {
         if (!prevProfile) return null;
         return {
           ...prevProfile,
-          preferences: updatedPreferences
+          notificationsEnabled: updatedPreferences
         };
       });
       showNotification({

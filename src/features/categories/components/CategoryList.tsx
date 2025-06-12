@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import DataTable from '../../../components/common/DataTable.tsx';
-import type{ Category } from '../types/index.ts';
+import DataTable from '../../../components/common/DataTable';
+import type{ Category } from '../types/index';
 import { 
   CheckCircleIcon, 
   XCircleIcon,
@@ -22,6 +22,7 @@ interface CategoryListProps {
   onEditCategory?: (category: Category) => void;
   onDeleteCategory?: (category: Category) => void;
   title?: string;
+  loading?: boolean;
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({
@@ -30,7 +31,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
   onViewCategory,
   onEditCategory,
   onDeleteCategory,
-  title = 'Categories'
+  title = 'Categories',
+  loading = false
 }) => {
   const columns = [
     { 
@@ -126,6 +128,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
       onRowClick={onCategoryClick}
       title={title}
       pagination={true}
+      loading={loading}
     />
   );
 };

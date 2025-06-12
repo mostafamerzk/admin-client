@@ -1,6 +1,6 @@
 /**
  * User Details Component
- * 
+ *
  * This component displays detailed information about a user.
  */
 
@@ -22,11 +22,11 @@ interface UserDetailsProps {
 
 const UserDetails: React.FC<UserDetailsProps> = ({ user, userOrders = [] }) => {
   const navigate = useNavigate();
-  
+
   const handleViewOrder = (order: Order) => {
     navigate(ROUTES.getOrderDetailsRoute(order.id));
   };
-  
+
   return (
     <div className="space-y-6">
       <DetailSection
@@ -41,7 +41,7 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user, userOrders = [] }) => {
           <DetailItem label="Last login" value={user.lastLogin} />
         </DetailList>
       </DetailSection>
-      
+
       <OrdersSection
         orders={userOrders}
         title="User Orders"
@@ -54,6 +54,3 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user, userOrders = [] }) => {
 };
 
 export default UserDetails;
-
-
-

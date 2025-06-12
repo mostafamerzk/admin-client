@@ -7,9 +7,9 @@
 import React from 'react';
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth.ts';
-import { hasAnyRole } from '../../features/auth/utils/authUtils.ts';
-import { ROUTES } from '../../constants/routes.ts';
+import useAuth from '../../hooks/useAuth';
+import { hasAnyRole } from '../../features/auth/utils/authUtils';
+import { ROUTES } from '../../constants/routes';
 
 interface ProtectedRouteProps {
   children: ReactNode;

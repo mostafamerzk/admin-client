@@ -1,12 +1,12 @@
 import React from 'react';
-import Card from '../../../components/common/Card.tsx';
+import Card from '../../../components/common/Card';
 
 // Helper function to get appropriate background class for icon
 const getIconBackgroundClass = (icon: React.ReactNode): string => {
   if (!React.isValidElement(icon)) return 'bg-primary bg-opacity-10';
 
   // Get the className from the icon props
-  const className = icon.props?.className || '';
+  const className = icon.props.className || '';
 
   // Debug the className to see what we're working with
   console.log('Icon className:', className);
@@ -51,7 +51,7 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <Card
       className="transition-transform duration-300 hover:scale-105"
-      {...(onClick ? { onClick: () => onClick() } : {})}
+      {...(onClick && { onClick })}
       hoverable={hoverable}
     >
       <div className="flex items-center justify-between">
@@ -80,13 +80,20 @@ const StatCard: React.FC<StatCardProps> = ({
 
         <div className={`p-3 rounded-full ${getIconBackgroundClass(icon)}`}>
           {/* Ensure consistent icon styling while preserving color */}
-          {React.isValidElement(icon) ?
-            React.cloneElement(icon as React.ReactElement, {
-              className: `w-6 h-6 ${(icon as React.ReactElement).props.className?.match(/text-[a-z0-9-]+/) ?
-                (icon as React.ReactElement).props.className?.match(/text-[a-z0-9-]+/)[0] : 'text-primary'}`
-            }) :
+          {React.isValidElement(icon) ? (
+            (() => {
+              const iconElement = icon as React.ReactElement;
+              const existingClassName = iconElement.props.className || '';
+              const colorMatch = existingClassName.match(/text-[a-z0-9-]+/);
+              const colorClass = colorMatch ? colorMatch[0] : 'text-primary';
+
+              return React.cloneElement(iconElement, {
+                className: `w-6 h-6 ${colorClass}`
+              });
+            })()
+          ) : (
             icon
-          }
+          )}
         </div>
       </div>
     </Card>
@@ -94,6 +101,3 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 export default StatCard;
-
-
-

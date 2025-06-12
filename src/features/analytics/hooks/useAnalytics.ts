@@ -11,9 +11,7 @@ import type {
   SalesTrendData,
   UserGrowthData,
   CategoryDistributionData,
-  TopProductData,
-  TopSupplierData,
-  GeographicData,
+
   AnalyticsTimeRange,
   TimeRange,
   ChartData,
@@ -21,10 +19,10 @@ import type {
   CategoryDistribution,
   Supplier
 } from '../types';
-import analyticsApi from '../api/analyticsApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
-import { mockDb } from '../../../mockData/db.ts';
-import type { DashboardStats } from '../../../mockData/entities/dashboard.ts';
+import analyticsApi from '../api/analyticsApi';
+import useNotification from '../../../hooks/useNotification';
+import { mockDb } from '../../../mockData/db';
+import type { DashboardStats } from '../../../mockData/entities/dashboard';
 
 export const useAnalytics = (defaultTimeRange: AnalyticsTimeRange = 'month') => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);

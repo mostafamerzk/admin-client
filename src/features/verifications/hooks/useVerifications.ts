@@ -5,9 +5,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type{ Verification, VerificationUpdateData } from '../types/index.ts';
-import verificationsApi from '../api/verificationsApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import type{ Verification, VerificationUpdateData } from '../types/index';
+import verificationsApi from '../api/verificationsApi';
+import useNotification from '../../../hooks/useNotification';
 
 export const useVerifications = () => {
   const [verifications, setVerifications] = useState<Verification[]>([]);

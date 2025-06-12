@@ -8,6 +8,7 @@ export interface Settings {
   general: GeneralSettings;
   notifications: NotificationSettings;
   security: SecuritySettings;
+  appearance: AppearanceSettings;
   api: ApiSettings;
   billing: BillingSettings;
 }
@@ -30,6 +31,13 @@ export interface NotificationSettings {
   newUsers: boolean;
   newOrders: boolean;
   supplierVerifications: boolean;
+}
+
+export interface AppearanceSettings {
+  theme: 'light' | 'dark' | 'system';
+  primaryColor: string;
+  fontSize: 'small' | 'medium' | 'large';
+  compactMode: boolean;
 }
 
 export interface ApiSettings {
@@ -76,4 +84,4 @@ export interface BillingInvoice {
   downloadUrl: string;
 }
 
-export type SettingsTab = 'general' | 'security' | 'notifications' | 'api' | 'billing';
+export type SettingsTab = 'general' | 'security' | 'api' | 'billing';

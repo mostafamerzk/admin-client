@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { NotificationSettings } from '../types/index.ts';
-import Button from '../../../components/common/Button.tsx';
+import { NotificationSettings } from '../types/index';
+import Button from '../../../components/common/Button';
 
 interface NotificationSettingsFormProps {
   settings: NotificationSettings;

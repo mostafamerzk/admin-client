@@ -41,3 +41,10 @@ export interface VerificationFilters {
     end: string;
   };
 }
+
+export interface VerificationUpdateData {
+  status?: 'pending' | 'verified' | 'rejected';
+  notes?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+}

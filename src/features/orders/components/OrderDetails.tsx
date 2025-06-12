@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import type{ Order, OrderItem } from '../types/index.ts';
-import { formatCurrency, formatDate } from '../../../utils/formatters.ts';
+import type{ Order, OrderItem } from '../types/index';
+import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { 
   CheckCircleIcon, 
   ClockIcon, 
@@ -15,7 +15,7 @@ import {
   CalendarIcon,
   UserIcon,
   BuildingOffice2Icon,
-  CurrencyDollarIcon
+
 } from '@heroicons/react/24/outline';
 
 interface OrderDetailsProps {

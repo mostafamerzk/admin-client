@@ -1,6 +1,6 @@
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from './types.ts';
-import type { MiddlewareConfig } from './types.ts';
-import { CacheManager } from './cache.ts';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from './types';
+import type { MiddlewareConfig } from './types';
+import { CacheManager } from './cache';
 
 export const setupInterceptors = (
   instance: AxiosInstance,

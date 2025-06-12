@@ -7,16 +7,16 @@
 
 import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import{
   authApi,
   type AuthUser,
   type LoginCredentials,
   type ForgotPasswordRequest,
   type ResetPasswordRequest
-} from '../features/auth/index.ts';
-import useNotification from '../hooks/useNotification.ts';
-import { ROUTES } from '../constants/routes.ts';
+} from '../features/auth/index';
+import useNotification from '../hooks/useNotification';
+import { ROUTES } from '../constants/routes';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
+
   const { showNotification } = useNotification();
 
   // Check if the user is authenticated on mount

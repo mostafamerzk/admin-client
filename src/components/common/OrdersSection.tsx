@@ -76,7 +76,8 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({
                         variant="text"
                         size="sm"
                         onClick={() => onViewOrder(order)}
-                        icon={<EyeIcon className="w-4 h-4" />}
+                        icon={<EyeIcon className="w-4 h-4 text-black" />}
+                        className="text-black hover:text-gray-700 hover:bg-gray-100"
                       >
                         View
                       </Button>

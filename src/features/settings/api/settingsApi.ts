@@ -5,7 +5,7 @@
  */
 
 import apiClient from '../../../api';
-import type { Settings, NotificationSettings } from '../types';
+import type { Settings, NotificationSettings, GeneralSettings, SecuritySettings, AppearanceSettings } from '../types';
 
 export const settingsApi = {
   /**
@@ -68,6 +68,70 @@ export const settingsApi = {
       return response.data;
     } catch (error) {
       console.error('Error updating notification settings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update general settings
+   */
+  updateGeneralSettings: async (settings: Partial<GeneralSettings>): Promise<GeneralSettings> => {
+    try {
+      const response = await apiClient.put<GeneralSettings>('/settings/general', settings);
+      if (!response.data) {
+        throw new Error('Failed to update general settings');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error updating general settings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update security settings
+   */
+  updateSecuritySettings: async (settings: Partial<SecuritySettings>): Promise<SecuritySettings> => {
+    try {
+      const response = await apiClient.put<SecuritySettings>('/settings/security', settings);
+      if (!response.data) {
+        throw new Error('Failed to update security settings');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error updating security settings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update appearance settings
+   */
+  updateAppearanceSettings: async (settings: Partial<AppearanceSettings>): Promise<AppearanceSettings> => {
+    try {
+      const response = await apiClient.put<AppearanceSettings>('/settings/appearance', settings);
+      if (!response.data) {
+        throw new Error('Failed to update appearance settings');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error updating appearance settings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Reset settings to defaults
+   */
+  resetSettings: async (): Promise<Settings> => {
+    try {
+      const response = await apiClient.post<Settings>('/settings/reset');
+      if (!response.data) {
+        throw new Error('Failed to reset settings');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error resetting settings:', error);
       throw error;
     }
   }

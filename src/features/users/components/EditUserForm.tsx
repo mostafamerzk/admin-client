@@ -5,11 +5,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import Button from '../../../components/common/Button.tsx';
-import Card from '../../../components/common/Card.tsx';
-import { validateForm, validationRules } from '../../../utils/validation.ts';
-import type { User, UserFormData } from '../types/index.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import Button from '../../../components/common/Button';
+import Card from '../../../components/common/Card';
+import { validateForm, validationRules } from '../../../utils/validation';
+import type { User, UserFormData } from '../types/index';
 
 interface EditUserFormProps {
   user: User;
@@ -29,7 +28,6 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { showNotification } = useNotification();
 
   // Initialize form with user data
   useEffect(() => {
@@ -76,13 +74,10 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     if (validateUserForm()) {
       try {
         await onSubmit(formData);
-        showNotification({
-          type: 'success',
-          title: 'Success',
-          message: 'User updated successfully'
-        });
+        // Success notification is handled in the parent component
       } catch (error) {
         // Error handling is done in the parent component
+        console.error('Form submission error:', error);
       }
     }
   };

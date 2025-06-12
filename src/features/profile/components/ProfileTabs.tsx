@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import type { ProfileTab } from '../types/index.ts';
-import Tabs, { type Tab } from '../../../components/common/Tabs.tsx';
+import type { ProfileTab } from '../types/index';
+import Tabs, { type Tab } from '../../../components/common/Tabs';
 import {
   UserCircleIcon,
   ShieldCheckIcon,

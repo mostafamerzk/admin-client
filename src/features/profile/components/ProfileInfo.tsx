@@ -4,40 +4,66 @@
  * This component displays and allows editing of the user's profile information.
  */
 
-import React from 'react';
-import type{ UserProfile } from '../types/index.ts';
+import React, { useRef } from 'react';
+import type{ UserProfile } from '../types/index';
 import { CameraIcon } from '@heroicons/react/24/outline';
+import Avatar from '../../../components/common/Avatar';
 
 interface ProfileInfoProps {
   profile: UserProfile;
   isEditing: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onAvatarChange?: (file: File) => void;
 }
 
 const ProfileInfo: React.FC<ProfileInfoProps> = ({
   profile,
   isEditing,
-  onInputChange
+  onInputChange,
+  onAvatarChange
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    if (isEditing && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onAvatarChange) {
+      onAvatarChange(file);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-gray-100">
         <div className="relative">
-          {profile.avatar ? (
-            <img 
-              src={profile.avatar} 
-              alt={profile.name} 
-              className="w-24 h-24 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-primary bg-opacity-10 flex items-center justify-center text-primary text-3xl font-bold">
-              {profile.name.charAt(0)}
-            </div>
-          )}
+          <Avatar
+            {...(profile.avatar && profile.avatar.trim() && { src: profile.avatar })}
+            alt={profile.name}
+            name={profile.name}
+            size="2xl"
+            className="w-24 h-24"
+          />
           {isEditing && (
-            <button className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-50">
-              <CameraIcon className="w-5 h-5 text-gray-600" />
-            </button>
+            <>
+              <button
+                onClick={handleAvatarClick}
+                className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-50"
+              >
+                <CameraIcon className="w-5 h-5 text-gray-600" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </>
           )}
         </div>
         <div className="flex-1">

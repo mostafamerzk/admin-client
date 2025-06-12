@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { SecuritySettings } from '../types/index.ts';
-import Button from '../../../components/common/Button.tsx';
+import { SecuritySettings } from '../types/index';
+import Button from '../../../components/common/Button';
 
 interface SecuritySettingsFormProps {
   settings: SecuritySettings;

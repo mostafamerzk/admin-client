@@ -17,7 +17,7 @@ interface StatusBadgeProps {
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({
   status,
-  type = 'user',
+  type: _type = 'user',
   className = ''
 }) => {
   const statusKey = status.toLowerCase();

@@ -12,10 +12,10 @@ import type {
   RegisterCredentials,
   ForgotPasswordRequest,
   ResetPasswordRequest
-} from '../types/index.ts';
-import authApi from '../api/authApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
-import { ROUTES } from '../../../constants/routes.ts';
+} from '../types/index';
+import authApi from '../api/authApi';
+import useNotification from '../../../hooks/useNotification';
+import { ROUTES } from '../../../constants/routes';
 
 export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);

@@ -6,7 +6,7 @@
 
 import React, { useState, useMemo, memo } from 'react';
 import { MagnifyingGlassIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { CONFIG } from '../../constants/config.ts';
+import { CONFIG } from '../../constants/config';
 
 export interface Column<T = Record<string, any>> {
   key: string;
@@ -117,7 +117,7 @@ function DataTable<T extends Record<string, any>>({
     if (!searchTerm) return sortedData;
 
     return sortedData.filter((row) =>
-      Object.entries(row).some(([key, value]) => {
+      Object.entries(row).some(([_key, value]) => {
         // Skip filtering on complex objects
         if (value === null || value === undefined) return false;
         if (typeof value === 'object') return false;

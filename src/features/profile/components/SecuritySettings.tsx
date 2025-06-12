@@ -5,9 +5,9 @@
  */
 
 import React from 'react';
-import type{ UserProfile } from '../types/index.ts';
-import Button from '../../../components/common/Button.tsx';
-import ToggleSwitch from '../../../components/common/ToggleSwitch.tsx';
+import type{ UserProfile } from '../types/index';
+import Button from '../../../components/common/Button';
+import ToggleSwitch from '../../../components/common/ToggleSwitch';
 
 interface SecuritySettingsProps {
   profile: UserProfile;

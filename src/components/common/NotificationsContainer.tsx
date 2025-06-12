@@ -6,8 +6,8 @@
 
 import React, { memo } from 'react';
 import { createPortal } from 'react-dom';
-import NotificationToast from './NotificationToast.tsx';
-import useNotification from '../../hooks/useNotification.ts';
+import NotificationToast from './NotificationToast';
+import useNotification from '../../hooks/useNotification';
 
 interface NotificationsContainerProps {
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';

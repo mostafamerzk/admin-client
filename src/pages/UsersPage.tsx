@@ -5,18 +5,21 @@
  */
 
 import React, { useState } from 'react';
-import Button from '../components/common/Button.tsx';
-import Card from '../components/common/Card.tsx';
-import Modal from '../components/common/Modal.tsx';
+import Button from '../components/common/Button';
+import Card from '../components/common/Card';
+import Modal from '../components/common/Modal';
 import { UserPlusIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import {
   AddUserForm,
-  UserDetails,
+  UserDetailsModal,
   UserList,
   type User,
   type UserFormData,
   getMockUsers
-} from '../features/users/index.ts';
+} from '../features/users/index';
+import useErrorHandler from '../hooks/useErrorHandler';
+import { safeAsyncOperation } from '../utils/errorHandling';
+import withErrorBoundary from '../components/common/withErrorBoundary';
 
 const UsersPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'banned'>('all');
@@ -27,6 +30,17 @@ const UsersPage: React.FC = () => {
 
   // Use mock data from the centralized mock data file
   const [users, setUsers] = useState<User[]>(getMockUsers());
+
+  // Error handling
+  const {
+    handleGeneralError,
+    withErrorHandling,
+    withFormErrorHandling,
+    clearError
+  } = useErrorHandler({
+    enableNotifications: true,
+    enableReporting: true
+  });
 
   // Filter users based on status (all, active, banned)
   const filteredUsers = users.filter(user => {
@@ -49,26 +63,91 @@ const UsersPage: React.FC = () => {
     console.log('Edit user (deprecated):', user);
   };
 
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = async (user: User) => {
     if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
-      setUsers(users.filter(u => u.id !== user.id));
+      const result = await withErrorHandling(async () => {
+        // Simulate API call with potential failure
+        await new Promise((resolve, reject) => {
+          setTimeout(() => {
+            // Simulate random failure for demonstration
+            if (Math.random() < 0.1) {
+              reject(new Error('Failed to delete user'));
+            } else {
+              resolve(true);
+            }
+          }, 500);
+        });
+
+        setUsers(users.filter(u => u.id !== user.id));
+        return true;
+      }, `Delete user ${user.name}`);
+
+      if (!result) {
+        console.error('Failed to delete user');
+      }
     }
   };
 
-  const handleExportUsers = () => {
+  const handleExportUsers = async () => {
     setIsLoading(true);
-    // Simulate export process
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log('Exporting users...');
-    }, 1500);
+
+    const result = await safeAsyncOperation(
+      async () => {
+        // Simulate export process with potential failure
+        await new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (Math.random() < 0.1) {
+              reject(new Error('Export failed'));
+            } else {
+              resolve(true);
+            }
+          }, 1500);
+        });
+
+        console.log('Exporting users...');
+        return true;
+      },
+      {
+        timeout: 5000,
+        retries: 2,
+        operationName: 'Export Users'
+      }
+    );
+
+    if (!result.success) {
+      handleGeneralError(result.error, 'Export Users');
+    }
+
+    setIsLoading(false);
   };
 
-  const handleAddUser = (userData: UserFormData) => {
+  const handleAddUser = async (userData: UserFormData) => {
     setIsLoading(true);
+    clearError();
 
-    // Simulate API call
-    setTimeout(() => {
+    const result = await withFormErrorHandling(async () => {
+      // Simulate API call with validation
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Simulate validation error
+          if (users.some(u => u.email === userData.email)) {
+            reject({
+              response: {
+                data: {
+                  errors: {
+                    email: ['Email already exists']
+                  }
+                }
+              }
+            });
+          } else if (Math.random() < 0.1) {
+            reject(new Error('Failed to create user'));
+          } else {
+            resolve(true);
+          }
+        }, 1500);
+      });
+
       // Create new user with form data
       const newUser: User = {
         id: (users.length + 1).toString(),
@@ -77,29 +156,58 @@ const UsersPage: React.FC = () => {
         type: userData.type,
         status: 'active',
         lastLogin: '-',
-        avatar: ''
+        avatar: userData.image && userData.image instanceof File ? URL.createObjectURL(userData.image) : '',
+        address: userData.address || '',
+        businessType: userData.businessType || '',
+        phone: userData.phone || ''
       };
 
       // Add to users array
       setUsers([...users, newUser]);
-
-      // Reset state
-      setIsLoading(false);
       setIsAddUserModalOpen(false);
-    }, 1500);
+      return newUser;
+    }, undefined, 'Add User');
+
+    setIsLoading(false);
+
+    if (result) {
+      console.log('User added successfully:', result);
+    }
   };
 
-  const toggleUserStatus = (userId: string) => {
-    setUsers(users.map(user => {
-      if (user.id === userId) {
-        return {
-          ...user,
-          status: user.status === 'active' ? 'banned' : 'active'
-        };
-      }
-      return user;
-    }));
-    setIsUserDetailsModalOpen(false);
+  const toggleUserStatus = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const result = await withErrorHandling(async () => {
+      // Simulate API call
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (Math.random() < 0.1) {
+            reject(new Error('Failed to update user status'));
+          } else {
+            resolve(true);
+          }
+        }, 500);
+      });
+
+      setUsers(users.map(u => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            status: u.status === 'active' ? 'banned' : 'active'
+          };
+        }
+        return u;
+      }));
+
+      setIsUserDetailsModalOpen(false);
+      return true;
+    }, `Toggle status for user ${user.name}`);
+
+    if (!result) {
+      console.error('Failed to toggle user status');
+    }
   };
 
   return (
@@ -182,7 +290,7 @@ const UsersPage: React.FC = () => {
           isOpen={isUserDetailsModalOpen}
           onClose={() => setIsUserDetailsModalOpen(false)}
           title="User Details"
-          size="md"
+          size="lg"
           footer={
             <>
               <Button
@@ -200,11 +308,29 @@ const UsersPage: React.FC = () => {
             </>
           }
         >
-          <UserDetails user={selectedUser} />
+          <UserDetailsModal user={selectedUser} />
         </Modal>
       )}
     </div>
   );
 };
 
-export default UsersPage;
+// Wrap with error boundary
+export default withErrorBoundary(UsersPage, {
+  fallback: ({ error, resetError }) => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
+      <div className="text-red-500 text-4xl mb-4">⚠️</div>
+      <h2 className="text-xl font-semibold mb-2">Users Page Error</h2>
+      <p className="text-gray-600 mb-4 text-center max-w-md">
+        {error.message || 'An error occurred while loading the users page'}
+      </p>
+      <button
+        onClick={resetError}
+        className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+      >
+        Reload Page
+      </button>
+    </div>
+  ),
+  context: 'UsersPage'
+});

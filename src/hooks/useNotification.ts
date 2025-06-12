@@ -5,7 +5,7 @@
  */
 
 import { useContext } from 'react';
-import { NotificationContext } from '../context/NotificationContext.tsx'; 
+import { NotificationContext } from '../context/NotificationContext'; 
 
 export interface NotificationOptions {
   type: 'success' | 'error' | 'warning' | 'info';

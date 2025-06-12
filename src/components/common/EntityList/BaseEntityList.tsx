@@ -5,8 +5,8 @@
  * This component is generic and can be used for any entity type.
  */
 
-import DataTable from '../DataTable.tsx';
-import type { Column } from '../DataTable.tsx';
+import DataTable from '../DataTable';
+import type { Column } from '../DataTable';
 
 export interface BaseEntityListProps<T> {
   data: T[];

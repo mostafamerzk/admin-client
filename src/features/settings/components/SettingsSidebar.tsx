@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { SettingsTab } from '../types/index.ts';
-import Card from '../../../components/common/Card.tsx';
+import { SettingsTab } from '../types/index';
+import Card from '../../../components/common/Card';
 
 interface SettingsSidebarProps {
   activeTab: SettingsTab;
@@ -25,10 +25,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
     {
       id: 'security',
       label: 'Security'
-    },
-    {
-      id: 'notifications',
-      label: 'Notifications'
     },
     {
       id: 'api',

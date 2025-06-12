@@ -12,6 +12,7 @@ interface FormFieldProps {
   options?: { value: string; label: string }[];
   className?: string;
   disabled?: boolean;
+  loading?: boolean;
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -25,7 +26,8 @@ const FormField: React.FC<FormFieldProps> = ({
   placeholder = '',
   options = [],
   className = '',
-  disabled = false
+  disabled = false,
+  loading = false
 }) => {
   const inputClasses = `mt-1 block w-full rounded-md shadow-sm sm:text-sm ${
     error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary'
@@ -54,13 +56,17 @@ const FormField: React.FC<FormFieldProps> = ({
             value={value}
             onChange={onChange}
             className={inputClasses}
-            disabled={disabled}
+            disabled={disabled || loading}
           >
-            {options.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {loading ? (
+              <option value="">Loading...</option>
+            ) : (
+              options.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))
+            )}
           </select>
         );
       

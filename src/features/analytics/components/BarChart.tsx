@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import Card from '../../../components/common/Card.tsx';
+import Card from '../../../components/common/Card';
 
 interface BarChartProps {
   title: string;

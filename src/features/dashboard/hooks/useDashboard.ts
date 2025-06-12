@@ -5,9 +5,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { DashboardStats } from '../types/index.ts';
-import dashboardApi from '../api/dashboardApi.ts';
-import useNotification from '../../../hooks/useNotification.ts';
+import type { DashboardStats } from '../types/index';
+import dashboardApi from '../api/dashboardApi';
+import useNotification from '../../../hooks/useNotification';
 
 export const useDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);

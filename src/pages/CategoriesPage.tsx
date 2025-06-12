@@ -4,7 +4,7 @@
  * This page displays and manages categories in the system.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/common/Card';
@@ -14,7 +14,7 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 import { 
   CategoryList, 
   CategoryTree,
-  CategoryDetails, 
+
   AddCategoryForm,
   useCategories,
   Category
@@ -24,7 +24,7 @@ import useNotification from '../hooks/useNotification';
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { categories, isLoading, fetchCategories, getCategoryHierarchy } = useCategories();
+  const { categories, isLoading, fetchCategories, getCategoryHierarchy: _getCategoryHierarchy } = useCategories();
   const { showNotification } = useNotification();
   
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -36,7 +36,7 @@ const CategoriesPage: React.FC = () => {
     navigate(ROUTES.getCategoryDetailsRoute(category.id));
   };
   
-  const handleAddCategory = async (categoryData: any) => {
+  const handleAddCategory = async (_categoryData: any) => {
     try {
       // Implementation
       setIsAddCategoryModalOpen(false);

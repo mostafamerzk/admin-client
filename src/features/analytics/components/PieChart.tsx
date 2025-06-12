@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import Card from '../../../components/common/Card.tsx';
-import type { CategoryDistribution } from '../types/index.ts';
+import Card from '../../../components/common/Card';
+import type { CategoryDistribution } from '../types/index';
 
 interface PieChartProps {
   title: string;

@@ -5,28 +5,24 @@
  */
 
 import React, { useState } from 'react';
-import PageHeader from '../components/layout/PageHeader.tsx';
-import useNotification from '../hooks/useNotification.ts';
+import PageHeader from '../components/layout/PageHeader';
+import MigrationNotice from '../components/common/MigrationNotice';
+import useNotification from '../hooks/useNotification';
+import { ROUTES } from '../constants/routes';
 import {
   SettingsSidebar,
   GeneralSettingsForm,
   SecuritySettingsForm,
-  NotificationSettingsForm,
   ApiSettingsForm,
   BillingSettingsForm,
-  useSettings,
+
   SettingsTab,
   GeneralSettings,
   SecuritySettings,
-  NotificationSettings,
   ApiSettings,
   BillingSettings,
-  ApiKey,
-  ApiUsage,
-  BillingPlan,
-  PaymentMethod,
-  BillingInvoice
-} from '../features/settings/index.ts';
+
+} from '../features/settings/index';
 
 const SettingsPage: React.FC = () => {
   // In a real implementation, we would use the useSettings hook
@@ -50,13 +46,9 @@ const SettingsPage: React.FC = () => {
     confirmPassword: ''
   });
 
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
-    newUsers: true,
-    newOrders: true,
-    supplierVerifications: true
-  });
 
-  const [apiSettings, setApiSettings] = useState<ApiSettings>({
+
+  const [apiSettings, _setApiSettings] = useState<ApiSettings>({
     keys: [
       {
         name: 'Production API Key',
@@ -76,7 +68,7 @@ const SettingsPage: React.FC = () => {
     }
   });
 
-  const [billingSettings, setBillingSettings] = useState<BillingSettings>({
+  const [billingSettings, _setBillingSettings] = useState<BillingSettings>({
     plan: {
       name: 'Enterprise Plan',
       price: 499,
@@ -136,12 +128,7 @@ const SettingsPage: React.FC = () => {
     }));
   };
 
-  const handleNotificationToggle = (field: keyof NotificationSettings) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
-  };
+
 
   const handleRegenerateApiKey = (keyType: 'production' | 'test') => {
     // In a real app, this would call an API to regenerate the key
@@ -174,14 +161,7 @@ const SettingsPage: React.FC = () => {
             onPasswordChange={handlePasswordChange}
           />
         );
-      case 'notifications':
-        return (
-          <NotificationSettingsForm
-            settings={notificationSettings}
-            onSave={handleSave}
-            onToggle={handleNotificationToggle}
-          />
-        );
+
       case 'api':
         return (
           <ApiSettingsForm
@@ -210,11 +190,20 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Settings"
         description="Manage your application settings"
         breadcrumbs={[{ label: 'Settings' }]}
+      />
+
+      {/* Migration Notice */}
+      <MigrationNotice
+        title="Notification Settings Moved"
+        message="Notification preferences have been moved to your Profile page for better organization. You can now manage both personal and admin notifications in one place."
+        actionText="Go to Profile → Notifications"
+        actionLink={ROUTES.PROFILE}
+        type="info"
       />
 
       <div className="grid grid-cols-12 gap-6">

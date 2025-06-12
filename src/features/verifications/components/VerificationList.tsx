@@ -5,10 +5,10 @@
  */
 
 import React from 'react';
-import DataTable, { type Column } from '../../../components/common/DataTable.tsx';
-import { type Verification } from '../types/index.ts';
-import Badge from '../../../components/common/Badge.tsx';
-import Button from '../../../components/common/Button.tsx';
+import DataTable, { type Column } from '../../../components/common/DataTable';
+import { type Verification } from '../types/index';
+import Badge from '../../../components/common/Badge';
+import Button from '../../../components/common/Button';
 import { CheckIcon, XMarkIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 interface VerificationListProps {

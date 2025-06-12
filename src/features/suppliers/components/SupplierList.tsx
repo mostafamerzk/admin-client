@@ -5,11 +5,11 @@
  */
 
 import React from 'react';
-import DataTable from '../../../components/common/DataTable.tsx';
-import type{ Supplier } from '../types/index.ts';
+import { useNavigate } from 'react-router-dom';
+import DataTable from '../../../components/common/DataTable';
+import Avatar from '../../../components/common/Avatar';
+import type{ Supplier } from '../types/index';
 import {
-  BuildingOffice2Icon,
-  BuildingStorefrontIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
@@ -19,6 +19,7 @@ import {
   EnvelopeIcon,
   PhoneIcon
 } from '@heroicons/react/24/outline';
+import { ROUTES } from '../../../constants/routes';
 
 interface SupplierListProps {
   suppliers: Supplier[];
@@ -34,29 +35,30 @@ const SupplierList: React.FC<SupplierListProps> = ({
   onViewSupplier,
   onEditSupplier,
   onDeleteSupplier,
-  onSupplierClick,
+  onSupplierClick: _onSupplierClick, // Keep for interface compatibility but use navigation instead
   title = 'Suppliers'
 }) => {
+  const navigate = useNavigate();
+
+  // Handle row click to navigate to supplier profile page
+  const handleRowClick = (supplier: Supplier) => {
+    navigate(ROUTES.getSupplierProfileRoute(supplier.id));
+  };
   const columns = [
     {
       key: 'name',
       label: 'Company',
       sortable: true,
-      render: (value: string, supplier: Supplier) => (
+      render: (_value: string, supplier: Supplier) => (
         <div className="flex items-center">
-          {supplier.logo ? (
-            <img
-              src={supplier.logo}
+          <div className="mr-3">
+            <Avatar
+              {...(supplier.logo && { src: supplier.logo })}
               alt={supplier.name}
-              className="w-8 h-8 rounded-full mr-3 object-cover"
+              name={supplier.name}
+              size="sm"
             />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-primary">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
-              </svg>
-            </div>
-          )}
+          </div>
           <div>
             <div className="font-medium text-gray-900">{supplier.name}</div>
             <div className="text-xs text-gray-500">ID: {supplier.id}</div>
@@ -154,7 +156,7 @@ const SupplierList: React.FC<SupplierListProps> = ({
     <DataTable
       columns={columns}
       data={suppliers}
-      onRowClick={onSupplierClick}
+      onRowClick={handleRowClick}
       title={title}
       pagination={true}
     />
