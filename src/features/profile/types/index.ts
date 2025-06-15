@@ -64,7 +64,7 @@ export interface ActivityLogItem {
   id: number;
   content: string;
   date: string;
-  type: 'login' | 'password' | 'security' | 'profile' | 'account';
+  type: 'login' | 'password' | 'security' | 'profile' | 'account' | 'settings' | 'notifications';
   icon?: React.ReactNode;
 }
 

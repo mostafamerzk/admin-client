@@ -28,7 +28,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:mock": "env-cmd -f .env.mock react-scripts start",
+    "start:prod": "env-cmd -f .env.production react-scripts start",
     "build": "react-scripts build",
+    "build:mock": "env-cmd -f .env.mock react-scripts build",
+    "build:prod": "env-cmd -f .env.production react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -52,6 +56,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",
+    "env-cmd": "^10.1.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6"
   }

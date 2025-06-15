@@ -4,11 +4,12 @@
  * This component displays a chart of user growth data.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS } from 'chart.js';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 import { defaultLineChartOptions, destroyChart } from '../../../utils/chartConfig';
 
 interface UserGrowthData {
@@ -41,14 +42,16 @@ const UserGrowthChart: React.FC<UserGrowthChartProps> = ({
     };
   }, []);
 
-  const handlePeriodChange = (period: 'day' | 'week' | 'month' | 'year') => {
+  // Memoize event handler to prevent unnecessary re-renders
+  const handlePeriodChange = useCallback((period: 'day' | 'week' | 'month' | 'year') => {
     setActivePeriod(period);
     if (onPeriodChange) {
       onPeriodChange(period);
     }
-  };
+  }, [onPeriodChange]);
 
-  const chartData = {
+  // Memoize chart data to prevent unnecessary recalculations
+  const chartData = useMemo(() => ({
     labels: data.map(item => item.date),
     datasets: [
       {
@@ -65,10 +68,10 @@ const UserGrowthChart: React.FC<UserGrowthChartProps> = ({
         pointHoverRadius: 6
       }
     ]
-  };
+  }), [data]);
 
-  // Extend default options with custom callbacks
-  const options = {
+  // Memoize chart options to prevent unnecessary re-initializations
+  const options = useMemo(() => ({
     ...defaultLineChartOptions,
     plugins: {
       ...defaultLineChartOptions.plugins,
@@ -81,13 +84,13 @@ const UserGrowthChart: React.FC<UserGrowthChartProps> = ({
         }
       }
     }
-  };
+  }), []);
 
   const chartContent = (
     <>
       {isLoading ? (
         <div className="h-80 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <LoadingSpinner size="lg" />
         </div>
       ) : (
         <div className="h-80">
@@ -149,4 +152,4 @@ const UserGrowthChart: React.FC<UserGrowthChartProps> = ({
   );
 };
 
-export default UserGrowthChart;
+export default memo(UserGrowthChart);

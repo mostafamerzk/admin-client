@@ -13,7 +13,6 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-  PencilIcon,
   TrashIcon,
   EyeIcon,
   EnvelopeIcon,
@@ -24,7 +23,6 @@ import { ROUTES } from '../../../constants/routes';
 interface SupplierListProps {
   suppliers: Supplier[];
   onViewSupplier: (supplier: Supplier) => void;
-  onEditSupplier: (supplier: Supplier) => void;
   onDeleteSupplier: (supplier: Supplier) => void;
   onSupplierClick: (supplier: Supplier) => void;
   title?: string;
@@ -33,7 +31,6 @@ interface SupplierListProps {
 const SupplierList: React.FC<SupplierListProps> = ({
   suppliers,
   onViewSupplier,
-  onEditSupplier,
   onDeleteSupplier,
   onSupplierClick: _onSupplierClick, // Keep for interface compatibility but use navigation instead
   title = 'Suppliers'
@@ -47,7 +44,7 @@ const SupplierList: React.FC<SupplierListProps> = ({
   const columns = [
     {
       key: 'name',
-      label: 'Company',
+      label: 'Supplier Name',
       sortable: true,
       render: (_value: string, supplier: Supplier) => (
         <div className="flex items-center">
@@ -66,7 +63,6 @@ const SupplierList: React.FC<SupplierListProps> = ({
         </div>
       )
     },
-    { key: 'contactPerson', label: 'Contact Person', sortable: true },
     {
       key: 'email',
       label: 'Email',
@@ -94,6 +90,16 @@ const SupplierList: React.FC<SupplierListProps> = ({
       label: 'Status',
       sortable: true,
       render: (value: string) => {
+        // Handle undefined or null values
+        if (!value) {
+          return (
+            <div className="flex items-center">
+              <ClockIcon className="w-4 h-4 text-gray-400 mr-1" />
+              <span>Unknown</span>
+            </div>
+          );
+        }
+
         let icon;
         switch(value) {
           case 'verified':
@@ -105,11 +111,13 @@ const SupplierList: React.FC<SupplierListProps> = ({
           case 'rejected':
             icon = <XCircleIcon className="w-4 h-4 text-red-500 mr-1" />;
             break;
+          default:
+            icon = <ClockIcon className="w-4 h-4 text-gray-400 mr-1" />;
         }
         return (
           <div className="flex items-center">
             {icon}
-            <span>{value.charAt(0).toUpperCase() + value.slice(1)}</span>
+            <span>{value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Unknown'}</span>
           </div>
         );
       }
@@ -126,17 +134,9 @@ const SupplierList: React.FC<SupplierListProps> = ({
               e.stopPropagation();
               onViewSupplier(supplier);
             }}
+            title="View supplier details"
           >
             <EyeIcon className="w-5 h-5" />
-          </button>
-          <button
-            className="p-1 text-gray-500 hover:text-blue-600 rounded-full hover:bg-gray-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditSupplier(supplier);
-            }}
-          >
-            <PencilIcon className="w-5 h-5" />
           </button>
           <button
             className="p-1 text-gray-500 hover:text-red-600 rounded-full hover:bg-gray-100"
@@ -144,6 +144,7 @@ const SupplierList: React.FC<SupplierListProps> = ({
               e.stopPropagation();
               onDeleteSupplier(supplier);
             }}
+            title="Delete supplier"
           >
             <TrashIcon className="w-5 h-5" />
           </button>

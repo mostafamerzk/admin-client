@@ -129,7 +129,34 @@ export function useApi<T = any>(options: UseApiOptions<T> = {}) {
 }
 
 // Entity-specific hook for CRUD operations
+/**
+ * @deprecated This hook is deprecated and will be removed in a future version.
+ * Use feature-specific hooks (e.g., useUsers, useCategories) or useEntityData instead.
+ *
+ * Migration guide:
+ * - For feature-specific operations: Use hooks like useUsers(), useCategories(), etc.
+ * - For generic entity operations: Use useEntityData() with your API service
+ *
+ * Example migration:
+ * ```typescript
+ * // Old (deprecated):
+ * const { create, read, update, remove } = useEntityApi('/users');
+ *
+ * // New (recommended):
+ * const { createEntity, fetchEntities, updateEntity, deleteEntity } = useUsers();
+ * // or
+ * const entityHook = useEntityData(usersApi, { entityName: 'users' });
+ * ```
+ */
 export function useEntityApi<T = any>(baseUrl: string) {
+  // Add deprecation warning in development
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(
+      `[DEPRECATED] useEntityApi is deprecated and will be removed in a future version. ` +
+      `Use feature-specific hooks (e.g., useUsers, useCategories) or useEntityData instead. ` +
+      `Called with baseUrl: ${baseUrl}`
+    );
+  }
   const {
     data,
     error,

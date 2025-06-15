@@ -4,7 +4,7 @@
  * This page displays and manages users in the system.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
@@ -13,9 +13,9 @@ import {
   AddUserForm,
   UserDetailsModal,
   UserList,
+  useUsers,
   type User,
-  type UserFormData,
-  getMockUsers
+  type UserFormData
 } from '../features/users/index';
 import useErrorHandler from '../hooks/useErrorHandler';
 import { safeAsyncOperation } from '../utils/errorHandling';
@@ -27,9 +27,18 @@ const UsersPage: React.FC = () => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Use mock data from the centralized mock data file
-  const [users, setUsers] = useState<User[]>(getMockUsers());
+  // Use users feature hook
+  const {
+    users,
+    isLoading: usersLoading,
+    createEntity: createUser,
+    deleteEntity: deleteUser,
+    toggleUserStatus
+  } = useUsers();
 
   // Error handling
   const {
@@ -42,20 +51,21 @@ const UsersPage: React.FC = () => {
     enableReporting: true
   });
 
-  // Filter users based on status (all, active, banned)
-  const filteredUsers = users.filter(user => {
-    if (activeTab === 'all') return true;
-    return user.status === activeTab;
-  });
+  // Memoize filtered users to prevent unnecessary recalculations
+  const filteredUsers = useMemo(() => {
+    if (activeTab === 'all') return users;
+    return users.filter(user => user.status === activeTab);
+  }, [users, activeTab]);
 
-  const handleUserClick = (user: User) => {
-    handleViewUser(user);
-  };
-
-  const handleViewUser = (user: User) => {
+  const handleViewUser = useCallback((user: User) => {
     setSelectedUser(user);
     setIsUserDetailsModalOpen(true);
-  };
+  }, []);
+
+  // Memoize event handlers to prevent unnecessary re-renders
+  const handleUserClick = useCallback((user: User) => {
+    handleViewUser(user);
+  }, [handleViewUser]);
 
   // Note: Edit functionality is now handled directly in the UserList component
   // This is kept for backward compatibility
@@ -63,32 +73,30 @@ const UsersPage: React.FC = () => {
     console.log('Edit user (deprecated):', user);
   };
 
-  const handleDeleteUser = async (user: User) => {
-    if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
-      const result = await withErrorHandling(async () => {
-        // Simulate API call with potential failure
-        await new Promise((resolve, reject) => {
-          setTimeout(() => {
-            // Simulate random failure for demonstration
-            if (Math.random() < 0.1) {
-              reject(new Error('Failed to delete user'));
-            } else {
-              resolve(true);
-            }
-          }, 500);
-        });
+  const handleDeleteUser = useCallback((user: User) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  }, []);
 
-        setUsers(users.filter(u => u.id !== user.id));
-        return true;
-      }, `Delete user ${user.name}`);
+  const confirmDeleteUser = useCallback(async () => {
+    if (!userToDelete) return;
 
-      if (!result) {
-        console.error('Failed to delete user');
-      }
+    setIsDeleting(true);
+    const result = await withErrorHandling(async () => {
+      await deleteUser(userToDelete.id);
+      return true;
+    }, `Delete user ${userToDelete.name}`);
+
+    setIsDeleting(false);
+    if (result) {
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
+    } else {
+      console.error('Failed to delete user');
     }
-  };
+  }, [userToDelete, withErrorHandling, deleteUser]);
 
-  const handleExportUsers = async () => {
+  const handleExportUsers = useCallback(async () => {
     setIsLoading(true);
 
     const result = await safeAsyncOperation(
@@ -119,51 +127,14 @@ const UsersPage: React.FC = () => {
     }
 
     setIsLoading(false);
-  };
+  }, [handleGeneralError]);
 
-  const handleAddUser = async (userData: UserFormData) => {
+  const handleAddUser = useCallback(async (userData: UserFormData) => {
     setIsLoading(true);
     clearError();
 
     const result = await withFormErrorHandling(async () => {
-      // Simulate API call with validation
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Simulate validation error
-          if (users.some(u => u.email === userData.email)) {
-            reject({
-              response: {
-                data: {
-                  errors: {
-                    email: ['Email already exists']
-                  }
-                }
-              }
-            });
-          } else if (Math.random() < 0.1) {
-            reject(new Error('Failed to create user'));
-          } else {
-            resolve(true);
-          }
-        }, 1500);
-      });
-
-      // Create new user with form data
-      const newUser: User = {
-        id: (users.length + 1).toString(),
-        name: userData.name,
-        email: userData.email,
-        type: userData.type,
-        status: 'active',
-        lastLogin: '-',
-        avatar: userData.image && userData.image instanceof File ? URL.createObjectURL(userData.image) : '',
-        address: userData.address || '',
-        businessType: userData.businessType || '',
-        phone: userData.phone || ''
-      };
-
-      // Add to users array
-      setUsers([...users, newUser]);
+      const newUser = await createUser(userData);
       setIsAddUserModalOpen(false);
       return newUser;
     }, undefined, 'Add User');
@@ -173,33 +144,21 @@ const UsersPage: React.FC = () => {
     if (result) {
       console.log('User added successfully:', result);
     }
-  };
+  }, [withFormErrorHandling, createUser, clearError]);
 
-  const toggleUserStatus = async (userId: string) => {
+  const handleToggleUserStatus = useCallback(async (userId: string) => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
-    const result = await withErrorHandling(async () => {
-      // Simulate API call
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() < 0.1) {
-            reject(new Error('Failed to update user status'));
-          } else {
-            resolve(true);
-          }
-        }, 500);
-      });
+    const newStatus = user.status === 'active' ? 'banned' : 'active';
 
-      setUsers(users.map(u => {
-        if (u.id === userId) {
-          return {
-            ...u,
-            status: u.status === 'active' ? 'banned' : 'active'
-          };
-        }
-        return u;
-      }));
+    const result = await withErrorHandling(async () => {
+      const updatedUser = await toggleUserStatus(userId, newStatus);
+
+      // Update the selectedUser state if it's the same user
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser(updatedUser);
+      }
 
       setIsUserDetailsModalOpen(false);
       return true;
@@ -208,7 +167,7 @@ const UsersPage: React.FC = () => {
     if (!result) {
       console.error('Failed to toggle user status');
     }
-  };
+  }, [users, withErrorHandling, toggleUserStatus, selectedUser]);
 
   return (
     <div className="space-y-6">
@@ -222,7 +181,7 @@ const UsersPage: React.FC = () => {
             variant="outline"
             icon={<ArrowDownTrayIcon className="h-5 w-5" />}
             onClick={handleExportUsers}
-            loading={isLoading}
+            loading={isLoading || usersLoading}
           >
             Export Users
           </Button>
@@ -267,6 +226,7 @@ const UsersPage: React.FC = () => {
           onDeleteUser={handleDeleteUser}
           onUserClick={handleUserClick}
           title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} (${filteredUsers.length})`}
+          loading={usersLoading}
         />
       </Card>
 
@@ -301,7 +261,7 @@ const UsersPage: React.FC = () => {
               </Button>
               <Button
                 variant={selectedUser.status === 'active' ? 'danger' : 'success'}
-                onClick={() => toggleUserStatus(selectedUser.id)}
+                onClick={() => handleToggleUserStatus(selectedUser.id)}
               >
                 {selectedUser.status === 'active' ? 'Ban User' : 'Activate User'}
               </Button>
@@ -309,6 +269,38 @@ const UsersPage: React.FC = () => {
           }
         >
           <UserDetailsModal user={selectedUser} />
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {userToDelete && (
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          title="Delete User"
+          size="sm"
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDeleteUser}
+                loading={isDeleting}
+              >
+                Delete User
+              </Button>
+            </>
+          }
+        >
+          <div className="text-sm text-gray-500">
+            Are you sure you want to delete "{userToDelete.name}"? This action cannot be undone.
+          </div>
         </Modal>
       )}
     </div>

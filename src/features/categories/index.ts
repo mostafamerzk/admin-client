@@ -9,7 +9,6 @@ export { default as CategoryList } from './components/CategoryList';
 export { default as CategoryDetails } from './components/CategoryDetails';
 export { default as CategoryFilter } from './components/CategoryFilter';
 export { default as AddCategoryForm } from './components/AddCategoryForm';
-export { default as CategoryTree } from './components/CategoryTree';
 
 // Hooks
 export { default as useCategories } from './hooks/useCategories';

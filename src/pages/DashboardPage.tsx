@@ -4,18 +4,14 @@
  * The main dashboard page for the ConnectChain admin panel.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Pie } from 'react-chartjs-2';
+import React, { useState } from 'react';
 import PageHeader from '../components/layout/PageHeader';
-import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import { formatCurrency } from '../utils/formatters';
-import { mockDb } from '../mockData/db';
-import { DashboardStats } from '../mockData/entities/dashboard';
-import { defaultPieChartOptions, destroyChart } from '../utils/chartConfig';
-import { Chart as ChartJS } from 'chart.js';
+
 import useErrorHandler from '../hooks/useErrorHandler';
-import { safeAsyncOperation, handleDataTransformationError } from '../utils/errorHandling';
+import { safeAsyncOperation } from '../utils/errorHandling';
 import withErrorBoundary from '../components/common/withErrorBoundary';
 import {
   UsersIcon,
@@ -32,64 +28,25 @@ import {
   StatCard,
   SalesChart,
   UserGrowthChart,
-  RecentOrders
+  CategoryDistributionChart,
+  RecentOrders,
+  useDashboard
 } from '../features/dashboard/index';
 
 const DashboardPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
   const [, setActiveTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
-  const pieChartRef = useRef<ChartJS | null>(null);
+
+  // Use dashboard hook
+  const { stats: dashboardData, isLoading, fetchStats } = useDashboard();
 
   // Error handling
   const {
-    handleGeneralError,
-    withErrorHandling,
-    clearError
+    handleGeneralError
   } = useErrorHandler({
     enableNotifications: true,
     enableReporting: true
   });
-
-  // Fetch dashboard data
-  useEffect(() => {
-    const fetchData = async () => {
-      clearError();
-
-      const result = await withErrorHandling(async () => {
-        // Simulate potential data transformation errors
-        const rawData = mockDb.getAll<DashboardStats, 'dashboardStats'>('dashboardStats')[0];
-
-        if (!rawData) {
-          throw new Error('No dashboard data available');
-        }
-
-        // Validate data structure
-        if (!rawData.summary || !rawData.revenueData || !rawData.userGrowth) {
-          const transformationError = handleDataTransformationError(
-            'Dashboard data',
-            new Error('Invalid dashboard data structure'),
-            rawData
-          );
-          throw transformationError;
-        }
-
-        setDashboardData(rawData);
-        return rawData;
-      }, 'Fetch dashboard data');
-
-      if (!result) {
-        console.error('Failed to fetch dashboard data');
-      }
-    };
-
-    fetchData();
-
-    // Cleanup chart instances when component unmounts
-    return () => {
-      destroyChart(pieChartRef.current);
-    };
-  }, [withErrorHandling, clearError]);
 
   // Handle refresh
   const handleRefresh = async () => {
@@ -108,11 +65,9 @@ const DashboardPage: React.FC = () => {
           }, 1500);
         });
 
-        const data = mockDb.getAll<DashboardStats, 'dashboardStats'>('dashboardStats')[0];
-        if (data) {
-          setDashboardData(data);
-        }
-        return data;
+        // Use the dashboard hook's fetchStats method with force refresh
+        await fetchStats(true);
+        return true;
       },
       {
         timeout: 10000,
@@ -129,10 +84,10 @@ const DashboardPage: React.FC = () => {
   };
 
   // If data is not loaded yet
-  if (!dashboardData) {
+  if (isLoading || !dashboardData) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <LoadingSpinner size="lg" variant="pulse" />
       </div>
     );
   }
@@ -232,36 +187,10 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
-        <Card title="Category Distribution">
-          <div className="h-80">
-            <Pie
-              ref={(ref) => {
-                if (ref) {
-                  pieChartRef.current = ref;
-                }
-              }}
-              data={{
-                labels: dashboardData.categoryDistribution.labels,
-                datasets: dashboardData.categoryDistribution.datasets
-              }}
-              options={defaultPieChartOptions}
-            />
-          </div>
-          <div className="mt-4 space-y-2">
-            {dashboardData.categoryDistribution.labels.map((label, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: dashboardData.categoryDistribution.datasets[0]?.backgroundColor?.[index] as string || '#ccc' }}
-                  ></div>
-                  <span className="text-sm text-gray-600">{label}</span>
-                </div>
-                <span className="text-sm font-medium">{dashboardData.categoryDistribution.datasets[0]?.data?.[index] || 0}%</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <CategoryDistributionChart
+          data={dashboardData.categoryDistribution}
+          title="Category Distribution"
+        />
       </div>
     </div>
   );

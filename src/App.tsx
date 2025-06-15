@@ -26,14 +26,14 @@ const UsersPage = lazy(() => import('./pages/UsersPage'));
 const UserEditPage = lazy(() => import('./pages/UserEditPage'));
 const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
 const SupplierProfilePage = lazy(() => import('./pages/SupplierProfilePage'));
-const SupplierEditPage = lazy(() => import('./pages/SupplierEditPage'));
+const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'));
+
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
+const CategoryManagementPage = lazy(() => import('./pages/CategoryManagementPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const OrderDetailsPage = lazy(() => import('./pages/OrderDetailsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const VerificationsPage = lazy(() => import('./pages/VerificationsPage'));
-const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const App: React.FC = () => {
@@ -50,14 +50,13 @@ const App: React.FC = () => {
       { importFn: () => import('./pages/UserEditPage'), name: 'user-edit' },
       { importFn: () => import('./pages/SuppliersPage'), name: 'suppliers' },
       { importFn: () => import('./pages/SupplierProfilePage'), name: 'supplier-profile' },
-      { importFn: () => import('./pages/SupplierEditPage'), name: 'supplier-edit' },
+      { importFn: () => import('./pages/ProductDetailsPage'), name: 'product-details' },
+
       { importFn: () => import('./pages/CategoriesPage'), name: 'categories' },
       { importFn: () => import('./pages/OrdersPage'), name: 'orders' },
       { importFn: () => import('./pages/OrderDetailsPage'), name: 'order-details' },
       { importFn: () => import('./pages/ProfilePage'), name: 'profile' },
-      { importFn: () => import('./pages/SettingsPage'), name: 'settings' },
-      { importFn: () => import('./pages/VerificationsPage'), name: 'verifications' },
-      { importFn: () => import('./pages/AnalyticsPage'), name: 'analytics' }
+      { importFn: () => import('./pages/VerificationsPage'), name: 'verifications' }
     ]);
   }, []);
 
@@ -80,14 +79,14 @@ const App: React.FC = () => {
                       <Route path={ROUTES.USER_EDIT} element={<UserEditPage />} />
                       <Route path={ROUTES.SUPPLIERS} element={<SuppliersPage />} />
                       <Route path={ROUTES.SUPPLIER_PROFILE} element={<SupplierProfilePage />} />
-                      <Route path={ROUTES.SUPPLIER_EDIT} element={<SupplierEditPage />} />
+                      <Route path={ROUTES.PRODUCT_DETAILS} element={<ProductDetailsPage />} />
+
                       <Route path={ROUTES.CATEGORIES} element={<CategoriesPage />} />
+                      <Route path={ROUTES.CATEGORY_MANAGEMENT} element={<CategoryManagementPage />} />
                       <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
                       <Route path={ROUTES.ORDER_DETAILS} element={<OrderDetailsPage />} />
                       <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-                      <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
                       <Route path={ROUTES.VERIFICATIONS} element={<VerificationsPage />} />
-                      <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
                     </Route>
                   </Route>
 

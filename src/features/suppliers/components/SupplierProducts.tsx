@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DataTable from '../../../components/common/DataTable';
 import type { Column } from '../../../components/common/DataTable';
 import DetailSection from '../../../components/common/DetailSection';
@@ -14,6 +15,7 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import Modal from '../../../components/common/Modal';
 import useNotification from '../../../hooks/useNotification';
 import type { SupplierProduct } from '../types';
+import { ROUTES } from '../../../constants/routes';
 import {
   EyeIcon,
   PencilIcon,
@@ -21,7 +23,7 @@ import {
   CubeIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface SupplierProductsProps {
   products: SupplierProduct[];
@@ -34,9 +36,9 @@ const SupplierProducts: React.FC<SupplierProductsProps> = ({
   supplierId: _supplierId,
   onProductUpdate
 }) => {
+  const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
   const [selectedProduct, setSelectedProduct] = useState<SupplierProduct | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const getStatusBadgeStatus = (status: string): string => {
@@ -52,10 +54,10 @@ const SupplierProducts: React.FC<SupplierProductsProps> = ({
     }
   };
 
-  const getStockStatus = (stock: number, status: string) => {
+  const getStockStatus = (stock: number, minimumStock: number, status: string) => {
     if (status === 'out_of_stock' || stock === 0) {
       return { text: 'Out of Stock', color: 'text-red-600' };
-    } else if (stock < 10) {
+    } else if (stock <= minimumStock) {
       return { text: 'Low Stock', color: 'text-yellow-600' };
     } else {
       return { text: 'In Stock', color: 'text-green-600' };
@@ -63,8 +65,7 @@ const SupplierProducts: React.FC<SupplierProductsProps> = ({
   };
 
   const handleViewProduct = (product: SupplierProduct) => {
-    setSelectedProduct(product);
-    setIsViewModalOpen(true);
+    navigate(ROUTES.getProductDetailsRoute(product.id));
   };
 
   const handleEditProduct = (product: SupplierProduct) => {
@@ -148,7 +149,7 @@ const SupplierProducts: React.FC<SupplierProductsProps> = ({
       label: 'Stock',
       sortable: true,
       render: (value: number, product: SupplierProduct) => {
-        const stockStatus = getStockStatus(value, product.status);
+        const stockStatus = getStockStatus(value, product.minimumStock || 10, product.status);
         return (
           <div>
             <div className="font-medium text-gray-900">{value}</div>
@@ -245,108 +246,6 @@ const SupplierProducts: React.FC<SupplierProductsProps> = ({
           className="border-0"
         />
       </DetailSection>
-
-      {/* Product Details Modal */}
-      {selectedProduct && (
-        <Modal
-          isOpen={isViewModalOpen}
-          onClose={() => setIsViewModalOpen(false)}
-          title={`Product Details: ${selectedProduct.name}`}
-          size="lg"
-          footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setIsViewModalOpen(false)}
-              >
-                Close
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => handleEditProduct(selectedProduct)}
-                icon={<PencilIcon className="w-4 h-4" />}
-              >
-                Edit Product
-              </Button>
-            </>
-          }
-        >
-          <div className="space-y-6">
-            {/* Product Image and Basic Info */}
-            <div className="flex items-start space-x-4">
-              {selectedProduct.image ? (
-                <img
-                  src={selectedProduct.image}
-                  alt={selectedProduct.name}
-                  className="h-24 w-24 rounded-lg object-cover"
-                />
-              ) : (
-                <div className="h-24 w-24 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <CubeIcon className="h-8 w-8 text-gray-400" />
-                </div>
-              )}
-              <div className="flex-1">
-                <h3 className="text-lg font-medium text-gray-900">{selectedProduct.name}</h3>
-                <p className="text-sm text-gray-500">SKU: {selectedProduct.sku}</p>
-                <div className="mt-2 flex items-center space-x-3">
-                  <StatusBadge
-                    status={getStatusBadgeStatus(selectedProduct.status)}
-                    type="supplier"
-                  />
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {selectedProduct.category}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Product Details Grid */}
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-3">Pricing & Inventory</h4>
-                <dl className="space-y-2">
-                  <div>
-                    <dt className="text-xs text-gray-500">Price</dt>
-                    <dd className="text-sm font-medium text-gray-900">{formatCurrency(selectedProduct.price)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-gray-500">Stock Quantity</dt>
-                    <dd className="text-sm text-gray-900">{selectedProduct.stock}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-gray-500">Stock Status</dt>
-                    <dd className={`text-sm ${getStockStatus(selectedProduct.stock, selectedProduct.status).color}`}>
-                      {getStockStatus(selectedProduct.stock, selectedProduct.status).text}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-3">Dates</h4>
-                <dl className="space-y-2">
-                  <div>
-                    <dt className="text-xs text-gray-500">Created</dt>
-                    <dd className="text-sm text-gray-900">{formatDate(selectedProduct.createdAt)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-gray-500">Last Updated</dt>
-                    <dd className="text-sm text-gray-900">{formatDate(selectedProduct.updatedAt)}</dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-
-            {/* Product Description */}
-            {selectedProduct.description && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Description</h4>
-                <p className="text-sm text-gray-900">{selectedProduct.description}</p>
-              </div>
-            )}
-          </div>
-        </Modal>
-      )}
 
       {/* Delete Confirmation Modal */}
       {selectedProduct && (

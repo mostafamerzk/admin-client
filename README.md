@@ -8,8 +8,7 @@ A modern, feature-rich admin panel for the ConnectChain platform, built with Rea
 - **Supplier Management**: Manage suppliers and their verification process
 - **Category Management**: Create and manage product categories
 - **Order Management**: View and process customer orders
-- **Dashboard**: Real-time analytics and statistics
-- **Settings**: Configure platform settings and preferences
+- **Dashboard**: Real-time statistics and insights
 - **Enhanced Performance**: Route preloading and code splitting
 - **Robust Error Handling**: Comprehensive error boundaries
 - **Advanced API Layer**: Caching, retry logic, and error handling
@@ -51,12 +50,6 @@ src/
 │   ├── verifications/          # Supplier verifications
 │   ├── categories/             # Category management
 │   ├── orders/                 # Order management
-│   ├── analytics/              # Analytics components and hooks
-│   │   ├── api/                # Analytics API services
-│   │   ├── components/         # Analytics-specific components
-│   │   ├── hooks/              # Analytics custom hooks
-│   │   └── types/              # Analytics type definitions
-│   ├── settings/               # Platform settings
 ├── hooks/                      # Custom hooks (useAuth, useFetch, useApi, etc.)
 ├── pages/                      # Top-level page components
 ├── services/                   # API and authentication logic
@@ -137,14 +130,6 @@ For development, you can use the following credentials:
 - **Header**: Top header component with user profile and notifications
 - **PageHeader**: Page header component with title, description, and actions
 
-### Analytics Components
-
-- **TimeRangeSelector**: Component for selecting time ranges for analytics data
-- **MetricCard**: Card component for displaying key metrics with growth indicators
-- **BarChart**: Component for displaying bar charts using Chart.js
-- **PieChart**: Component for displaying pie charts using Chart.js
-- **SupplierTable**: Table component for displaying supplier performance data
-
 ### Context Providers
 
 - **AuthContext**: Authentication state and methods
@@ -158,7 +143,13 @@ For development, you can use the following credentials:
 - **useNotification**: Hook for displaying notifications
 - **useUI**: Hook for UI state and methods
 - **useApi**: Enhanced hook for API interactions with TypeScript support
+- **useEntityData**: Generic hook for entity CRUD operations with error handling
 - **useAnalytics**: Hook for working with analytics data
+- **Feature-specific hooks**: useUsers, useCategories, useSuppliers, etc. for specialized operations
+
+### Deprecated Hooks
+
+- **~~useEntityApi~~**: ⚠️ **DEPRECATED** - Use feature-specific hooks or `useEntityData` instead. See [Migration Guide](docs/MIGRATION_GUIDE.md) for details.
 
 ### Enhanced API Service
 

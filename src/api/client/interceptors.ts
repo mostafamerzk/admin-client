@@ -1,6 +1,7 @@
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from './types';
 import type { MiddlewareConfig } from './types';
 import { CacheManager } from './cache';
+import { authApi } from '../../features/auth/api/authApi';
 
 export const setupInterceptors = (
   instance: AxiosInstance,
@@ -66,7 +67,7 @@ export const setupInterceptors = (
 
       // Handle authentication errors
       if (error.response?.status === 401) {
-        localStorage.removeItem('auth_token');
+        authApi.removeToken();
         window.location.href = '/login';
         return Promise.reject(error);
       }

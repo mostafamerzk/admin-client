@@ -43,7 +43,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   return (
     <button
       type="button"
-      className={`relative inline-flex ${sizeClasses[size].container} items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+      className={`relative inline-flex ${sizeClasses[size].container} items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
         enabled ? 'bg-primary' : 'bg-gray-200'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
       onClick={disabled ? undefined : onChange}

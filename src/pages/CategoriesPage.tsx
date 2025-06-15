@@ -4,17 +4,15 @@
  * This page displays and manages categories in the system.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { 
-  CategoryList, 
-  CategoryTree,
-
+import {
+  CategoryList,
   AddCategoryForm,
   useCategories,
   Category
@@ -24,19 +22,19 @@ import useNotification from '../hooks/useNotification';
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { categories, isLoading, fetchCategories, getCategoryHierarchy: _getCategoryHierarchy } = useCategories();
+  const { categories, isLoading, fetchCategories } = useCategories();
   const { showNotification } = useNotification();
   
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'tree'>('list');
   
-  const handleCategoryClick = (category: Category) => {
-    setSelectedCategory(category);
+
+
+  // Memoize event handlers to prevent unnecessary re-renders
+  const handleCategoryClick = useCallback((category: Category) => {
     navigate(ROUTES.getCategoryDetailsRoute(category.id));
-  };
-  
-  const handleAddCategory = async (_categoryData: any) => {
+  }, [navigate]);
+
+  const handleAddCategory = useCallback(async (_categoryData: any) => {
     try {
       // Implementation
       setIsAddCategoryModalOpen(false);
@@ -53,7 +51,7 @@ const CategoriesPage: React.FC = () => {
         message: 'Failed to add category'
       });
     }
-  };
+  }, [fetchCategories, showNotification]);
   
   return (
     <div className="space-y-6">
@@ -61,37 +59,21 @@ const CategoriesPage: React.FC = () => {
         title="Categories"
         description="Manage product categories"
         actions={
-          <div className="flex space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => setViewMode(viewMode === 'list' ? 'tree' : 'list')}
-            >
-              {viewMode === 'list' ? 'Tree View' : 'List View'}
-            </Button>
-            <Button
-              icon={<PlusIcon className="h-5 w-5" />}
-              onClick={() => setIsAddCategoryModalOpen(true)}
-            >
-              Add Category
-            </Button>
-          </div>
+          <Button
+            icon={<PlusIcon className="h-5 w-5" />}
+            onClick={() => setIsAddCategoryModalOpen(true)}
+          >
+            Add Category
+          </Button>
         }
       />
       
       <Card>
-        {viewMode === 'list' ? (
-          <CategoryList
-            categories={categories}
-            onCategoryClick={handleCategoryClick}
-            loading={isLoading}
-          />
-        ) : (
-          <CategoryTree
-            categories={categories}
-            onCategorySelect={handleCategoryClick}
-            selectedCategoryId={selectedCategory?.id}
-          />
-        )}
+        <CategoryList
+          categories={categories}
+          onCategoryClick={handleCategoryClick}
+          loading={isLoading}
+        />
       </Card>
       
       <Modal
@@ -102,11 +84,10 @@ const CategoriesPage: React.FC = () => {
         <AddCategoryForm
           onSubmit={handleAddCategory}
           onCancel={() => setIsAddCategoryModalOpen(false)}
-          parentCategories={categories.filter(c => !c.parentId)}
         />
       </Modal>
     </div>
   );
 };
 
-export default CategoriesPage;
+export default memo(CategoriesPage);

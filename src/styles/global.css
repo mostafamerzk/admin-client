@@ -46,10 +46,23 @@ body {
   background: #9CA3AF;
 }
 
-/* Custom focus styles */
+/* Custom focus styles - only show focus rings for keyboard navigation */
 *:focus {
-  outline: 2px solid var(--color-primary-light);
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* Remove focus outline on mouse click for interactive elements */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible),
+[role="tab"]:focus:not(:focus-visible),
+[tabindex]:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Custom utility classes */
@@ -116,9 +129,42 @@ input, select, textarea {
   @apply rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50;
 }
 
+/* Remove focus ring on mouse click for form elements, keep for keyboard navigation */
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+  @apply ring-0;
+}
+
 /* Buttons */
 button {
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+  @apply focus:outline-none;
+}
+
+button:focus-visible {
+  @apply ring-2 ring-offset-2 ring-primary;
+}
+
+/* SVG and Icon fixes */
+svg {
+  /* Ensure SVG icons render properly */
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+/* Heroicons specific fixes */
+svg[data-slot="icon"] {
+  /* Preserve Heroicons default styling */
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+/* Prevent text color from affecting icon structure */
+.icon-container svg {
+  /* Reset any inherited text styles that might affect SVG rendering */
+  font-family: inherit;
+  font-size: inherit;
 }
 
 /* Tables */

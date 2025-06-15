@@ -15,9 +15,26 @@ const mockApi = {
 
     // Parse the URL to determine which handler to use
     const urlParts = url.split('/').filter(Boolean);
-    const resource = urlParts[0];
-    const id = urlParts[1];
-    const action = urlParts[2];
+    const resource = urlParts[0] || '';
+
+    // Improved URL parsing logic to handle both ID-based and action-based routes
+    let id: string | undefined;
+    let action: string | undefined;
+
+    // Special handling for resources that use action-based routes
+    const actionBasedResources = ['dashboard', 'auth', 'profile'];
+
+    if (actionBasedResources.includes(resource)) {
+      // For action-based resources: /resource/action
+      action = urlParts[1];
+      id = undefined;
+    } else {
+      // For ID-based resources: /resource/id/action
+      id = urlParts[1];
+      action = urlParts[2];
+    }
+
+    console.log(`[Mock API] URL parsing: url="${url}", resource="${resource}", id="${id}", action="${action}"`);
 
     // Extract query parameters
     const queryParams = config?.params || {};
@@ -28,7 +45,10 @@ const mockApi = {
       // Route to the appropriate mock handler
       switch (resource) {
         case 'users':
-          if (id) {
+          if (id && action === 'status') {
+            // This is a status endpoint, but it's a GET request which shouldn't happen
+            response = { error: 'Status endpoint requires PUT method' };
+          } else if (id) {
             response = await handlers.users.getById(id);
           } else {
             response = await handlers.users.getAll(queryParams);
@@ -36,10 +56,26 @@ const mockApi = {
           break;
 
         case 'suppliers':
-          if (id) {
+          if (id && action === 'products') {
+            response = await handlers.suppliers.getProducts?.(id, queryParams) || { error: 'Not implemented' };
+          } else if (id && action === 'documents') {
+            response = await handlers.suppliers.getDocuments?.(id, queryParams) || { error: 'Not implemented' };
+          } else if (id && action === 'analytics') {
+            response = await handlers.suppliers.getAnalytics?.(id, queryParams) || { error: 'Not implemented' };
+          } else if (id) {
             response = await handlers.suppliers.getById?.(id) || { error: 'Not implemented' };
           } else {
             response = await handlers.suppliers.getAll(queryParams);
+          }
+          break;
+
+        case 'products':
+          if (id && action === 'upload-images') {
+            response = await handlers.products.uploadImages?.(id, []) || { error: 'Not implemented' };
+          } else if (id) {
+            response = await handlers.products.getById?.(id) || { error: 'Not implemented' };
+          } else {
+            response = { error: 'Products list not implemented' };
           }
           break;
 
@@ -59,8 +95,29 @@ const mockApi = {
           }
           break;
 
+        case 'verifications':
+          if (id) {
+            response = await handlers.verifications?.getById?.(id) || { error: 'Not implemented' };
+          } else {
+            response = await handlers.verifications?.getAll?.(queryParams) || { error: 'Not implemented' };
+          }
+          break;
+
         case 'dashboard':
-          response = await handlers.dashboard.getStats();
+          if (action === 'stats') {
+            response = await handlers.dashboard.getStats();
+          } else if (action === 'sales') {
+            response = await handlers.dashboard.getSalesData(queryParams.period || 'month');
+          } else if (action === 'user-growth') {
+            response = await handlers.dashboard.getUserGrowth(queryParams.period || 'month');
+          } else if (action === 'category-distribution') {
+            response = await handlers.dashboard.getCategoryDistribution();
+          } else if (!action) {
+            // Default to stats if no action specified
+            response = await handlers.dashboard.getStats();
+          } else {
+            response = { error: `Unknown dashboard action: ${action}` };
+          }
           break;
 
         case 'auth':
@@ -71,6 +128,29 @@ const mockApi = {
             response = await handlers.auth.getCurrentUser(token);
           } else {
             response = { error: `Unknown auth action: ${action}` };
+          }
+          break;
+
+        case 'profile':
+          if (action === 'activity') {
+            // GET /profile/activity - get activity log
+            response = await handlers.profile.getActivityLog(queryParams);
+          } else if (action === 'preferences') {
+            // GET /profile/preferences - get preferences
+            response = await handlers.profile.getPreferences();
+          } else if (!action) {
+            // GET /profile - get current user's profile
+            response = await handlers.profile.getProfile();
+          } else {
+            response = { error: `Unknown profile action: ${action}` };
+          }
+          break;
+
+        case 'business-types':
+          if (id) {
+            response = await handlers.businessTypes.getById(id);
+          } else {
+            response = await handlers.businessTypes.getAll();
           }
           break;
 
@@ -117,8 +197,7 @@ const mockApi = {
 
     const urlParts = url.split('/').filter(Boolean);
     const resource = urlParts[0];
-    // const _id = urlParts[1];
-    // const _action = urlParts[2];
+    const action = urlParts[1];
 
     try {
       let response;
@@ -132,11 +211,26 @@ const mockApi = {
         // Handle other resources
         switch (resource) {
           case 'users':
-            response = await handlers.users.create(data);
+            if (action === 'upload-image') {
+              response = await handlers.users.uploadImage(data.image);
+            } else {
+              response = await handlers.users.create(data);
+            }
             break;
 
           case 'suppliers':
-            response = await handlers.suppliers.create?.(data) || { error: 'Not implemented' };
+            // Special case: suppliers use ID-based routes even for POST upload-image
+            // POST /suppliers/ID/upload-image
+            if (urlParts[2] === 'upload-image') {
+              const supplierId = urlParts[1];
+              if (supplierId) {
+                response = await handlers.suppliers.uploadImage?.(supplierId, data.image) || { error: 'Not implemented' };
+              } else {
+                response = { error: 'Missing supplier ID for image upload' };
+              }
+            } else {
+              response = await handlers.suppliers.create?.(data) || { error: 'Not implemented' };
+            }
             break;
 
           case 'categories':
@@ -145,6 +239,18 @@ const mockApi = {
 
           case 'orders':
             response = await handlers.orders.create?.(data) || { error: 'Not implemented' };
+            break;
+
+          case 'verifications':
+            response = await handlers.verifications?.create?.(data) || { error: 'Not implemented' };
+            break;
+
+          case 'profile':
+            if (url === '/profile/upload-image' || url === '/profile/picture') {
+              response = await handlers.profile.updateProfilePicture(data);
+            } else {
+              response = { error: 'Unknown profile POST action' };
+            }
             break;
 
           default:
@@ -189,15 +295,30 @@ const mockApi = {
     console.log(`[Mock API] PUT ${url}`, data, config);
 
     const urlParts = url.split('/').filter(Boolean);
-    const resource = urlParts[0];
-    const id = urlParts[1];
+    const resource = urlParts[0] || '';
+
+    // Use the same improved URL parsing logic as GET
+    let id: string | undefined;
+    let action: string | undefined;
+
+    const actionBasedResources = ['dashboard', 'auth', 'profile'];
+
+    if (actionBasedResources.includes(resource)) {
+      action = urlParts[1];
+      id = undefined;
+    } else {
+      id = urlParts[1];
+      action = urlParts[2];
+    }
 
     try {
       let response;
 
       switch (resource) {
         case 'users':
-          if (id) {
+          if (id && action === 'status') {
+            response = await handlers.users.toggleStatus(id, data.status);
+          } else if (id) {
             response = await handlers.users.update(id, data);
           } else {
             response = { error: 'Missing ID for update' };
@@ -205,8 +326,29 @@ const mockApi = {
           break;
 
         case 'suppliers':
-          if (id) {
+          if (id && action === 'verification') {
+            response = await handlers.suppliers.updateVerification?.(id, data) || { error: 'Not implemented' };
+          } else if (id && action === 'documents') {
+            const documentId = urlParts[3]; // suppliers/ID/documents/DOC_ID
+            if (documentId) {
+              response = { error: 'Document update not supported' };
+            } else {
+              response = { error: 'Missing document ID for update' };
+            }
+          } else if (id && action === 'ban') {
+            response = await handlers.suppliers.ban?.(id) || { error: 'Not implemented' };
+          } else if (id && action === 'unban') {
+            response = await handlers.suppliers.unban?.(id) || { error: 'Not implemented' };
+          } else if (id) {
             response = await handlers.suppliers.update?.(id, data) || { error: 'Not implemented' };
+          } else {
+            response = { error: 'Missing ID for update' };
+          }
+          break;
+
+        case 'products':
+          if (id) {
+            response = await handlers.products.update?.(id, data) || { error: 'Not implemented' };
           } else {
             response = { error: 'Missing ID for update' };
           }
@@ -225,6 +367,35 @@ const mockApi = {
             response = await handlers.orders.update?.(id, data) || { error: 'Not implemented' };
           } else {
             response = { error: 'Missing ID for update' };
+          }
+          break;
+
+        case 'verifications':
+          if (id && action === 'approve') {
+            response = await handlers.verifications?.approve?.(id, data.notes) || { error: 'Not implemented' };
+          } else if (id && action === 'reject') {
+            response = await handlers.verifications?.reject?.(id, data.notes) || { error: 'Not implemented' };
+          } else if (id && action === 'status') {
+            response = await handlers.verifications?.updateStatus?.(id, data.status) || { error: 'Not implemented' };
+          } else if (id) {
+            response = await handlers.verifications?.update?.(id, data) || { error: 'Not implemented' };
+          } else {
+            response = { error: 'Missing ID for update' };
+          }
+          break;
+
+        case 'profile':
+          if (action === 'password') {
+            response = await handlers.profile.changePassword(data);
+          } else if (action === 'picture') {
+            response = await handlers.profile.updateProfilePicture(data);
+          } else if (action === 'preferences') {
+            response = await handlers.profile.updatePreferences(data);
+          } else if (!action) {
+            // PUT /profile - update current user's profile
+            response = await handlers.profile.updateProfile(data);
+          } else {
+            response = { error: `Unknown profile update action: ${action}` };
           }
           break;
 
@@ -269,8 +440,21 @@ const mockApi = {
     console.log(`[Mock API] DELETE ${url}`, config);
 
     const urlParts = url.split('/').filter(Boolean);
-    const resource = urlParts[0];
-    const id = urlParts[1];
+    const resource = urlParts[0] || '';
+
+    // Use the same improved URL parsing logic
+    let id: string | undefined;
+    let action: string | undefined;
+
+    const actionBasedResources = ['dashboard', 'auth', 'profile'];
+
+    if (actionBasedResources.includes(resource)) {
+      action = urlParts[1];
+      id = undefined;
+    } else {
+      id = urlParts[1];
+      action = urlParts[2];
+    }
 
     try {
       let response;
@@ -305,6 +489,22 @@ const mockApi = {
             response = await handlers.orders.delete?.(id) || { error: 'Not implemented' };
           } else {
             response = { error: 'Missing ID for delete' };
+          }
+          break;
+
+        case 'verifications':
+          if (id) {
+            response = { success: true }; // Verifications don't have delete in handlers yet
+          } else {
+            response = { error: 'Missing ID for delete' };
+          }
+          break;
+
+        case 'profile':
+          if (action === 'picture') {
+            response = await handlers.profile.deleteProfilePicture();
+          } else {
+            response = { error: `Unknown profile delete action: ${action}` };
           }
           break;
 

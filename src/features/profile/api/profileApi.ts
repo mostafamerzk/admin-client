@@ -5,6 +5,8 @@
  */
 
 import apiClient from '../../../api';
+import { handleApiError } from '../../../utils/errorHandling';
+import { responseValidators } from '../../../utils/apiHelpers';
 import type { UserProfile, ProfileUpdateRequest, PasswordChangeRequest, ActivityLogItem } from '../types';
 
 export const profileApi = {
@@ -14,13 +16,9 @@ export const profileApi = {
   getProfile: async (): Promise<UserProfile> => {
     try {
       const response = await apiClient.get<UserProfile>('/profile');
-      if (!response.data) {
-        throw new Error('No profile data received');
-      }
-      return response.data;
+      return responseValidators.getById(response, 'profile', 'current');
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -30,13 +28,9 @@ export const profileApi = {
   updateProfile: async (profileData: ProfileUpdateRequest): Promise<UserProfile> => {
     try {
       const response = await apiClient.put<UserProfile>('/profile', profileData);
-      if (!response.data) {
-        throw new Error('Failed to update profile');
-      }
-      return response.data;
+      return responseValidators.update(response, 'profile', 'current');
     } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -53,13 +47,10 @@ export const profileApi = {
           'Content-Type': 'multipart/form-data'
         }
       });
-      if (!response.data) {
-        throw new Error('Failed to update profile picture');
-      }
-      return response.data;
+
+      return responseValidators.update(response, 'profile picture', 'current');
     } catch (error) {
-      console.error('Error updating profile picture:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -71,8 +62,7 @@ export const profileApi = {
       await apiClient.put('/profile/password', passwordData);
       return { success: true };
     } catch (error) {
-      console.error('Error changing password:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -82,13 +72,9 @@ export const profileApi = {
   deleteProfilePicture: async (): Promise<UserProfile> => {
     try {
       const response = await apiClient.delete<UserProfile>('/profile/picture');
-      if (!response.data) {
-        throw new Error('Failed to delete profile picture');
-      }
-      return response.data;
+      return responseValidators.update(response, 'profile picture', 'current');
     } catch (error) {
-      console.error('Error deleting profile picture:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -98,10 +84,10 @@ export const profileApi = {
   updateAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
     try {
       const profile = await profileApi.updateProfilePicture(file);
-      return { avatarUrl: profile.avatar || '' };
+      const avatarUrl = profile.avatar || '';
+      return { avatarUrl };
     } catch (error) {
-      console.error('Error updating avatar:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -111,13 +97,10 @@ export const profileApi = {
   updatePreferences: async (preferences: UserProfile['notificationsEnabled']): Promise<UserProfile['notificationsEnabled']> => {
     try {
       const response = await apiClient.put<{ preferences: UserProfile['notificationsEnabled'] }>('/profile/preferences', { preferences });
-      if (!response.data) {
-        throw new Error('Failed to update preferences');
-      }
-      return response.data.preferences;
+      const data = responseValidators.update(response, 'preferences', 'current');
+      return data.preferences;
     } catch (error) {
-      console.error('Error updating preferences:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -127,13 +110,9 @@ export const profileApi = {
   getActivityLog: async (params?: { page?: number; limit?: number }): Promise<ActivityLogItem[]> => {
     try {
       const response = await apiClient.get<ActivityLogItem[]>('/profile/activity', { params });
-      if (!response.data) {
-        throw new Error('No activity log data received');
-      }
-      return response.data;
+      return responseValidators.getList(response, 'activity log', true);
     } catch (error) {
-      console.error('Error fetching activity log:', error);
-      throw error;
+      throw handleApiError(error);
     }
   }
 };

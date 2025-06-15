@@ -1,5 +1,11 @@
 import axios from 'axios';
-import { API_URL, USE_MOCK_API } from '../../constants/config';
+import {
+  API_URL,
+  USE_MOCK_API,
+  API_TIMEOUT,
+  API_RETRY_ATTEMPTS,
+  API_CACHE_TTL
+} from '../../constants/config';
 import mockApi from '../../services/mockApi';
 import type { AxiosInstance, AxiosRequestConfig } from './types';
 import type { ApiResponse, MiddlewareConfig, CacheConfig, RetryConfig } from './types';
@@ -7,25 +13,8 @@ import { authMiddleware, loggingMiddleware } from './middlewares';
 import { CacheManager } from './cache';
 import { setupInterceptors } from './interceptors';
 
-// Add auth middleware to the default middlewares
+// Default middlewares
 const defaultMiddlewares: MiddlewareConfig[] = [
-  {
-    onRequest: async (config) => {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    },
-    onResponse: async (response) => response,
-    onError: async (error) => {
-      if (error.response?.status === 401) {
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
-      }
-      return Promise.reject(error);
-    }
-  },
   authMiddleware,
   loggingMiddleware,
 ];
@@ -44,11 +33,11 @@ export class ApiClient {
 
     this.cacheManager = new CacheManager({
       enabled: true,
-      ttl: 5 * 60 * 1000, // 5 minutes
+      ttl: API_CACHE_TTL,
     });
 
     this.retryConfig = {
-      maxRetries: 3,
+      maxRetries: API_RETRY_ATTEMPTS,
       initialDelay: 1000,
       maxDelay: 10000,
     };
@@ -63,11 +52,14 @@ export class ApiClient {
   private createApiInstance(): AxiosInstance {
     const instance = axios.create({
       baseURL: API_URL,
-      timeout: 10000,
+      timeout: API_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest', // Helps with CORS
       },
+      // Enable credentials for cross-origin requests
+      withCredentials: false, // Set to true if your backend requires cookies
     });
 
     setupInterceptors(instance, this.middlewares, this.cacheManager, this.retryConfig);

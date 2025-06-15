@@ -112,18 +112,8 @@ const OrderDetailsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="text-center space-y-6 max-w-md mx-auto">
-          <LoadingSpinner size="lg" className="mb-2" />
-          <div className="space-y-3">
-            <h3 className="text-lg sm:text-xl font-medium text-gray-900">
-              Loading Order Details
-            </h3>
-            <p className="text-sm sm:text-base text-gray-500 leading-relaxed">
-              Please wait while we fetch the complete order information...
-            </p>
-          </div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

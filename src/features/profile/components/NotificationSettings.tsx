@@ -6,12 +6,12 @@
  */
 
 import React from 'react';
-import type{ UserProfile } from '../types/index';
+import type { UserProfile } from '../types/index';
 import ToggleSwitch from '../../../components/common/ToggleSwitch';
 import { BellIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 interface NotificationSettingsProps {
-  profile: UserProfile;
+  profile: UserProfile | null;
   onToggleChange: (setting: string) => void;
   isAdmin?: boolean;
 }
@@ -21,6 +21,16 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   onToggleChange,
   isAdmin = false
 }) => {
+  // Return null or loading state if profile is not available
+  if (!profile) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <p className="text-gray-500">Notification settings not available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

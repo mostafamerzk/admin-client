@@ -49,7 +49,7 @@ const EntityForm: React.FC<EntityFormProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev: any) => ({ ...prev, [name]: checked }));
@@ -112,7 +112,7 @@ const EntityForm: React.FC<EntityFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       onSubmit(formData);
     }
@@ -304,16 +304,16 @@ const EntityForm: React.FC<EntityFormProps> = ({
       {entityType === 'user' ? renderUserFields() : renderSupplierFields()}
 
       <div className="flex justify-end space-x-3">
-        <Button 
-          type="button" 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={onCancel}
           disabled={isLoading}
         >
           Cancel
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           loading={isLoading}
         >
           Save Changes

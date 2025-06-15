@@ -189,6 +189,48 @@ export const validationRules = {
   confirmPasswordMatch: (message: string = 'Passwords do not match'): ValidationRule => ({
     validator: (value: string, formData?: any) => doPasswordsMatch(value, formData?.password),
     message
+  }),
+
+  // Product-specific validation rules
+  sku: (message: string = 'Please enter a valid SKU'): ValidationRule => ({
+    validator: (value: string) => /^[A-Z0-9-_]{3,20}$/i.test(value),
+    message
+  }),
+
+  price: (message: string = 'Please enter a valid price'): ValidationRule => ({
+    validator: (value: number) => value > 0 && value <= 999999,
+    message
+  }),
+
+  stock: (message: string = 'Please enter a valid stock quantity'): ValidationRule => ({
+    validator: (value: number) => Number.isInteger(value) && value >= 0,
+    message
+  }),
+
+  minimumStock: (message: string = 'Please enter a valid minimum stock level'): ValidationRule => ({
+    validator: (value: number) => Number.isInteger(value) && value >= 0,
+    message
+  }),
+
+  stockConsistency: (message: string = 'Minimum stock cannot be greater than current stock'): ValidationRule => ({
+    validator: (minimumStock: number, formData?: any) => {
+      if (!formData || !formData.stock) return true;
+      return minimumStock <= formData.stock;
+    },
+    message
+  }),
+
+  arrayNotEmpty: (message: string = 'At least one item is required'): ValidationRule => ({
+    validator: (value: any[]) => Array.isArray(value) && value.length > 0,
+    message
+  }),
+
+  imageArray: (maxFiles: number = 10, message?: string): ValidationRule => ({
+    validator: (value: any[]) => {
+      if (!Array.isArray(value)) return false;
+      return value.length <= maxFiles;
+    },
+    message: message || `Maximum ${maxFiles} images allowed`
   })
 };
 

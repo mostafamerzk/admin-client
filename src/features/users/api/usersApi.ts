@@ -1,11 +1,12 @@
 /**
  * Users API Service
- * 
+ *
  * This file provides methods for interacting with the users API endpoints.
  */
 
 import apiClient from '../../../api';
 import { handleApiError } from '../../../utils/errorHandling';
+import { responseValidators } from '../../../utils/apiHelpers';
 import type { User, UserFormData } from '../types';
 
 /**
@@ -20,10 +21,7 @@ export const usersApi = {
   getUsers: async (params?: Record<string, any>): Promise<User[]> => {
     try {
       const response = await apiClient.get<User[]>('/users', { params });
-      if (!response.data) {
-        throw new Error('No users data received');
-      }
-      return response.data;
+      return responseValidators.getList(response, 'users');
     } catch (error) {
       throw handleApiError(error);
     }
@@ -37,10 +35,7 @@ export const usersApi = {
   getUserById: async (id: string): Promise<User> => {
     try {
       const response = await apiClient.get<User>(`/users/${id}`);
-      if (!response.data) {
-        throw new Error(`No user data received for ID: ${id}`);
-      }
-      return response.data;
+      return responseValidators.getById(response, 'user', id);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -54,10 +49,7 @@ export const usersApi = {
   createUser: async (userData: UserFormData): Promise<User> => {
     try {
       const response = await apiClient.post<User>('/users', userData);
-      if (!response.data) {
-        throw new Error('Failed to create user');
-      }
-      return response.data;
+      return responseValidators.create(response, 'user');
     } catch (error) {
       throw handleApiError(error);
     }
@@ -72,10 +64,7 @@ export const usersApi = {
   updateUser: async (id: string, userData: UserFormData): Promise<User> => {
     try {
       const response = await apiClient.put<User>(`/users/${id}`, userData);
-      if (!response.data) {
-        throw new Error(`Failed to update user ${id}`);
-      }
-      return response.data;
+      return responseValidators.update(response, 'user', id);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -88,7 +77,8 @@ export const usersApi = {
    */
   deleteUser: async (id: string): Promise<void> => {
     try {
-      await apiClient.delete(`/users/${id}`);
+      const response = await apiClient.delete(`/users/${id}`);
+      return responseValidators.delete(response, 'user', id);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -103,10 +93,7 @@ export const usersApi = {
   toggleUserStatus: async (id: string, status: 'active' | 'banned'): Promise<User> => {
     try {
       const response = await apiClient.put<User>(`/users/${id}/status`, { status });
-      if (!response.data) {
-        throw new Error(`Failed to toggle status for user ${id}`);
-      }
-      return response.data;
+      return responseValidators.update(response, 'user', id);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -119,13 +106,10 @@ export const usersApi = {
    */
   searchUsers: async (query: string): Promise<User[]> => {
     try {
-      const response = await apiClient.get<User[]>('/users', { 
-        params: { search: query } 
+      const response = await apiClient.get<User[]>('/users', {
+        params: { search: query }
       });
-      if (!response.data) {
-        throw new Error('No users data received');
-      }
-      return response.data;
+      return responseValidators.getList(response, 'users', true);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -141,10 +125,7 @@ export const usersApi = {
       const response = await apiClient.get<User[]>('/users', {
         params: { type }
       });
-      if (!response.data) {
-        throw new Error('No users data received');
-      }
-      return response.data;
+      return responseValidators.getList(response, 'users', true);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -165,10 +146,7 @@ export const usersApi = {
           'Content-Type': 'multipart/form-data'
         }
       });
-      if (!response.data) {
-        throw new Error('Failed to upload user image');
-      }
-      return response.data;
+      return responseValidators.create(response, 'user image');
     } catch (error) {
       throw handleApiError(error);
     }

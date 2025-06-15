@@ -18,6 +18,7 @@ export const ENDPOINTS = {
   USERS: {
     BASE: '/users',
     DETAILS: (id: string) => `/users/${id}`,
+    STATUS: (id: string) => `/users/${id}/status`,
     BAN: (id: string) => `/users/${id}/ban`,
     UNBAN: (id: string) => `/users/${id}/unban`,
     UPLOAD_IMAGE: '/users/upload-image',
@@ -56,16 +57,10 @@ export const ENDPOINTS = {
   // Dashboard endpoints
   DASHBOARD: {
     STATS: '/dashboard/stats',
+    SALES: '/dashboard/sales',
+    USER_GROWTH: '/dashboard/user-growth',
+    CATEGORY_DISTRIBUTION: '/dashboard/category-distribution',
     RECENT_ORDERS: '/dashboard/recent-orders',
     SALES_CHART: '/dashboard/sales-chart',
-    USER_GROWTH: '/dashboard/user-growth',
-  },
-  
-  // Settings endpoints
-  SETTINGS: {
-    BASE: '/settings',
-    PROFILE: '/settings/profile',
-    SECURITY: '/settings/security',
-    NOTIFICATIONS: '/settings/notifications',
   },
 };

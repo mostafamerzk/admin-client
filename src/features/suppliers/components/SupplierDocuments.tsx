@@ -2,13 +2,12 @@
  * Supplier Documents Component
  *
  * This component displays verification documents submitted by the supplier
- * with document preview/download functionality and status management.
+ * with document preview/download functionality.
  */
 
 import React, { useState } from 'react';
 import DetailSection from '../../../components/common/DetailSection';
 import Button from '../../../components/common/Button';
-import StatusBadge from '../../../components/common/StatusBadge';
 import Modal from '../../../components/common/Modal';
 import useNotification from '../../../hooks/useNotification';
 import type { SupplierDocument } from '../types';
@@ -16,9 +15,6 @@ import {
   DocumentTextIcon,
   EyeIcon,
   ArrowDownTrayIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
   CalendarIcon,
   DocumentIcon
 } from '@heroicons/react/24/outline';
@@ -27,15 +23,13 @@ import { formatDate, formatFileSize } from '../../../utils/formatters';
 interface SupplierDocumentsProps {
   documents: SupplierDocument[];
   supplierId?: string;
-  onDocumentUpdate?: () => void;
 }
 
 const SupplierDocuments: React.FC<SupplierDocumentsProps> = ({
   documents,
-  supplierId: _supplierId,
-  onDocumentUpdate
+  supplierId: _supplierId
 }) => {
-  const { showSuccess, showError, showInfo } = useNotification();
+  const { showInfo } = useNotification();
   const [selectedDocument, setSelectedDocument] = useState<SupplierDocument | null>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
@@ -50,32 +44,6 @@ const SupplierDocuments: React.FC<SupplierDocumentsProps> = ({
     return typeLabels[type] || 'Unknown Document';
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      case 'pending':
-        return <ClockIcon className="w-5 h-5 text-yellow-500" />;
-      case 'rejected':
-        return <XCircleIcon className="w-5 h-5 text-red-500" />;
-      default:
-        return <ClockIcon className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusBadgeStatus = (status: string): string => {
-    switch (status) {
-      case 'approved':
-        return 'verified';
-      case 'pending':
-        return 'pending';
-      case 'rejected':
-        return 'rejected';
-      default:
-        return 'pending';
-    }
-  };
-
   const handleViewDocument = (document: SupplierDocument) => {
     setSelectedDocument(document);
     setIsPreviewModalOpen(true);
@@ -85,26 +53,6 @@ const SupplierDocuments: React.FC<SupplierDocumentsProps> = ({
     // In a real implementation, this would trigger a download
     showInfo(`Downloading ${document.name}...`);
     console.log('Download document:', document);
-  };
-
-  const handleApproveDocument = async (_documentId: string) => {
-    try {
-      // In a real implementation, this would call an API
-      showSuccess('Document approved successfully');
-      onDocumentUpdate?.();
-    } catch (error) {
-      showError('Failed to approve document');
-    }
-  };
-
-  const handleRejectDocument = async (_documentId: string) => {
-    try {
-      // In a real implementation, this would call an API
-      showInfo('Document rejected');
-      onDocumentUpdate?.();
-    } catch (error) {
-      showError('Failed to reject document');
-    }
   };
 
   if (documents.length === 0) {
@@ -144,9 +92,6 @@ const SupplierDocuments: React.FC<SupplierDocumentsProps> = ({
                   Upload Date
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -178,15 +123,6 @@ const SupplierDocuments: React.FC<SupplierDocumentsProps> = ({
                       {formatDate(document.uploadDate)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(document.status)}
-                      <StatusBadge
-                        status={getStatusBadgeStatus(document.status)}
-                        type="verification"
-                      />
-                    </div>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
                       <Button
@@ -205,24 +141,6 @@ const SupplierDocuments: React.FC<SupplierDocumentsProps> = ({
                       >
                         Download
                       </Button>
-                      {document.status === 'pending' && (
-                        <>
-                          <Button
-                            variant="success"
-                            size="xs"
-                            onClick={() => handleApproveDocument(document.id)}
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            variant="danger"
-                            size="xs"
-                            onClick={() => handleRejectDocument(document.id)}
-                          >
-                            Reject
-                          </Button>
-                        </>
-                      )}
                     </div>
                   </td>
                 </tr>
@@ -271,16 +189,6 @@ const SupplierDocuments: React.FC<SupplierDocumentsProps> = ({
                 <div>
                   <span className="font-medium text-gray-500">Upload Date:</span>
                   <div className="text-gray-900">{formatDate(selectedDocument.uploadDate)}</div>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-500">Status:</span>
-                  <div className="flex items-center space-x-2">
-                    {getStatusIcon(selectedDocument.status)}
-                    <StatusBadge
-                      status={getStatusBadgeStatus(selectedDocument.status)}
-                      type="verification"
-                    />
-                  </div>
                 </div>
               </div>
               {selectedDocument.notes && (

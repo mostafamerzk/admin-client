@@ -5,12 +5,12 @@
  */
 
 import React from 'react';
-import type{ UserProfile } from '../types/index';
+import type { UserProfile } from '../types/index';
 import Button from '../../../components/common/Button';
 import ToggleSwitch from '../../../components/common/ToggleSwitch';
 
 interface SecuritySettingsProps {
-  profile: UserProfile;
+  profile: UserProfile | null;
   onToggleChange: (setting: string) => void;
   onChangePassword: () => void;
   onSignOutAllDevices: () => void;
@@ -22,6 +22,17 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({
   onChangePassword,
   onSignOutAllDevices
 }) => {
+  // Return null or loading state if profile is not available
+  if (!profile) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <p className="text-gray-500">Security settings not available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between py-4 border-b border-gray-100">

@@ -77,7 +77,84 @@ export const useEntityData = <T, IdType = string>(
     }
   }, []); // No dependencies needed due to refs
 
-  // Other common methods (create, update, delete)
+  const createEntity = useCallback(async (data: any) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const newEntity = await apiServiceRef.current.create(data);
+      setEntities(prev => [...prev, newEntity]);
+      showNotificationRef.current({
+        type: 'success',
+        title: 'Success',
+        message: `${entityNameRef.current} created successfully`
+      });
+      return newEntity;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: `Failed to create ${entityNameRef.current}`
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const updateEntity = useCallback(async (id: IdType, data: any) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updatedEntity = await apiServiceRef.current.update(id, data);
+      setEntities(prev => prev.map(entity =>
+        (entity as any).id === id ? updatedEntity : entity
+      ));
+      showNotificationRef.current({
+        type: 'success',
+        title: 'Success',
+        message: `${entityNameRef.current} updated successfully`
+      });
+      return updatedEntity;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: `Failed to update ${entityNameRef.current}`
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const deleteEntity = useCallback(async (id: IdType) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await apiServiceRef.current.delete(id);
+      setEntities(prev => prev.filter(entity => (entity as any).id !== id));
+      showNotificationRef.current({
+        type: 'success',
+        title: 'Success',
+        message: `${entityNameRef.current} deleted successfully`
+      });
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: `Failed to delete ${entityNameRef.current}`
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Initial fetch effect - runs only once
   useEffect(() => {
@@ -110,7 +187,11 @@ export const useEntityData = <T, IdType = string>(
 
       initialFetch();
     }
-  }, []); // Empty dependency array - runs only once on mount
+  }, [
+    apiService,
+    options.entityName,
+    options.initialFetch
+  ]); // Empty dependency array - runs only once on mount
 
   return {
     entities,
@@ -118,6 +199,9 @@ export const useEntityData = <T, IdType = string>(
     error,
     fetchEntities,
     getEntityById,
-    // Other methods
+    createEntity,
+    updateEntity,
+    deleteEntity,
+    setEntities // Expose setEntities for custom state updates
   };
 };

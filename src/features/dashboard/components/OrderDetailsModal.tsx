@@ -85,7 +85,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <div className="mt-1">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(order.status)}`}>
                 {getStatusIcon(order.status)}
-                <span className="ml-1">{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
+                <span className="ml-1">{order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Unknown'}</span>
               </span>
             </div>
           </div>

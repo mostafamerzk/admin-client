@@ -10,23 +10,24 @@ export interface Supplier {
   email: string;
   phone: string;
   address: string;
-  status: 'active' | 'pending' | 'rejected';
+  status: 'active' | 'pending' | 'rejected' | 'banned';
   verificationStatus: 'verified' | 'pending' | 'rejected';
   joinDate: string;
-  categories: string[];
+  categories?: string[];
   contactPerson: string;
   logo?: string;
   website?: string;
 }
 
 export interface SupplierFormData {
-  name: string;
+  supplierName: string;
   email: string;
   phone: string;
   address: string;
-  categories: string[];
-  contactPerson: string;
-  logo?: string;
+  businessType: string;
+  password: string;
+  confirmPassword: string;
+  image?: File | null;
 }
 
 // Product types for supplier products
@@ -37,11 +38,37 @@ export interface SupplierProduct {
   category: string;
   price: number;
   stock: number;
+  minimumStock: number;
   status: 'active' | 'inactive' | 'out_of_stock';
   description?: string;
   image?: string;
+  images?: string[];
+  attributes?: ProductAttribute[];
+  variants?: ProductVariant[];
   createdAt: string;
   updatedAt: string;
+}
+
+// Product attribute types
+export interface ProductAttribute {
+  id: string;
+  name: string;
+  value: string;
+  type: 'text' | 'number' | 'boolean' | 'select';
+  unit?: string;
+}
+
+// Product variant types
+export interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  stock: number;
+  attributes: {
+    [key: string]: string;
+  };
+  image?: string;
 }
 
 // Document types for verification documents
@@ -52,7 +79,6 @@ export interface SupplierDocument {
   fileName: string;
   fileSize: number;
   uploadDate: string;
-  status: 'pending' | 'approved' | 'rejected';
   url: string;
   notes?: string;
 }

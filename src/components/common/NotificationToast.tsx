@@ -105,9 +105,9 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   };
   
   return (
-    <div 
+    <div
       className={`
-        max-w-sm w-full shadow-lg rounded-lg pointer-events-auto border overflow-hidden
+        min-w-80 max-w-md w-full shadow-lg rounded-lg pointer-events-auto border overflow-hidden
         transition-all duration-300 transform
         ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}
         ${getBgColor(notification.type)}
@@ -118,17 +118,17 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       data-testid={testId}
     >
       <div className="p-4">
-        <div className="flex items-start">
+        <div className="flex items-center">
           <div className="flex-shrink-0">
             {getIcon(notification.type)}
           </div>
-          <div className="ml-3 w-0 flex-1 pt-0.5">
+          <div className="ml-3 flex-1 min-w-0">
             {notification.title && (
-              <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{notification.title}</p>
             )}
-            <p className="mt-1 text-sm text-gray-500">{notification.message}</p>
+            <p className="text-sm text-gray-500 break-words">{notification.message}</p>
           </div>
-          <div className="ml-4 flex-shrink-0 flex">
+          <div className="ml-4 flex-shrink-0">
             <button
               className="bg-transparent rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               onClick={handleClose}

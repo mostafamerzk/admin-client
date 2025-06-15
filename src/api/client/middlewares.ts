@@ -1,8 +1,9 @@
 import type { MiddlewareConfig } from './types';
+import { authApi } from '../../features/auth/api/authApi';
 
 export const authMiddleware: MiddlewareConfig = {
   onRequest: async (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = authApi.getToken();
     if (token) {
       config.headers.set('Authorization', `Bearer ${token}`);
     }

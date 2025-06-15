@@ -1,10 +1,10 @@
 /**
  * Verifications Hook
- * 
+ *
  * This hook provides methods and state for working with verifications.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type{ Verification, VerificationUpdateData } from '../types/index';
 import verificationsApi from '../api/verificationsApi';
 import useNotification from '../../../hooks/useNotification';
@@ -15,6 +15,15 @@ export const useVerifications = () => {
   const [error, setError] = useState<Error | null>(null);
   const { showNotification } = useNotification();
 
+  // Use ref to avoid dependency issues with showNotification
+  const showNotificationRef = useRef(showNotification);
+  const hasInitialFetched = useRef(false);
+
+  // Update ref when showNotification changes
+  useEffect(() => {
+    showNotificationRef.current = showNotification;
+  });
+
   // Fetch all verifications
   const fetchVerifications = useCallback(async () => {
     setIsLoading(true);
@@ -24,7 +33,7 @@ export const useVerifications = () => {
       setVerifications(data);
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to fetch verifications'
@@ -32,7 +41,7 @@ export const useVerifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Get a verification by ID
   const getVerificationById = useCallback(async (id: string) => {
@@ -43,7 +52,7 @@ export const useVerifications = () => {
       return verification;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: `Failed to fetch verification ${id}`
@@ -52,7 +61,7 @@ export const useVerifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Get verifications by status
   const getVerificationsByStatus = useCallback(async (status: Verification['status']) => {
@@ -63,7 +72,7 @@ export const useVerifications = () => {
       return filteredVerifications;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: `Failed to fetch verifications with status ${status}`
@@ -72,7 +81,7 @@ export const useVerifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Update a verification
   const updateVerification = useCallback(async (id: string, data: VerificationUpdateData) => {
@@ -80,10 +89,10 @@ export const useVerifications = () => {
     setError(null);
     try {
       const updatedVerification = await verificationsApi.updateVerification(id, data);
-      setVerifications(prevVerifications => 
+      setVerifications(prevVerifications =>
         prevVerifications.map(verification => verification.id === id ? updatedVerification : verification)
       );
-      showNotification({
+      showNotificationRef.current({
         type: 'success',
         title: 'Success',
         message: 'Verification updated successfully'
@@ -91,7 +100,7 @@ export const useVerifications = () => {
       return updatedVerification;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to update verification'
@@ -100,7 +109,7 @@ export const useVerifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Approve a verification
   const approveVerification = useCallback(async (id: string, notes: string = '') => {
@@ -108,18 +117,13 @@ export const useVerifications = () => {
     setError(null);
     try {
       const approvedVerification = await verificationsApi.approveVerification(id, notes);
-      setVerifications(prevVerifications => 
+      setVerifications(prevVerifications =>
         prevVerifications.map(verification => verification.id === id ? approvedVerification : verification)
       );
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Verification approved successfully'
-      });
       return approvedVerification;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to approve verification'
@@ -128,7 +132,7 @@ export const useVerifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Reject a verification
   const rejectVerification = useCallback(async (id: string, notes: string) => {
@@ -136,18 +140,13 @@ export const useVerifications = () => {
     setError(null);
     try {
       const rejectedVerification = await verificationsApi.rejectVerification(id, notes);
-      setVerifications(prevVerifications => 
+      setVerifications(prevVerifications =>
         prevVerifications.map(verification => verification.id === id ? rejectedVerification : verification)
       );
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Verification rejected successfully'
-      });
       return rejectedVerification;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to reject verification'
@@ -156,12 +155,15 @@ export const useVerifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Load verifications on mount
   useEffect(() => {
-    fetchVerifications();
-  }, [fetchVerifications]);
+    if (!hasInitialFetched.current) {
+      hasInitialFetched.current = true;
+      fetchVerifications();
+    }
+  }, []);
 
   return {
     verifications,

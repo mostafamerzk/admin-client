@@ -66,10 +66,10 @@ const MigrationNotice: React.FC<MigrationNoticeProps> = ({
             <div className="-mx-1.5 -my-1.5">
               <button
                 type="button"
-                className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  type === 'info' ? 'text-blue-500 hover:bg-blue-100 focus:ring-blue-600' :
-                  type === 'warning' ? 'text-yellow-500 hover:bg-yellow-100 focus:ring-yellow-600' :
-                  'text-green-500 hover:bg-green-100 focus:ring-green-600'
+                className={`inline-flex rounded-md p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  type === 'info' ? 'text-blue-500 hover:bg-blue-100 focus-visible:ring-blue-600' :
+                  type === 'warning' ? 'text-yellow-500 hover:bg-yellow-100 focus-visible:ring-yellow-600' :
+                  'text-green-500 hover:bg-green-100 focus-visible:ring-green-600'
                 }`}
                 onClick={onDismiss}
               >

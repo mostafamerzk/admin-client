@@ -1,11 +1,11 @@
 /**
  * Suppliers Hook
- * 
+ *
  * This hook provides methods and state for working with suppliers.
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import type{ Supplier, SupplierFormData } from '../types/index';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import type{ Supplier, SupplierFormData, SupplierProduct } from '../types/index';
 import suppliersApi from '../api/suppliersApi';
 import useNotification from '../../../hooks/useNotification';
 
@@ -14,6 +14,15 @@ export const useSuppliers = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { showNotification } = useNotification();
+
+  // Use ref to avoid dependency issues with showNotification
+  const showNotificationRef = useRef(showNotification);
+  const hasInitialFetched = useRef(false);
+
+  // Update ref when showNotification changes
+  useEffect(() => {
+    showNotificationRef.current = showNotification;
+  });
 
   // Fetch all suppliers
   const fetchSuppliers = useCallback(async () => {
@@ -24,7 +33,7 @@ export const useSuppliers = () => {
       setSuppliers(data);
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to fetch suppliers'
@@ -32,33 +41,39 @@ export const useSuppliers = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Create a new supplier
-  const createSupplier = useCallback(async (supplierData: SupplierFormData) => {
+  const createSupplier = useCallback(async (supplierData: SupplierFormData, showNotifications: boolean = true) => {
     setIsLoading(true);
     setError(null);
     try {
       const newSupplier = await suppliersApi.createSupplier(supplierData);
       setSuppliers(prevSuppliers => [...prevSuppliers, newSupplier]);
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Supplier created successfully'
-      });
+      if (showNotifications) {
+        showNotificationRef.current({
+          type: 'success',
+          title: 'Success',
+          message: 'Supplier created successfully'
+        });
+      }
       return newSupplier;
     } catch (err) {
       setError(err as Error);
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to create supplier'
-      });
+      // Don't show error notifications when showNotifications is false
+      // Let the form error handler manage the error display
+      if (showNotifications) {
+        showNotificationRef.current({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to create supplier'
+        });
+      }
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Update a supplier
   const updateSupplier = useCallback(async (id: string, supplierData: Partial<SupplierFormData>) => {
@@ -66,10 +81,10 @@ export const useSuppliers = () => {
     setError(null);
     try {
       const updatedSupplier = await suppliersApi.updateSupplier(id, supplierData);
-      setSuppliers(prevSuppliers => 
+      setSuppliers(prevSuppliers =>
         prevSuppliers.map(supplier => supplier.id === id ? updatedSupplier : supplier)
       );
-      showNotification({
+      showNotificationRef.current({
         type: 'success',
         title: 'Success',
         message: 'Supplier updated successfully'
@@ -77,7 +92,7 @@ export const useSuppliers = () => {
       return updatedSupplier;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to update supplier'
@@ -86,7 +101,7 @@ export const useSuppliers = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Delete a supplier
   const deleteSupplier = useCallback(async (id: string) => {
@@ -95,14 +110,10 @@ export const useSuppliers = () => {
     try {
       await suppliersApi.deleteSupplier(id);
       setSuppliers(prevSuppliers => prevSuppliers.filter(supplier => supplier.id !== id));
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Supplier deleted successfully'
-      });
+      // Note: Success notification is handled by the calling component for better UX
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to delete supplier'
@@ -111,7 +122,7 @@ export const useSuppliers = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Get supplier by ID
   const getSupplierById = useCallback(async (id: string) => {
@@ -122,7 +133,7 @@ export const useSuppliers = () => {
       return supplier;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: 'Failed to fetch supplier details'
@@ -131,7 +142,7 @@ export const useSuppliers = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Update supplier verification status
   const updateVerificationStatus = useCallback(async (id: string, status: 'verified' | 'pending' | 'rejected') => {
@@ -142,7 +153,7 @@ export const useSuppliers = () => {
       setSuppliers(prevSuppliers =>
         prevSuppliers.map(supplier => supplier.id === id ? updatedSupplier : supplier)
       );
-      showNotification({
+      showNotificationRef.current({
         type: 'success',
         title: 'Success',
         message: `Supplier ${status === 'verified' ? 'verified' : status === 'rejected' ? 'rejected' : 'set to pending'} successfully`
@@ -150,7 +161,7 @@ export const useSuppliers = () => {
       return updatedSupplier;
     } catch (err) {
       setError(err as Error);
-      showNotification({
+      showNotificationRef.current({
         type: 'error',
         title: 'Error',
         message: `Failed to update supplier verification status`
@@ -159,12 +170,218 @@ export const useSuppliers = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showNotification]);
+  }, []);
 
   // Load suppliers on mount
   useEffect(() => {
-    fetchSuppliers();
-  }, [fetchSuppliers]);
+    if (!hasInitialFetched.current) {
+      hasInitialFetched.current = true;
+      fetchSuppliers();
+    }
+  }, []);
+
+  // Get supplier products
+  const getSupplierProducts = useCallback(async (supplierId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const products = await suppliersApi.getSupplierProducts(supplierId);
+      return products;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch supplier products'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Get product by ID
+  const getProductById = useCallback(async (productId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const product = await suppliersApi.getProductById(productId);
+      return product;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch product details'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Update product
+  const updateProduct = useCallback(async (productId: string, productData: Partial<SupplierProduct>) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updatedProduct = await suppliersApi.updateProduct(productId, productData);
+      showNotificationRef.current({
+        type: 'success',
+        title: 'Success',
+        message: 'Product updated successfully'
+      });
+      return updatedProduct;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update product'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Upload product images
+  const uploadProductImages = useCallback(async (productId: string, files: File[]) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await suppliersApi.uploadProductImages(productId, files);
+      showNotificationRef.current({
+        type: 'success',
+        title: 'Success',
+        message: 'Product images uploaded successfully'
+      });
+      return result;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to upload product images'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Get supplier documents
+  const getSupplierDocuments = useCallback(async (supplierId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const documents = await suppliersApi.getSupplierDocuments(supplierId);
+      return documents;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch supplier documents'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Get supplier analytics
+  const getSupplierAnalytics = useCallback(async (supplierId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const analytics = await suppliersApi.getSupplierAnalytics(supplierId);
+      return analytics;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch supplier analytics'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Upload supplier image
+  const uploadSupplierImage = useCallback(async (supplierId: string, file: File) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await suppliersApi.uploadSupplierImage(supplierId, file);
+      showNotificationRef.current({
+        type: 'success',
+        title: 'Success',
+        message: 'Supplier image uploaded successfully'
+      });
+      return result;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to upload supplier image'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Ban a supplier
+  const banSupplier = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const bannedSupplier = await suppliersApi.banSupplier(id);
+      setSuppliers(prevSuppliers =>
+        prevSuppliers.map(supplier => supplier.id === id ? bannedSupplier : supplier)
+      );
+      // Note: Success notification is handled by the calling component for better UX
+      return bannedSupplier;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to ban supplier'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Unban a supplier
+  const unbanSupplier = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const unbannedSupplier = await suppliersApi.unbanSupplier(id);
+      setSuppliers(prevSuppliers =>
+        prevSuppliers.map(supplier => supplier.id === id ? unbannedSupplier : supplier)
+      );
+      // Note: Success notification is handled by the calling component for better UX
+      return unbannedSupplier;
+    } catch (err) {
+      setError(err as Error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to unban supplier'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   return {
     suppliers,
@@ -173,9 +390,21 @@ export const useSuppliers = () => {
     fetchSuppliers,
     getSupplierById,
     createSupplier,
+    createEntity: createSupplier, // Alias for consistency with user pattern
     updateSupplier,
     deleteSupplier,
-    updateVerificationStatus
+    deleteEntity: deleteSupplier, // Alias for consistency with user pattern
+    updateVerificationStatus,
+    getSupplierProducts,
+    getSupplierDocuments,
+    getSupplierAnalytics,
+    uploadSupplierImage,
+    banSupplier,
+    unbanSupplier,
+    // Product operations
+    getProductById,
+    updateProduct,
+    uploadProductImages
   };
 };
 

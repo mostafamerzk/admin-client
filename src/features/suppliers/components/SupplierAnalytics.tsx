@@ -6,13 +6,13 @@
  */
 
 import React from 'react';
-import { CurrencyDollarIcon, ShoppingCartIcon, CubeIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
-import MetricsSection from '../../../components/analytics/MetricsSection';
-import type { Metric } from '../../../components/analytics/MetricsSection';
+import { CurrencyDollarIcon, ShoppingCartIcon, CubeIcon } from '@heroicons/react/24/outline';
+import MetricsSection from '../../../components/common/MetricsSection';
+import type { Metric } from '../../../components/common/MetricsSection';
 import ChartSection from '../../../components/analytics/ChartSection';
-import BarChart from '../../../features/analytics/components/BarChart';
-import PieChart from '../../../features/analytics/components/PieChart';
-import DetailSection from '../../../components/common/DetailSection';
+import SimpleBarChart from '../../../components/common/SimpleBarChart';
+import SimplePieChart from '../../../components/common/SimplePieChart';
+// import DetailSection from '../../../components/common/DetailSection';
 import { formatCurrency } from '../../../utils/formatters';
 import type { SupplierAnalyticsData } from '../types';
 
@@ -39,11 +39,7 @@ const SupplierAnalytics: React.FC<SupplierAnalyticsProps> = ({ supplierData, sup
       value: supplierData.productCount,
       icon: <CubeIcon className="w-6 h-6 text-purple-500" />
     },
-    {
-      title: 'Avg Order Value',
-      value: formatCurrency(supplierData.averageOrderValue),
-      icon: <ArrowTrendingUpIcon className="w-6 h-6 text-orange-500" />
-    }
+    
   ];
 
   // Prepare chart data
@@ -70,7 +66,7 @@ const SupplierAnalytics: React.FC<SupplierAnalyticsProps> = ({ supplierData, sup
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartSection title="Revenue History" description="Supplier's revenue over time">
-          <BarChart
+          <SimpleBarChart
             data={revenueChartData.map(item => item.value)}
             labels={revenueChartData.map(item => item.label)}
             title="Revenue History"
@@ -79,7 +75,7 @@ const SupplierAnalytics: React.FC<SupplierAnalyticsProps> = ({ supplierData, sup
         </ChartSection>
 
         <ChartSection title="Order Trends" description="Number of orders over time">
-          <BarChart
+          <SimpleBarChart
             data={orderTrendsData.map(item => item.value)}
             labels={orderTrendsData.map(item => item.label)}
             title="Order Trends"
@@ -90,7 +86,7 @@ const SupplierAnalytics: React.FC<SupplierAnalyticsProps> = ({ supplierData, sup
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartSection title="Sales by Product" description="Revenue distribution by product">
-          <PieChart
+          <SimplePieChart
             title="Sales by Product"
             data={{
               labels: productChartData.map(item => item.label),
@@ -103,7 +99,7 @@ const SupplierAnalytics: React.FC<SupplierAnalyticsProps> = ({ supplierData, sup
         </ChartSection>
 
         <ChartSection title="Top Categories" description="Revenue by product category">
-          <PieChart
+          <SimplePieChart
             title="Top Categories"
             data={{
               labels: supplierData.topCategories.map(item => item.category),
@@ -116,7 +112,7 @@ const SupplierAnalytics: React.FC<SupplierAnalyticsProps> = ({ supplierData, sup
         </ChartSection>
       </div>
 
-      {/* Performance Summary */}
+      {/* Performance Summary
       <DetailSection
         title="Performance Summary"
         description="Key performance indicators and insights"
@@ -137,7 +133,7 @@ const SupplierAnalytics: React.FC<SupplierAnalyticsProps> = ({ supplierData, sup
             </div>
           </div>
         </div>
-      </DetailSection>
+      </DetailSection> */}
     </div>
   );
 };

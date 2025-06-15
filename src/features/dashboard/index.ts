@@ -8,6 +8,7 @@
 export { default as StatCard } from './components/StatCard';
 export { default as SalesChart } from './components/SalesChart';
 export { default as UserGrowthChart } from './components/UserGrowthChart';
+export { default as CategoryDistributionChart } from './components/CategoryDistributionChart';
 export { default as RecentOrders } from './components/RecentOrders';
 
 // Hooks

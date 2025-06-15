@@ -39,7 +39,10 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier }) => {
                     ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-red-100 text-red-800'
               }`}>
-                {supplier.verificationStatus.charAt(0).toUpperCase() + supplier.verificationStatus.slice(1)}
+                {supplier.verificationStatus ?
+                  supplier.verificationStatus.charAt(0).toUpperCase() + supplier.verificationStatus.slice(1) :
+                  'Unknown'
+                }
               </span>
             </div>
           </div>
@@ -86,14 +89,18 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier }) => {
       <div className="border-t border-gray-200 pt-4">
         <h4 className="text-sm font-medium text-gray-500 mb-2">Categories</h4>
         <div className="flex flex-wrap gap-2">
-          {supplier.categories.map((category, index) => (
-            <span 
-              key={index} 
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-            >
-              {category}
-            </span>
-          ))}
+          {supplier.categories && supplier.categories.length > 0 ? (
+            supplier.categories.map((category, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {category}
+              </span>
+            ))
+          ) : (
+            <span className="text-gray-500 text-sm">No categories assigned</span>
+          )}
         </div>
       </div>
 

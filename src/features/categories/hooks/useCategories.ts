@@ -8,7 +8,6 @@ import { useCallback } from 'react';
 import { useEntityData } from '../../../hooks/useEntityData';
 import categoriesApi from '../api/categoriesApi';
 import type { Category } from '../types';
-import useNotification from '../../../hooks/useNotification';
 
 export const useCategories = (options = { initialFetch: true }) => {
   const baseHook = useEntityData({
@@ -22,34 +21,16 @@ export const useCategories = (options = { initialFetch: true }) => {
     initialFetch: options.initialFetch
   });
   
-  const { showNotification: _showNotification } = useNotification();
+  // Note: useNotification is available through useEntityData if needed
   
   // Category-specific methods
   const getCategoryHierarchy = useCallback(() => {
-    // Get parent categories (those without parentId)
-    const parentCategories = (baseHook.entities as Category[]).filter(
-      (category) => !category.parentId
-    );
-    
-    // Create a map for quick lookup
-    const categoryMap = new Map<string, Category & { subcategories: Category[] }>();
-    
-    // Initialize parent categories with empty subcategories array
-    parentCategories.forEach(category => {
-      categoryMap.set(category.id, { ...category as Category, subcategories: [] });
-    });
-
-    // Add subcategories to their parents
-    (baseHook.entities as Category[]).forEach((category) => {
-      if (category.parentId) {
-        const parent = categoryMap.get(category.parentId);
-        if (parent) {
-          parent.subcategories.push(category);
-        }
-      }
-    });
-    
-    return Array.from(categoryMap.values());
+    // In the new hierarchy, all categories are top-level
+    // Subcategories are now embedded within categories
+    return (baseHook.entities as Category[]).map(category => ({
+      ...category,
+      subcategories: category.subcategories || []
+    }));
   }, [baseHook.entities]);
   
   return {

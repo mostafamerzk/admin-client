@@ -4,56 +4,42 @@
  * Utility functions to map between different category data formats
  */
 
-import type{ Category, Subcategory } from '../types/index';
+import type{ Category } from '../types/index';
 import { categories as mockCategories } from '../../../mockData/entities/categories';
 
 /**
  * Maps a mock category to the application category format
  */
-export const mapMockCategoryToCategory = (mockCategory: any): Category => {
-  // Create the base category
+export const mapMockCategoryToCategory = (mockCategory: Category): Category => {
+  // The mock category already has the correct format, just ensure all required fields are present
   const category: Category = {
     id: mockCategory.id,
     name: mockCategory.name,
-    description: mockCategory.description,
-    productCount: mockCategory.productCount,
-    status: mockCategory.status,
-    createdAt: mockCategory.createdAt ? (new Date(mockCategory.createdAt).toISOString().split('T')[0] || new Date().toISOString().split('T')[0]!) : new Date().toISOString().split('T')[0]!,
-    image: mockCategory.image
+    description: mockCategory.description || '',
+    status: mockCategory.status || 'active',
+    productCount: mockCategory.productCount || 0,
+    subcategoryCount: mockCategory.subcategoryCount || 0,
+    subcategories: mockCategory.subcategories || [],
+    createdAt: mockCategory.createdAt ? new Date(mockCategory.createdAt).toISOString() : new Date().toISOString(),
+    updatedAt: mockCategory.updatedAt ? new Date(mockCategory.updatedAt).toISOString() : new Date().toISOString(),
+    visibleInSupplierApp: mockCategory.visibleInSupplierApp ?? true,
+    visibleInCustomerApp: mockCategory.visibleInCustomerApp ?? true
   };
 
-  // If it's a parent category, find its subcategories
-  if (!mockCategory.parentId) {
-    const subcategories = mockCategories
-      .filter(c => c.parentId === mockCategory.id)
-      .map(subcat => ({
-        id: subcat.id,
-        name: subcat.name,
-        productCount: subcat.productCount,
-        status: subcat.status
-      } as Subcategory));
-
-    if (subcategories.length > 0) {
-      category.subcategories = subcategories;
-    }
-  } else {
-    category.parentId = mockCategory.parentId;
+  // Add image only if it exists
+  if (mockCategory.image) {
+    category.image = mockCategory.image;
   }
 
   return category;
 };
 
 /**
- * Get all parent categories from mock data
- * (Categories that don't have a parentId)
+ * Get all categories from mock data
  */
 export const getMockCategories = (): Category[] => {
-  // Get parent categories (those without parentId)
-  const parentCategories = mockCategories
-    .filter(c => !c.parentId)
-    .map(mapMockCategoryToCategory);
-
-  return parentCategories;
+  // All categories in the mock data are already top-level categories with embedded subcategories
+  return mockCategories.map(mapMockCategoryToCategory);
 };
 
 /**
@@ -72,9 +58,12 @@ export const getMockCategoryById = (id: string): Category | undefined => {
   return mapMockCategoryToCategory(mockCategory);
 };
 
-export default {
+// Assign to variable before exporting
+const categoryMappers = {
   mapMockCategoryToCategory,
   getMockCategories,
   getAllMockCategories,
   getMockCategoryById
 };
+
+export default categoryMappers;

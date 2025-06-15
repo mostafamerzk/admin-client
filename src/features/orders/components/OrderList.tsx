@@ -4,7 +4,7 @@
  * This component displays a list of orders in a data table.
  */
 
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import BaseEntityList from '../../../components/common/EntityList/BaseEntityList';
 import StatusBadge from '../../../components/common/StatusBadge';
 import type { Column } from '../../../components/common/DataTable';
@@ -24,10 +24,11 @@ const OrderList: React.FC<OrderListProps> = ({
   title = 'Orders',
   loading = false
 }) => {
-  const columns: Column<Order>[] = [
-    { 
-      key: 'id', 
-      label: 'Order ID', 
+  // Memoize columns to prevent unnecessary re-renders
+  const columns: Column<Order>[] = useMemo(() => [
+    {
+      key: 'id',
+      label: 'Order ID',
       sortable: true,
       render: (value: string) => (
         <span className="font-medium text-black">{value}</span>
@@ -35,9 +36,9 @@ const OrderList: React.FC<OrderListProps> = ({
     },
     { key: 'customerName', label: 'Customer', sortable: true },
     { key: 'supplierName', label: 'Supplier', sortable: true },
-    { 
-      key: 'totalAmount', 
-      label: 'Total Amount', 
+    {
+      key: 'totalAmount',
+      label: 'Total Amount',
       sortable: true,
       render: (value: number) => formatCurrency(value)
     },
@@ -51,7 +52,7 @@ const OrderList: React.FC<OrderListProps> = ({
     },
     { key: 'orderDate', label: 'Order Date', sortable: true },
     { key: 'deliveryDate', label: 'Delivery Date', sortable: true },
-  ];
+  ], []);
 
   return (
     <BaseEntityList<Order>
@@ -66,5 +67,5 @@ const OrderList: React.FC<OrderListProps> = ({
   );
 };
 
-export default OrderList;
+export default memo(OrderList);
 

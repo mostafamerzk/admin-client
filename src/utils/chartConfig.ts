@@ -40,8 +40,19 @@ export const defaultLineChartOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
+    title: {
+      display: true,
+      color: '#000000',
+      font: {
+        size: 16,
+        weight: 'bold'
+      }
+    },
     legend: {
-      display: false
+      display: false,
+      labels: {
+        color: '#000000'
+      }
     },
     tooltip: {
       backgroundColor: '#F28B22',
@@ -55,6 +66,9 @@ export const defaultLineChartOptions: ChartOptions<'line'> = {
     x: {
       grid: {
         display: false
+      },
+      ticks: {
+        color: '#000000'
       }
     },
     y: {
@@ -62,6 +76,9 @@ export const defaultLineChartOptions: ChartOptions<'line'> = {
       grid: {
         display: true,
         color: '#E5E7EB'
+      },
+      ticks: {
+        color: '#000000'
       }
     }
   }
@@ -71,14 +88,76 @@ export const defaultPieChartOptions: ChartOptions<'pie'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
+    title: {
+      display: true,
+      color: '#000000',
+      font: {
+        size: 16,
+        weight: 'bold'
+      }
+    },
     legend: {
       position: 'bottom',
+      labels: {
+        color: '#000000',
+        font: {
+          size: 12
+        }
+      }
     },
     tooltip: {
       backgroundColor: '#F28B22',
       titleColor: '#FFFFFF',
       bodyColor: '#FFFFFF',
       padding: 12
+    }
+  }
+};
+
+export const defaultBarChartOptions: ChartOptions<'bar'> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    title: {
+      display: true,
+      color: '#000000',
+      font: {
+        size: 16,
+        weight: 'bold'
+      }
+    },
+    legend: {
+      display: false,
+      labels: {
+        color: '#000000'
+      }
+    },
+    tooltip: {
+      backgroundColor: '#F28B22',
+      titleColor: '#FFFFFF',
+      bodyColor: '#FFFFFF',
+      padding: 12,
+      displayColors: false
+    }
+  },
+  scales: {
+    x: {
+      grid: {
+        display: false
+      },
+      ticks: {
+        color: '#000000'
+      }
+    },
+    y: {
+      beginAtZero: true,
+      grid: {
+        display: true,
+        color: '#E5E7EB'
+      },
+      ticks: {
+        color: '#000000'
+      }
     }
   }
 };

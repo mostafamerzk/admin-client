@@ -5,6 +5,8 @@
  */
 
 import apiClient from '../../../api';
+import { handleApiError } from '../../../utils/errorHandling';
+import { responseValidators } from '../../../utils/apiHelpers';
 import type { Category, CategoryFormData } from '../types';
 
 export const categoriesApi = {
@@ -14,13 +16,9 @@ export const categoriesApi = {
   getCategories: async (params?: Record<string, any>): Promise<Category[]> => {
     try {
       const response = await apiClient.get<Category[]>('/categories', { params });
-      if (!response.data) {
-        throw new Error('No categories data received');
-      }
-      return response.data;
+      return responseValidators.getList(response, 'categories');
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -30,13 +28,9 @@ export const categoriesApi = {
   getCategoryById: async (id: string): Promise<Category> => {
     try {
       const response = await apiClient.get<Category>(`/categories/${id}`);
-      if (!response.data) {
-        throw new Error(`No category data received for ID: ${id}`);
-      }
-      return response.data;
+      return responseValidators.getById(response, 'category', id);
     } catch (error) {
-      console.error(`Error fetching category ${id}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -46,13 +40,9 @@ export const categoriesApi = {
   createCategory: async (categoryData: CategoryFormData): Promise<Category> => {
     try {
       const response = await apiClient.post<Category>('/categories', categoryData);
-      if (!response.data) {
-        throw new Error('Failed to create category');
-      }
-      return response.data;
+      return responseValidators.create(response, 'category');
     } catch (error) {
-      console.error('Error creating category:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -62,13 +52,9 @@ export const categoriesApi = {
   updateCategory: async (id: string, categoryData: Partial<CategoryFormData>): Promise<Category> => {
     try {
       const response = await apiClient.put<Category>(`/categories/${id}`, categoryData);
-      if (!response.data) {
-        throw new Error(`Failed to update category ${id}`);
-      }
-      return response.data;
+      return responseValidators.update(response, 'category', id);
     } catch (error) {
-      console.error(`Error updating category ${id}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -77,10 +63,10 @@ export const categoriesApi = {
    */
   deleteCategory: async (id: string): Promise<void> => {
     try {
-      await apiClient.delete(`/categories/${id}`);
+      const response = await apiClient.delete(`/categories/${id}`);
+      return responseValidators.delete(response, 'category', id);
     } catch (error) {
-      console.error(`Error deleting category ${id}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -90,13 +76,9 @@ export const categoriesApi = {
   getSubcategories: async (parentId: string): Promise<Category[]> => {
     try {
       const response = await apiClient.get<Category[]>('/categories', { params: { parentId } });
-      if (!response.data) {
-        throw new Error(`No subcategories found for parent ID: ${parentId}`);
-      }
-      return response.data;
+      return responseValidators.getList(response, 'subcategories', true);
     } catch (error) {
-      console.error(`Error fetching subcategories for parent ${parentId}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   }
 };

@@ -52,7 +52,11 @@ const UserEditPage: React.FC = () => {
     };
 
     fetchData();
-  }, [userId]); // Only userId as dependency - functions are called directly
+  }, [
+    userId,
+    getOrdersByCustomer,
+    getUserById
+  ]); // Only userId as dependency - functions are called directly
   
   const handleUpdateUser = useCallback(async (userData: UserFormData) => {
     if (!user) return;
@@ -76,22 +80,8 @@ const UserEditPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="text-center space-y-6 max-w-md mx-auto">
-          <LoadingSpinner size="lg" className="mb-2" />
-          <div className="space-y-3">
-            <h3 className="text-lg sm:text-xl font-medium text-gray-900">
-              Loading User Details
-            </h3>
-            <p className="text-sm sm:text-base text-gray-500 leading-relaxed">
-              Please wait while we fetch the user information and order history...
-            </p>
-          </div>
-          {/* Optional: Add a subtle progress indicator */}
-          <div className="w-full bg-gray-200 rounded-full h-1 max-w-xs mx-auto">
-            <div className="bg-primary h-1 rounded-full animate-pulse" style={{ width: '60%' }}></div>
-          </div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

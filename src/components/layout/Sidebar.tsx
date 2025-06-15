@@ -16,8 +16,6 @@ import {
 
   ChevronLeftIcon,
   UserCircleIcon,
-  Cog6ToothIcon,
-  ChartBarIcon,
   ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 import useUI from '../../hooks/useUI';
@@ -34,8 +32,6 @@ interface NavItem {
   path: string;
   label: string;
   icon: React.ElementType;
-  badge?: number | string;
-  badgeColor?: string;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -55,13 +51,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems: NavItem[] = [
     { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: HomeIcon },
-    { path: ROUTES.USERS, label: 'Users', icon: UsersIcon, badge: 12 },
-    { path: ROUTES.SUPPLIERS, label: 'Suppliers', icon: BuildingStorefrontIcon, badge: 5, badgeColor: 'bg-yellow-500' },
-    { path: ROUTES.CATEGORIES, label: 'Categories', icon: TagIcon },
-    { path: ROUTES.ORDERS, label: 'Orders', icon: ShoppingCartIcon, badge: 8, badgeColor: 'bg-blue-500' },
-    { path: '/analytics', label: 'Analytics', icon: ChartBarIcon },
-    { path: '/verifications', label: 'Verifications', icon: ClipboardDocumentCheckIcon, badge: 3, badgeColor: 'bg-red-500' },
-    { path: ROUTES.SETTINGS, label: 'Settings', icon: Cog6ToothIcon },
+    { path: ROUTES.USERS, label: 'Users', icon: UsersIcon },
+    { path: ROUTES.SUPPLIERS, label: 'Suppliers', icon: BuildingStorefrontIcon },
+    { path: ROUTES.CATEGORY_MANAGEMENT, label: 'Category Management', icon: TagIcon },
+    { path: ROUTES.ORDERS, label: 'Orders', icon: ShoppingCartIcon },
+    { path: '/verifications', label: 'Verifications', icon: ClipboardDocumentCheckIcon },
     { path: ROUTES.PROFILE, label: 'Profile', icon: UserCircleIcon },
   ];
 
@@ -96,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </Link>
           <button
             onClick={toggleSidebar}
-            className="p-1 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="p-1 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
             aria-label={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
             data-testid={`${testId}-toggle`}
@@ -136,18 +130,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {isSidebarOpen && (
                       <span className="ml-3 font-medium">{item.label}</span>
-                    )}
-                    
-                    {isSidebarOpen && item.badge && (
-                      <span className={`ml-auto ${item.badgeColor || 'bg-primary'} text-white px-2 py-0.5 rounded-full text-xs`}>
-                        {item.badge}
-                      </span>
-                    )}
-                    
-                    {!isSidebarOpen && item.badge && (
-                      <span className={`absolute top-0 right-0 ${item.badgeColor || 'bg-primary'} text-white w-4 h-4 rounded-full text-xs flex items-center justify-center`}>
-                        {item.badge}
-                      </span>
                     )}
                   </Link>
                 </li>

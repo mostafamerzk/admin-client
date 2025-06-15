@@ -6,8 +6,8 @@
 
 import apiClient from '../../../api';
 import { handleApiError } from '../../../utils/errorHandling';
+import { responseValidators } from '../../../utils/apiHelpers';
 import type { BusinessType } from '../types';
-import { businessTypes } from '../../../mockData/entities/businessTypes';
 
 export const businessTypesApi = {
   /**
@@ -16,16 +16,8 @@ export const businessTypesApi = {
    */
   getBusinessTypes: async (): Promise<BusinessType[]> => {
     try {
-      // For development, return mock data with a delay to simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return businessTypes;
-
-      // Uncomment below for real API call
-      // const response = await apiClient.get<BusinessType[]>('/business-types');
-      // if (!response.data) {
-      //   throw new Error('No business types data received');
-      // }
-      // return response.data;
+      const response = await apiClient.get<BusinessType[]>('/business-types');
+      return responseValidators.getList(response, 'business types');
     } catch (error) {
       throw handleApiError(error);
     }
@@ -39,10 +31,7 @@ export const businessTypesApi = {
   getBusinessTypeById: async (id: string): Promise<BusinessType> => {
     try {
       const response = await apiClient.get<BusinessType>(`/business-types/${id}`);
-      if (!response.data) {
-        throw new Error(`No business type data received for ID: ${id}`);
-      }
-      return response.data;
+      return responseValidators.getById(response, 'business type', id);
     } catch (error) {
       throw handleApiError(error);
     }

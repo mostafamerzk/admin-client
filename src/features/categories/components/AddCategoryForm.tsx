@@ -6,27 +6,26 @@
 
 import React, { useState } from 'react';
 import Button from '../../../components/common/Button';
-import type { CategoryFormData, Category } from '../types/index';
+import type { CategoryFormData } from '../types/index';
 import { validateForm, validationRules } from '../../../utils/validation';
 
 interface AddCategoryFormProps {
   onSubmit: (categoryData: CategoryFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
-  parentCategories?: Category[];
 }
 
 const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
   onSubmit,
   onCancel,
-  isLoading = false,
-  parentCategories = []
+  isLoading = false
 }) => {
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     description: '',
     status: 'active',
-    parentCategoryId: ''
+    visibleInSupplierApp: true,
+    visibleInCustomerApp: true
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -115,24 +114,31 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
           </select>
         </div>
 
-        <div>
-          <label htmlFor="parentCategoryId" className="block text-sm font-medium text-gray-700">
-            Parent Category
-          </label>
-          <select
-            id="parentCategoryId"
-            name="parentCategoryId"
-            value={formData.parentCategoryId}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-          >
-            <option value="">None (Top Level Category)</option>
-            {parentCategories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                name="visibleInSupplierApp"
+                checked={formData.visibleInSupplierApp}
+                onChange={(e) => setFormData(prev => ({ ...prev, visibleInSupplierApp: e.target.checked }))}
+                className="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <span className="ml-2 text-sm text-gray-700">Visible in Supplier App</span>
+            </label>
+          </div>
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                name="visibleInCustomerApp"
+                checked={formData.visibleInCustomerApp}
+                onChange={(e) => setFormData(prev => ({ ...prev, visibleInCustomerApp: e.target.checked }))}
+                className="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <span className="ml-2 text-sm text-gray-700">Visible in Customer App</span>
+            </label>
+          </div>
         </div>
       </div>
 

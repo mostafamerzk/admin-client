@@ -5,7 +5,7 @@
  * following the exact design pattern and styling used in UserEditPage and UserDetails.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Tabs from '../components/common/Tabs';
@@ -13,29 +13,45 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import useNotification from '../hooks/useNotification';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, NoSymbolIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import SupplierPersonalInfo from '../features/suppliers/components/SupplierPersonalInfo';
-import SupplierEditForm from '../features/suppliers/components/SupplierEditForm';
 import SupplierDocuments from '../features/suppliers/components/SupplierDocuments';
 import SupplierProducts from '../features/suppliers/components/SupplierProducts';
 import SupplierAnalytics from '../features/suppliers/components/SupplierAnalytics';
-import { getMockSupplierById } from '../features/suppliers/utils/supplierMappers';
+import { useSuppliers } from '../features/suppliers/hooks/useSuppliers';
 import type {
   Supplier,
-  SupplierFormData,
   SupplierProduct,
   SupplierDocument,
   SupplierAnalyticsData
 } from '../features/suppliers/types';
 import { ROUTES } from '../constants/routes';
 
+
+
 const SupplierProfilePage: React.FC = () => {
   const { id: supplierId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
+
+  // Use refs to store stable references to notification functions
+  const showErrorRef = useRef(showError);
+  const showSuccessRef = useRef(showSuccess);
+
+  // Update refs when functions change
+  useEffect(() => {
+    showErrorRef.current = showError;
+    showSuccessRef.current = showSuccess;
+  }, [showError, showSuccess]);
+
+  // Use ref to store supplierId to avoid recreating fetchSupplierData
+  const supplierIdRef = useRef(supplierId);
+  useEffect(() => {
+    supplierIdRef.current = supplierId;
+  }, [supplierId]);
   
   // State
-  const [activeTab, setActiveTab] = useState<'personal' | 'edit' | 'documents' | 'products' | 'analytics'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'documents' | 'products' | 'analytics'>('personal');
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [supplierProducts, setSupplierProducts] = useState<SupplierProduct[]>([]);
   const [supplierDocuments, setSupplierDocuments] = useState<SupplierDocument[]>([]);
@@ -44,116 +60,28 @@ const SupplierProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isBanModalOpen, setIsBanModalOpen] = useState(false);
+  const [isBanning, setIsBanning] = useState(false);
 
-  // Hooks - commented out for now, using mock data
-  // const { getSupplierById } = useSuppliers();
+  // Use the useSuppliers hook for API integration
+  const {
+    getSupplierById,
+    getSupplierProducts,
+    getSupplierDocuments,
+    getSupplierAnalytics,
+    deleteSupplier,
+    banSupplier,
+    unbanSupplier,
+    isLoading: hookLoading
+  } = useSuppliers();
 
-  // Mock data for development
-  const mockSupplierProducts: SupplierProduct[] = [
-    {
-      id: '1',
-      name: 'Wireless Bluetooth Headphones',
-      sku: 'WBH-001',
-      category: 'Electronics',
-      price: 99.99,
-      stock: 150,
-      status: 'active',
-      description: 'High-quality wireless headphones with noise cancellation',
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&h=150&fit=crop',
-      createdAt: '2024-01-15T10:30:00Z',
-      updatedAt: '2024-01-20T14:45:00Z'
-    },
-    {
-      id: '2',
-      name: 'Smart Watch Pro',
-      sku: 'SWP-002',
-      category: 'Electronics',
-      price: 299.99,
-      stock: 75,
-      status: 'active',
-      description: 'Advanced smartwatch with health monitoring features',
-      image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop',
-      createdAt: '2024-01-10T09:15:00Z',
-      updatedAt: '2024-01-18T16:20:00Z'
-    },
-    {
-      id: '3',
-      name: 'USB-C Cable',
-      sku: 'USC-003',
-      category: 'Accessories',
-      price: 19.99,
-      stock: 0,
-      status: 'out_of_stock',
-      description: 'High-speed USB-C charging cable',
-      createdAt: '2024-01-05T11:00:00Z',
-      updatedAt: '2024-01-22T13:30:00Z'
-    }
-  ];
 
-  const mockSupplierDocuments: SupplierDocument[] = [
-    {
-      id: '1',
-      name: 'Business License',
-      type: 'business_license',
-      fileName: 'business_license_2024.pdf',
-      fileSize: 2048576,
-      uploadDate: '2024-01-10T09:30:00Z',
-      status: 'approved',
-      url: '#',
-      notes: 'Valid until December 2024'
-    },
-    {
-      id: '2',
-      name: 'Tax Certificate',
-      type: 'tax_certificate',
-      fileName: 'tax_cert_2024.pdf',
-      fileSize: 1536000,
-      uploadDate: '2024-01-12T14:15:00Z',
-      status: 'approved',
-      url: '#'
-    },
-    {
-      id: '3',
-      name: 'Insurance Policy',
-      type: 'insurance',
-      fileName: 'insurance_policy.pdf',
-      fileSize: 3072000,
-      uploadDate: '2024-01-15T11:45:00Z',
-      status: 'pending',
-      url: '#',
-      notes: 'Awaiting verification'
-    }
-  ];
 
-  const mockSupplierAnalytics: SupplierAnalyticsData = {
-    totalOrders: 245,
-    totalRevenue: 48750.50,
-    productCount: 156,
-    averageOrderValue: 198.98,
-    revenueHistory: [
-      { date: '2024-01', amount: 12500 },
-      { date: '2024-02', amount: 15200 },
-      { date: '2024-03', amount: 21050.50 }
-    ],
-    salesByProduct: [
-      { productName: 'Wireless Headphones', amount: 15000, quantity: 150 },
-      { productName: 'Smart Watch Pro', amount: 22500, quantity: 75 },
-      { productName: 'USB-C Cable', amount: 1999, quantity: 100 }
-    ],
-    orderTrends: [
-      { date: '2024-01', orders: 85 },
-      { date: '2024-02', orders: 92 },
-      { date: '2024-03', orders: 68 }
-    ],
-    topCategories: [
-      { category: 'Electronics', revenue: 37500, percentage: 76.9 },
-      { category: 'Accessories', revenue: 11250.50, percentage: 23.1 }
-    ]
-  };
+  // Fetch supplier data - using useRef to prevent recreation
+  const fetchSupplierData = useRef(async () => {
+    const currentSupplierId = supplierIdRef.current;
 
-  // Fetch supplier data
-  const fetchSupplierData = useCallback(async () => {
-    if (!supplierId) {
+    if (!currentSupplierId) {
       setError('No supplier ID provided');
       setIsLoading(false);
       return;
@@ -163,61 +91,37 @@ const SupplierProfilePage: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      // Use mock data for development
-      const supplierData = getMockSupplierById(supplierId);
-      if (!supplierData) {
-        throw new Error('Supplier not found');
-      }
+      // Fetch supplier data from API
+      const supplierData = await getSupplierById(currentSupplierId);
       setSupplier(supplierData);
 
-      // Set mock data for development
-      setSupplierProducts(mockSupplierProducts);
-      setSupplierDocuments(mockSupplierDocuments);
-      setSupplierAnalytics(mockSupplierAnalytics);
+      // Fetch related data in parallel
+      const [products, documents, analytics] = await Promise.all([
+        getSupplierProducts(currentSupplierId),
+        getSupplierDocuments(currentSupplierId),
+        getSupplierAnalytics(currentSupplierId)
+      ]);
+
+      setSupplierProducts(products);
+      setSupplierDocuments(documents);
+      setSupplierAnalytics(analytics);
 
     } catch (error) {
       console.error('Error fetching supplier data:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch supplier data';
       setError(errorMessage);
-      showError('Failed to load supplier data');
+      showErrorRef.current('Failed to load supplier data');
     } finally {
       setIsLoading(false);
     }
-  }, [supplierId, showError]);
+  });
 
+  // Effect to fetch data when supplierId changes
   useEffect(() => {
-    fetchSupplierData();
-  }, [fetchSupplierData]);
+    fetchSupplierData.current();
+  }, [supplierId]);
 
-  // Handle supplier save
-  const handleSupplierSave = async (supplierData: SupplierFormData) => {
-    try {
-      // In a real implementation, this would call an API to update the supplier
-      console.log('Saving supplier data:', supplierData);
 
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update the local supplier state with new data
-      setSupplier(prev => prev ? {
-        ...prev,
-        name: supplierData.name,
-        email: supplierData.email,
-        phone: supplierData.phone,
-        address: supplierData.address,
-        contactPerson: supplierData.contactPerson,
-        categories: supplierData.categories,
-        logo: supplierData.logo || ''
-      } : null);
-
-      // Optionally refresh all data
-      // await fetchSupplierData();
-
-    } catch (error) {
-      console.error('Error saving supplier:', error);
-      throw error; // Re-throw to let the form handle the error
-    }
-  };
 
   // Handle supplier deletion
   const handleDeleteSupplier = async () => {
@@ -226,13 +130,9 @@ const SupplierProfilePage: React.FC = () => {
     try {
       setIsDeleting(true);
 
-      // In a real implementation, this would call an API to delete the supplier
-      console.log('Deleting supplier:', supplier.id);
+      await deleteSupplier(supplier.id);
 
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      showSuccess(`Supplier "${supplier.name}" has been deleted successfully`);
+      showSuccessRef.current(`Supplier "${supplier.name}" has been deleted successfully`);
       setIsDeleteModalOpen(false);
 
       // Navigate back to suppliers list
@@ -240,19 +140,64 @@ const SupplierProfilePage: React.FC = () => {
 
     } catch (error) {
       console.error('Error deleting supplier:', error);
-      showError('Failed to delete supplier');
+      showErrorRef.current('Failed to delete supplier');
     } finally {
       setIsDeleting(false);
     }
   };
 
+  // Handle supplier ban
+  const handleBanSupplier = async () => {
+    if (!supplier) return;
+
+    try {
+      setIsBanning(true);
+
+      await banSupplier(supplier.id);
+
+      showSuccessRef.current(`Supplier "${supplier.name}" has been banned successfully`);
+      setIsBanModalOpen(false);
+
+      // Refresh supplier data to show updated status
+      await fetchSupplierData.current();
+
+    } catch (error) {
+      console.error('Error banning supplier:', error);
+      showErrorRef.current('Failed to ban supplier');
+    } finally {
+      setIsBanning(false);
+    }
+  };
+
+  // Handle supplier unban
+  const handleUnbanSupplier = async () => {
+    if (!supplier) return;
+
+    try {
+      setIsBanning(true);
+
+      await unbanSupplier(supplier.id);
+
+      showSuccessRef.current(`Supplier "${supplier.name}" has been unbanned successfully`);
+
+      // Refresh supplier data to show updated status
+      await fetchSupplierData.current();
+
+    } catch (error) {
+      console.error('Error unbanning supplier:', error);
+      showErrorRef.current('Failed to unban supplier');
+    } finally {
+      setIsBanning(false);
+    }
+  };
+
   // Handle tab change
   const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId as 'personal' | 'edit' | 'documents' | 'products' | 'analytics');
+    setActiveTab(tabId as 'personal' | 'documents' | 'products' | 'analytics');
   };
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || hookLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -289,22 +234,45 @@ const SupplierProfilePage: React.FC = () => {
           { label: supplier.name }
         ]}
         actions={
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => setIsDeleteModalOpen(true)}
-            icon={<TrashIcon className="h-4 w-4" />}
-            disabled={isLoading || isDeleting}
-          >
-            Delete Supplier
-          </Button>
+          <div className="flex gap-2">
+            {supplier.status === 'banned' ? (
+              <Button
+                variant="success"
+                size="sm"
+                onClick={handleUnbanSupplier}
+                icon={<CheckCircleIcon className="h-4 w-4" />}
+                disabled={isLoading || isBanning || isDeleting}
+                loading={isBanning}
+              >
+                Unban Supplier
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsBanModalOpen(true)}
+                icon={<NoSymbolIcon className="h-4 w-4" />}
+                disabled={isLoading || isBanning || isDeleting}
+              >
+                Ban Supplier
+              </Button>
+            )}
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setIsDeleteModalOpen(true)}
+              icon={<TrashIcon className="h-4 w-4" />}
+              disabled={isLoading || isDeleting || isBanning}
+            >
+              Delete Supplier
+            </Button>
+          </div>
         }
       />
       
       <Tabs
         tabs={[
           { id: 'personal', label: 'Personal Information' },
-          { id: 'edit', label: 'Edit Supplier' },
           { id: 'documents', label: 'Verification Documents' },
           { id: 'products', label: 'Products' },
           { id: 'analytics', label: 'Analytics' }
@@ -317,27 +285,19 @@ const SupplierProfilePage: React.FC = () => {
         <SupplierPersonalInfo supplier={supplier} />
       )}
 
-      {activeTab === 'edit' && (
-        <SupplierEditForm
-          supplier={supplier}
-          onSave={handleSupplierSave}
-          onCancel={() => setActiveTab('personal')}
-        />
-      )}
 
       {activeTab === 'documents' && (
-        <SupplierDocuments 
+        <SupplierDocuments
           documents={supplierDocuments}
           supplierId={supplier.id}
-          onDocumentUpdate={fetchSupplierData}
         />
       )}
       
       {activeTab === 'products' && (
-        <SupplierProducts 
+        <SupplierProducts
           products={supplierProducts}
           supplierId={supplier.id}
-          onProductUpdate={fetchSupplierData}
+          onProductUpdate={fetchSupplierData.current}
         />
       )}
       
@@ -347,6 +307,51 @@ const SupplierProfilePage: React.FC = () => {
           supplierId={supplier.id}
         />
       )}
+
+      {/* Ban Confirmation Modal */}
+      <Modal
+        isOpen={isBanModalOpen}
+        onClose={() => setIsBanModalOpen(false)}
+        title="Ban Supplier"
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setIsBanModalOpen(false)}
+              disabled={isBanning}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleBanSupplier}
+              loading={isBanning}
+              icon={<NoSymbolIcon className="h-4 w-4" />}
+            >
+              Ban Supplier
+            </Button>
+          </>
+        }
+      >
+        <div className="text-sm text-gray-500">
+          <p className="mb-3">
+            Are you sure you want to ban <strong>"{supplier.name}"</strong>?
+          </p>
+          <p className="text-orange-600 font-medium">
+            This action will:
+          </p>
+          <ul className="mt-2 list-disc list-inside text-orange-600">
+            <li>Change the supplier's status to 'banned'</li>
+            <li>Prevent them from receiving new orders</li>
+            <li>Restrict their access to the platform</li>
+            <li>Allow for potential future reactivation</li>
+          </ul>
+          <p className="mt-3 text-gray-600">
+            Unlike deletion, this action can be reversed by changing the supplier's status back to 'active'.
+          </p>
+        </div>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

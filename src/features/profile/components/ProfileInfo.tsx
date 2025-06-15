@@ -5,12 +5,12 @@
  */
 
 import React, { useRef } from 'react';
-import type{ UserProfile } from '../types/index';
+import type { UserProfile } from '../types/index';
 import { CameraIcon } from '@heroicons/react/24/outline';
 import Avatar from '../../../components/common/Avatar';
 
 interface ProfileInfoProps {
-  profile: UserProfile;
+  profile: UserProfile | null;
   isEditing: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onAvatarChange?: (file: File) => void;
@@ -36,6 +36,17 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       onAvatarChange(file);
     }
   };
+
+  // Return null or loading state if profile is not available
+  if (!profile) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <p className="text-gray-500">Profile information not available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

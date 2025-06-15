@@ -40,14 +40,15 @@ export const useUsers = (options = { initialFetch: true }) => {
   const toggleUserStatus = useCallback(async (id: string, status: 'active' | 'banned') => {
     try {
       const updatedUser = await usersApi.toggleUserStatus(id, status);
-      // Update the local state if the user exists in the current list
-      baseHook.entities.forEach((user, index) => {
-        if ((user as User).id === id) {
-          const updatedEntities = [...baseHook.entities];
-          updatedEntities[index] = updatedUser;
-          // Use the setEntities method from baseHook if exposed, or implement a custom solution
-        }
-      });
+
+      // Update the local state immediately using setEntities
+      const currentEntities = baseHook.entities as User[];
+      const updatedEntities = currentEntities.map(user =>
+        user.id === id ? updatedUser : user
+      );
+
+      // Use the exposed setEntities function to update the state
+      baseHook.setEntities(updatedEntities);
 
       showNotificationRef.current({
         type: 'success',
@@ -64,21 +65,21 @@ export const useUsers = (options = { initialFetch: true }) => {
       });
       throw error;
     }
-  }, [baseHook.entities]);
+  }, [baseHook]);
   
   // Add updateUser method
   const updateUser = useCallback(async (id: string, userData: UserFormData) => {
     try {
       const updatedUser = await usersApi.updateUser(id, userData);
 
-      // Update the local state if the user exists in the current list
-      const updatedEntities = [...baseHook.entities];
-      const userIndex = updatedEntities.findIndex((user) => (user as User).id === id);
+      // Update the local state using setEntities
+      const currentEntities = baseHook.entities as User[];
+      const updatedEntities = currentEntities.map(user =>
+        user.id === id ? updatedUser : user
+      );
 
-      if (userIndex !== -1) {
-        updatedEntities[userIndex] = updatedUser;
-        // If baseHook exposes a setEntities method, use it here
-      }
+      // Use the exposed setEntities function to update the state
+      baseHook.setEntities(updatedEntities);
 
       showNotificationRef.current({
         type: 'success',
@@ -95,13 +96,15 @@ export const useUsers = (options = { initialFetch: true }) => {
       });
       throw error;
     }
-  }, [baseHook.entities]);
+  }, [baseHook]);
   
   return {
     ...baseHook,
     users: baseHook.entities as User[], // Rename for clarity
     fetchUsers: baseHook.fetchEntities, // Rename for clarity
     getUserById: baseHook.getEntityById, // Rename for clarity
+    createEntity: baseHook.createEntity, // Expose create method
+    deleteEntity: baseHook.deleteEntity, // Expose delete method
     toggleUserStatus,
     updateUser // Add the new method to the return object
   };

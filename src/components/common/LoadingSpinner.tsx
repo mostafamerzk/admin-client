@@ -1,55 +1,115 @@
 // src/components/common/LoadingSpinner.tsx
 import React from 'react';
+import './LoadingSpinner.css';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  variant?: 'spinner' | 'dots' | 'pulse' | 'ripple';
   color?: string;
+  useCurrentColor?: boolean;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'md',
   className = '',
-  color = '#F28B22' // Primary color
+  variant = 'spinner',
+  color = '#F28B22', // Primary color
+  useCurrentColor = false
 }) => {
   const sizeMap = {
-    sm: 'w-5 h-5',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
+    sm: { spinner: 'w-5 h-5', dots: 'w-1 h-1', pulse: 'w-4 h-4', ripple: 'w-6 h-6' },
+    md: { spinner: 'w-8 h-8', dots: 'w-1.5 h-1.5', pulse: 'w-6 h-6', ripple: 'w-10 h-10' },
+    lg: { spinner: 'w-12 h-12', dots: 'w-2 h-2', pulse: 'w-8 h-8', ripple: 'w-16 h-16' }
   };
-  
-  const sizeClass = sizeMap[size];
-  
-  return (
-    <div
-      className={`flex justify-center items-center ${className}`}
-      role="status"
-      aria-label="Loading"
-    >
-      <svg
-        className={`animate-spin ${sizeClass}`}
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
+
+  const currentColor = useCurrentColor ? 'currentColor' : color;
+
+  // Simple rotating ring spinner
+  if (variant === 'spinner') {
+    return (
+      <div
+        className={`flex justify-center items-center ${className}`}
+        role="status"
+        aria-label="Loading"
       >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill={color}
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        ></path>
-      </svg>
-      <span className="sr-only">Loading...</span>
-    </div>
-  );
+        <div
+          className={`spinner-smooth rounded-full border-2 border-gray-200 ${sizeMap[size].spinner}`}
+          style={{
+            borderTopColor: currentColor,
+            borderRightColor: currentColor,
+          }}
+        />
+        <span className="sr-only">Loading...</span>
+      </div>
+    );
+  }
+
+  // Three bouncing dots
+  if (variant === 'dots') {
+    return (
+      <div
+        className={`flex justify-center items-center space-x-1 dots-bounce ${className}`}
+        role="status"
+        aria-label="Loading"
+      >
+        <div
+          className={`${sizeMap[size].dots} rounded-full dot`}
+          style={{ backgroundColor: currentColor }}
+        />
+        <div
+          className={`${sizeMap[size].dots} rounded-full dot`}
+          style={{ backgroundColor: currentColor }}
+        />
+        <div
+          className={`${sizeMap[size].dots} rounded-full dot`}
+          style={{ backgroundColor: currentColor }}
+        />
+        <span className="sr-only">Loading...</span>
+      </div>
+    );
+  }
+
+  // Pulsing circle
+  if (variant === 'pulse') {
+    return (
+      <div
+        className={`flex justify-center items-center ${className}`}
+        role="status"
+        aria-label="Loading"
+      >
+        <div
+          className={`${sizeMap[size].pulse} rounded-full pulse-smooth`}
+          style={{ backgroundColor: currentColor }}
+        />
+        <span className="sr-only">Loading...</span>
+      </div>
+    );
+  }
+
+  // Ripple effect
+  if (variant === 'ripple') {
+    return (
+      <div
+        className={`flex justify-center items-center ${className}`}
+        role="status"
+        aria-label="Loading"
+      >
+        <div
+          className={`${sizeMap[size].ripple} rounded-full ripple-effect`}
+          style={{ color: currentColor }}
+        >
+          <div
+            className={`${sizeMap[size].pulse} rounded-full pulse-smooth mx-auto`}
+            style={{ backgroundColor: currentColor }}
+          />
+        </div>
+        <span className="sr-only">Loading...</span>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default LoadingSpinner;

@@ -5,6 +5,8 @@
  */
 
 import apiClient from '../../../api';
+import { handleApiError } from '../../../utils/errorHandling';
+import { responseValidators } from '../../../utils/apiHelpers';
 import type { Order, OrderUpdateData } from '../types';
 
 export const ordersApi = {
@@ -14,13 +16,9 @@ export const ordersApi = {
   getOrders: async (params?: Record<string, any>): Promise<Order[]> => {
     try {
       const response = await apiClient.get<Order[]>('/orders', { params });
-      if (!response.data) {
-        throw new Error('No orders data received');
-      }
-      return response.data;
+      return responseValidators.getList(response, 'orders');
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -30,13 +28,9 @@ export const ordersApi = {
   getOrderById: async (id: string): Promise<Order> => {
     try {
       const response = await apiClient.get<Order>(`/orders/${id}`);
-      if (!response.data) {
-        throw new Error(`No order data received for ID: ${id}`);
-      }
-      return response.data;
+      return responseValidators.getById(response, 'order', id);
     } catch (error) {
-      console.error(`Error fetching order ${id}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -46,13 +40,9 @@ export const ordersApi = {
   createOrder: async (orderData: OrderUpdateData): Promise<Order> => {
     try {
       const response = await apiClient.post<Order>('/orders', orderData);
-      if (!response.data) {
-        throw new Error('Failed to create order');
-      }
-      return response.data;
+      return responseValidators.create(response, 'order');
     } catch (error) {
-      console.error('Error creating order:', error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -62,13 +52,9 @@ export const ordersApi = {
   updateOrder: async (id: string, orderData: Partial<OrderUpdateData>): Promise<Order> => {
     try {
       const response = await apiClient.put<Order>(`/orders/${id}`, orderData);
-      if (!response.data) {
-        throw new Error(`Failed to update order ${id}`);
-      }
-      return response.data;
+      return responseValidators.update(response, 'order', id);
     } catch (error) {
-      console.error(`Error updating order ${id}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -77,10 +63,10 @@ export const ordersApi = {
    */
   deleteOrder: async (id: string): Promise<void> => {
     try {
-      await apiClient.delete(`/orders/${id}`);
+      const response = await apiClient.delete(`/orders/${id}`);
+      return responseValidators.delete(response, 'order', id);
     } catch (error) {
-      console.error(`Error deleting order ${id}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -90,13 +76,9 @@ export const ordersApi = {
   updateOrderStatus: async (id: string, status: Order['status']): Promise<Order> => {
     try {
       const response = await apiClient.put<Order>(`/orders/${id}/status`, { status });
-      if (!response.data) {
-        throw new Error(`Failed to update status for order ${id}`);
-      }
-      return response.data;
+      return responseValidators.update(response, 'order', id);
     } catch (error) {
-      console.error(`Error updating status for order ${id}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -106,13 +88,9 @@ export const ordersApi = {
   getOrdersByStatus: async (status: Order['status']): Promise<Order[]> => {
     try {
       const response = await apiClient.get<Order[]>('/orders', { params: { status } });
-      if (!response.data) {
-        throw new Error(`No orders found with status: ${status}`);
-      }
-      return response.data;
+      return responseValidators.getList(response, 'orders', true);
     } catch (error) {
-      console.error(`Error fetching orders with status ${status}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 
@@ -122,13 +100,9 @@ export const ordersApi = {
   getOrdersByCustomer: async (customerId: string): Promise<Order[]> => {
     try {
       const response = await apiClient.get<Order[]>('/orders', { params: { customerId } });
-      if (!response.data) {
-        throw new Error(`No orders found for customer: ${customerId}`);
-      }
-      return response.data;
+      return responseValidators.getList(response, 'orders', true);
     } catch (error) {
-      console.error(`Error fetching orders for customer ${customerId}:`, error);
-      throw error;
+      throw handleApiError(error);
     }
   }
 };

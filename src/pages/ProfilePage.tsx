@@ -7,9 +7,9 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import PageHeader from '../components/layout/PageHeader';
 import useAuth from '../hooks/useAuth';
-import { AVATAR_PLACEHOLDER_SERVICE } from '../constants/config';
 import {
   ProfileTabs,
   ProfileInfo,
@@ -22,97 +22,60 @@ import {
   ActivityLogItem
 } from '../features/profile/index';
 
-// Utility function to generate avatar URL
-const generateAvatarUrl = (name: string): string => {
-  const encodedName = encodeURIComponent(name);
-  return `${AVATAR_PLACEHOLDER_SERVICE}?name=${encodedName}&background=3b82f6&color=fff&size=128`;
-};
-
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
-  const { profile: profileData, isLoading: profileLoading, updateProfile, updateAvatar } = useProfile();
+  const {
+    profile: profileData,
+    isLoading: profileLoading,
+    error: profileError,
+    updateProfile,
+    updateAvatar,
+    getActivityLog
+  } = useProfile();
 
   const [activeTab, setActiveTab] = useState<ProfileTab>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activities, setActivities] = useState<ActivityLogItem[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
 
-  // Use real profile data or fallback to user data from auth context
-  const defaultName = user?.name || 'Admin User';
-  const [profile, setProfile] = useState<UserProfile>({
-    id: user?.id || '1',
-    name: defaultName,
-    email: user?.email || 'admin@connectchain.com',
-    phone: '+1 (555) 123-4567',
-    role: user?.role || 'Administrator',
-    avatar: (user?.avatar && user.avatar.trim()) ? user.avatar : generateAvatarUrl(defaultName),
-    joinDate: '2023-10-15',
-    twoFactorEnabled: true,
-    notificationsEnabled: {
-      email: true,
-      push: false,
-      sms: true
-    },
-    adminNotifications: {
-      newUsers: true,
-      newOrders: true,
-      supplierVerifications: false
-    },
-    lastLogin: '2024-01-20 14:30:25',
-    lastIp: '192.168.1.1'
+  // Create a working profile state that syncs with the hook
+  const [localProfileChanges, setLocalProfileChanges] = useState<Partial<UserProfile>>({});
+
+  // Merge hook profile data with local changes for editing
+  const profile = profileData ? { ...profileData, ...localProfileChanges } : null;
+
+  // Debug logging
+  console.log('[ProfilePage] Render state:', {
+    user,
+    profileData,
+    profileLoading,
+    profileError: profileError?.message,
+    localProfileChanges
   });
 
-  // Update local profile state when profileData or user changes
+  // Load activity log when activity tab is accessed
   useEffect(() => {
-    if (profileData) {
-      setProfile(profileData);
-    } else if (user) {
-      setProfile(prev => ({
-        ...prev,
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role || 'Administrator',
-        avatar: (user.avatar && user.avatar.trim()) ? user.avatar : generateAvatarUrl(user.name)
-      }));
+    if (activeTab === 'activity' && getActivityLog && activities.length === 0) {
+      const loadActivities = async () => {
+        setActivitiesLoading(true);
+        try {
+          const activityData = await getActivityLog();
+          setActivities(activityData);
+        } catch (error) {
+          console.error('Failed to load activity log:', error);
+          // Fallback to empty array - error is handled by the hook
+          setActivities([]);
+        } finally {
+          setActivitiesLoading(false);
+        }
+      };
+      loadActivities();
     }
-  }, [profileData, user]);
-
-  // Mock activity data
-  const activities: ActivityLogItem[] = [
-    {
-      id: 1,
-      content: 'Logged in from new device',
-      date: '2024-01-20 14:30:25',
-      type: 'login'
-    },
-    {
-      id: 2,
-      content: 'Changed password',
-      date: '2023-12-15 09:45:12',
-      type: 'password'
-    },
-    {
-      id: 3,
-      content: 'Enabled two-factor authentication',
-      date: '2023-11-30 16:22:45',
-      type: 'security'
-    },
-    {
-      id: 4,
-      content: 'Updated profile information',
-      date: '2023-11-10 11:15:30',
-      type: 'profile'
-    },
-    {
-      id: 5,
-      content: 'Account created',
-      date: '2023-10-15 08:00:00',
-      type: 'account'
-    }
-  ];
+  }, [activeTab, getActivityLog, activities.length]);
 
   const handleSaveProfile = async () => {
-    if (!updateProfile) return;
+    if (!updateProfile || !profile) return;
 
     setIsSaving(true);
     try {
@@ -124,6 +87,7 @@ const ProfilePage: React.FC = () => {
       };
 
       await updateProfile(updateData);
+      setLocalProfileChanges({}); // Clear local changes after successful save
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to save profile:', error);
@@ -134,43 +98,49 @@ const ProfilePage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setProfile({
-      ...profile,
+    setLocalProfileChanges(prev => ({
+      ...prev,
       [name]: value
-    });
+    }));
   };
 
   const handleToggleChange = (setting: string) => {
+    if (!profile) return;
+
     if (setting.startsWith('notifications.')) {
       const notificationType = setting.split('.')[1];
       if (notificationType && notificationType in profile.notificationsEnabled) {
         const notifKey = notificationType as keyof typeof profile.notificationsEnabled;
-        setProfile({
-          ...profile,
+        setLocalProfileChanges(prev => ({
+          ...prev,
           notificationsEnabled: {
             ...profile.notificationsEnabled,
+            ...prev.notificationsEnabled,
             [notifKey]: !profile.notificationsEnabled[notifKey]
           }
-        });
+        }));
       }
     } else if (setting.startsWith('adminNotifications.')) {
       const adminNotificationType = setting.split('.')[1];
-      if (adminNotificationType && profile.adminNotifications && adminNotificationType in profile.adminNotifications) {
-        const adminNotifKey = adminNotificationType as keyof typeof profile.adminNotifications;
-        setProfile({
-          ...profile,
+      // Safe access to adminNotifications with proper null checking
+      const currentAdminNotifications = profile.adminNotifications;
+      if (adminNotificationType && currentAdminNotifications && adminNotificationType in currentAdminNotifications) {
+        const adminNotifKey = adminNotificationType as keyof NonNullable<typeof profile.adminNotifications>;
+        setLocalProfileChanges(prev => ({
+          ...prev,
           adminNotifications: {
-            ...profile.adminNotifications,
-            [adminNotifKey]: !profile.adminNotifications[adminNotifKey]
+            ...currentAdminNotifications,
+            ...prev.adminNotifications,
+            [adminNotifKey]: !currentAdminNotifications[adminNotifKey]
           }
-        });
+        }));
       }
     } else if (setting in profile) {
       const profileKey = setting as keyof typeof profile;
-      setProfile({
-        ...profile,
+      setLocalProfileChanges(prev => ({
+        ...prev,
         [profileKey]: !profile[profileKey]
-      });
+      }));
     }
   };
 
@@ -186,18 +156,20 @@ const ProfilePage: React.FC = () => {
     if (!updateAvatar) return;
 
     try {
-      const avatarUrl = await updateAvatar(file);
-      setProfile(prev => ({
-        ...prev,
-        avatar: avatarUrl
-      }));
+      await updateAvatar(file);
+      // The hook will update the profile state automatically
+      // We just need to clear any local avatar changes
+      setLocalProfileChanges(prev => {
+        const { avatar: _avatar, ...rest } = prev;
+        return rest;
+      });
     } catch (error) {
       console.error('Failed to update avatar:', error);
     }
   };
 
   // Check if user is admin (in real app, this would come from auth context)
-  const isAdmin = profile.role === 'Administrator';
+  const isAdmin = profile?.role === 'Administrator';
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -222,6 +194,7 @@ const ProfilePage: React.FC = () => {
         return (
           <ActivityLog
             activities={activities}
+            isLoading={activitiesLoading}
           />
         );
       default:
@@ -237,7 +210,7 @@ const ProfilePage: React.FC = () => {
   };
 
   // Show loading state while profile is being fetched
-  if (profileLoading && !profile.id) {
+  if (profileLoading && !profile) {
     return (
       <div className="space-y-6">
         <PageHeader
@@ -247,13 +220,38 @@ const ProfilePage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <LoadingSpinner size="md" />
               <p className="mt-2 text-sm text-gray-500">Loading profile...</p>
             </div>
           </div>
         </Card>
       </div>
     );
+  }
+
+  // Show error state if profile failed to load
+  if (profileError && !profile) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="My Profile"
+          description="View and manage your profile information and notification preferences"
+        />
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <p className="text-red-600 mb-2">Failed to load profile</p>
+              <p className="text-sm text-gray-500">{profileError.message}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Don't render if no profile data
+  if (!profile) {
+    return null;
   }
 
   return (
@@ -267,7 +265,10 @@ const ProfilePage: React.FC = () => {
               <>
                 <Button
                   variant="outline"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setIsEditing(false);
+                    setLocalProfileChanges({}); // Clear unsaved changes
+                  }}
                 >
                   Cancel
                 </Button>
@@ -288,6 +289,8 @@ const ProfilePage: React.FC = () => {
           )
         }
       />
+
+
 
       <Card>
         <ProfileTabs

@@ -187,20 +187,24 @@ const SupplierPersonalInfo: React.FC<SupplierPersonalInfoProps> = ({ supplier })
               </div>
             } 
           />
-          <DetailItem 
-            label="Business Categories" 
+          <DetailItem
+            label="Business Categories"
             value={
               <div className="flex flex-wrap gap-2">
-                {supplier.categories.map((category, index) => (
-                  <span 
-                    key={index} 
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                  >
-                    {category}
-                  </span>
-                ))}
+                {supplier.categories && supplier.categories.length > 0 ? (
+                  supplier.categories.map((category, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    >
+                      {category}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500 text-sm">No categories assigned</span>
+                )}
               </div>
-            } 
+            }
           />
           <DetailItem 
             label="Account Status" 

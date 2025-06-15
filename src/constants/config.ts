@@ -10,14 +10,28 @@ export const IS_DEV = ENV === 'development';
 export const IS_PROD = ENV === 'production';
 export const IS_TEST = ENV === 'test';
 
-// API configuration
-export const API_URL = process.env.REACT_APP_API_URL || 'https://api.connectchain.com';
-export const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true' || IS_DEV;
+// Environment variables with fallbacks
+export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+export const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true';
+export const ENVIRONMENT = process.env.REACT_APP_ENVIRONMENT || 'development';
 
 // Authentication configuration
-export const AUTH_TOKEN_KEY = 'auth_token';
-export const USER_DATA_KEY = 'user_data';
+export const AUTH_TOKEN_KEY = process.env.REACT_APP_AUTH_TOKEN_KEY || 'connectchain_auth_token';
+export const USER_DATA_KEY = process.env.REACT_APP_USER_DATA_KEY || 'connectchain_user_data';
 export const TOKEN_EXPIRY_MARGIN = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// API configuration
+export const API_TIMEOUT = 30000; // 30 seconds
+export const API_RETRY_ATTEMPTS = 3;
+export const API_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Development helpers
+export const IS_DEVELOPMENT = ENVIRONMENT === 'development';
+export const IS_PRODUCTION = ENVIRONMENT === 'production';
+
+// Logging configuration
+export const ENABLE_API_LOGGING = IS_DEVELOPMENT;
+export const ENABLE_ERROR_REPORTING = IS_PRODUCTION;
 
 // UI configuration
 export const SIDEBAR_BREAKPOINT = 768; // in pixels
@@ -39,7 +53,6 @@ export const TIME_FORMAT = 'h:mm a';
 export const FEATURES = {
   ENABLE_NOTIFICATIONS: true,
   ENABLE_DARK_MODE: false,
-  ENABLE_ANALYTICS: IS_PROD,
   ENABLE_EXPORT: true,
 };
 
@@ -51,9 +64,17 @@ export const CONFIG = {
   IS_TEST,
   API_URL,
   USE_MOCK_API,
+  ENVIRONMENT,
   AUTH_TOKEN_KEY,
   USER_DATA_KEY,
   TOKEN_EXPIRY_MARGIN,
+  API_TIMEOUT,
+  API_RETRY_ATTEMPTS,
+  API_CACHE_TTL,
+  IS_DEVELOPMENT,
+  IS_PRODUCTION,
+  ENABLE_API_LOGGING,
+  ENABLE_ERROR_REPORTING,
   SIDEBAR_BREAKPOINT,
   NOTIFICATION_DURATION,
   ANIMATION_DURATION,

@@ -18,22 +18,23 @@ export const ROUTES = {
   SUPPLIERS: '/suppliers',
   SUPPLIER_DETAILS: '/suppliers/:id',
   SUPPLIER_PROFILE: '/suppliers/:id/profile',
-  SUPPLIER_EDIT: '/suppliers/:id/edit',
+  PRODUCT_DETAILS: '/products/:id',
+
   CATEGORIES: '/categories',
+  CATEGORY_MANAGEMENT: '/category-management',
   CATEGORY_DETAILS: '/categories/:id',
   ORDERS: '/orders',
   ORDER_DETAILS: '/orders/:id',
-  SETTINGS: '/settings',
   PROFILE: '/profile',
   VERIFICATIONS: '/verifications',
-  ANALYTICS: '/analytics',
 
   // Helper function to generate dynamic routes
   getUserDetailsRoute: (id: string) => `/users/${id}`,
   getUserEditRoute: (id: string) => `/users/${id}/edit`,
   getSupplierDetailsRoute: (id: string) => `/suppliers/${id}`,
   getSupplierProfileRoute: (id: string) => `/suppliers/${id}/profile`,
-  getSupplierEditRoute: (id: string) => `/suppliers/${id}/edit`,
+  getProductDetailsRoute: (id: string) => `/products/${id}`,
+
   getCategoryDetailsRoute: (id: string) => `/categories/${id}`,
   getOrderDetailsRoute: (id: string) => `/orders/${id}`,
 };

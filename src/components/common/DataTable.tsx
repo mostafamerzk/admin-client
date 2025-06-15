@@ -6,6 +6,7 @@
 
 import React, { useState, useMemo, memo } from 'react';
 import { MagnifyingGlassIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import LoadingSpinner from './LoadingSpinner';
 import { CONFIG } from '../../constants/config';
 
 export interface Column<T = Record<string, any>> {
@@ -268,7 +269,7 @@ function DataTable<T extends Record<string, any>>({
       <div className={`overflow-x-auto ${bodyClassName}`}>
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+            <LoadingSpinner size="lg" variant="spinner" />
           </div>
         ) : (
           <table className="min-w-full divide-y divide-gray-100">

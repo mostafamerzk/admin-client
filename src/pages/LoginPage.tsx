@@ -208,9 +208,12 @@ const LoginPage: React.FC = () => {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-primary hover:text-primary-dark">
-                  Forgot your password?
-                </a>
+                <button
+                  className="text-primary hover:text-primary-dark text-sm font-medium"
+                  onClick={() => {}}
+                >
+                  Forgot Password?
+                </button>
               </div>
             </div>
 

@@ -4,10 +4,11 @@
  * The verifications page for the ConnectChain admin panel.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import useNotification from '../hooks/useNotification';
 import {
   VerificationList,
@@ -15,12 +16,12 @@ import {
   ApproveVerificationModal,
   RejectVerificationModal,
   Verification,
-
+  useVerifications
 } from '../features/verifications/index';
 
 const VerificationsPage: React.FC = () => {
-  // In a real implementation, we would use the useVerifications hook
-  // const { verifications, isLoading, approveVerification, rejectVerification } = useVerifications();
+  // Use the useVerifications hook for API integration
+  const { verifications, isLoading, approveVerification, rejectVerification } = useVerifications();
 
   const { showSuccess, showError } = useNotification();
   const [selectedVerification, setSelectedVerification] = useState<Verification | null>(null);
@@ -29,50 +30,17 @@ const VerificationsPage: React.FC = () => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  // Mock data
-  const verifications: Verification[] = [
-    {
-      id: '1',
-      companyName: 'Global Electronics',
-      contactPerson: 'David Chen',
-      email: 'david@globalelectronics.com',
-      phone: '+1 (456) 789-0123',
-      status: 'pending',
-      submittedDate: '2024-01-12T16:20:00Z',
-      documents: [
-        { name: 'Business License', type: 'PDF', url: '#' },
-        { name: 'Tax Certificate', type: 'PDF', url: '#' },
-        { name: 'Company Profile', type: 'DOCX', url: '#' }
-      ]
-    },
-    {
-      id: '2',
-      companyName: 'Fashion Trends Inc',
-      contactPerson: 'Emma Thompson',
-      email: 'emma@fashiontrends.com',
-      phone: '+1 (789) 012-3456',
-      status: 'pending',
-      submittedDate: '2024-01-14T15:40:00Z',
-      documents: [
-        { name: 'Business License', type: 'PDF', url: '#' },
-        { name: 'Tax Certificate', type: 'PDF', url: '#' }
-      ]
-    },
-    {
-      id: '3',
-      companyName: 'Organic Foods Co',
-      contactPerson: 'Michael Brown',
-      email: 'michael@organicfoods.com',
-      phone: '+1 (234) 567-8901',
-      status: 'pending',
-      submittedDate: '2024-01-10T09:15:00Z',
-      documents: [
-        { name: 'Business License', type: 'PDF', url: '#' },
-        { name: 'Food Safety Certificate', type: 'PDF', url: '#' },
-        { name: 'Organic Certification', type: 'PDF', url: '#' }
-      ]
-    }
-  ];
+  // Track processed verifications to remove them from the list
+  const [processedVerificationIds, setProcessedVerificationIds] = useState<Set<string>>(new Set());
+
+  // Filter out processed verifications to show only pending ones
+  const displayedVerifications = useMemo(() => {
+    return verifications.filter(verification =>
+      !processedVerificationIds.has(verification.id) && verification.status === 'pending'
+    );
+  }, [verifications, processedVerificationIds]);
+
+
 
   const handleViewVerification = (verification: Verification) => {
     setSelectedVerification(verification);
@@ -89,24 +57,48 @@ const VerificationsPage: React.FC = () => {
     setIsRejectModalOpen(true);
   };
 
-  const handleApprove = () => {
-    // In a real app, this would call an API to approve the verification
-    // approveVerification(selectedVerification!.id);
-    showSuccess(`${selectedVerification?.companyName} has been approved`);
-    setIsApproveModalOpen(false);
+  const handleApprove = async () => {
+    if (!selectedVerification) return;
+
+    try {
+      await approveVerification(selectedVerification.id);
+
+      // Add to processed list to remove from display
+      setProcessedVerificationIds(prev => new Set(prev).add(selectedVerification.id));
+
+      showSuccess(`${selectedVerification.companyName} has been approved`);
+      setIsApproveModalOpen(false);
+      setSelectedVerification(null);
+    } catch (error) {
+      console.error('Error approving verification:', error);
+      // Error notification is handled by the hook
+      // Don't add to processed list if there was an error
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectReason.trim()) {
       showError('Please provide a reason for rejection');
       return;
     }
 
-    // In a real app, this would call an API to reject the verification
-    // rejectVerification(selectedVerification!.id, rejectReason);
-    showSuccess(`${selectedVerification?.companyName} has been rejected`);
-    setIsRejectModalOpen(false);
-    setRejectReason('');
+    if (!selectedVerification) return;
+
+    try {
+      await rejectVerification(selectedVerification.id, rejectReason);
+
+      // Add to processed list to remove from display
+      setProcessedVerificationIds(prev => new Set(prev).add(selectedVerification.id));
+
+      showSuccess(`${selectedVerification.companyName} has been rejected`);
+      setIsRejectModalOpen(false);
+      setRejectReason('');
+      setSelectedVerification(null);
+    } catch (error) {
+      console.error('Error rejecting verification:', error);
+      // Error notification is handled by the hook
+      // Don't add to processed list if there was an error
+    }
   };
 
   return (
@@ -118,14 +110,27 @@ const VerificationsPage: React.FC = () => {
       />
 
       <Card>
-        <VerificationList
-          verifications={verifications}
-          onViewVerification={handleViewVerification}
-          onApproveClick={handleApproveClick}
-          onRejectClick={handleRejectClick}
-          title="Pending Verifications"
-          description="Suppliers waiting for verification approval"
-        />
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <LoadingSpinner />
+          </div>
+        ) : displayedVerifications.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500 text-lg mb-2">No pending verifications</div>
+            <div className="text-gray-400 text-sm">
+              All verification requests have been processed or there are no new requests.
+            </div>
+          </div>
+        ) : (
+          <VerificationList
+            verifications={displayedVerifications}
+            onViewVerification={handleViewVerification}
+            onApproveClick={handleApproveClick}
+            onRejectClick={handleRejectClick}
+            title="Pending Verifications"
+            description="Suppliers waiting for verification approval"
+          />
+        )}
       </Card>
 
       {/* View Verification Modal */}

@@ -5,16 +5,17 @@
  */
 
 import apiClient from '../../../api';
-import type { 
-  AuthUser, 
-  LoginCredentials, 
-  LoginResponse, 
+import type {
+  AuthUser,
+  LoginCredentials,
+  LoginResponse,
   RegisterCredentials,
   ForgotPasswordRequest,
   ResetPasswordRequest
 } from '../types';
 import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../../../constants/config';
 import { handleApiError } from '../../../utils/errorHandling';
+import { responseValidators } from '../../../utils/apiHelpers';
 
 export const authApi = {
   /**
@@ -23,15 +24,13 @@ export const authApi = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
-      if (!response.data) {
-        throw new Error('Invalid login response');
-      }
-      const { user, token, expiresIn } = response.data;
-      
+      const loginData = responseValidators.create(response, 'login');
+      const { user, token, expiresIn } = loginData;
+
       // Store token and user data
       localStorage.setItem(AUTH_TOKEN_KEY, token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
-      
+
       return { user, token, expiresIn };
     } catch (error) {
       throw handleApiError(error);
@@ -44,15 +43,13 @@ export const authApi = {
   register: async (credentials: RegisterCredentials): Promise<LoginResponse> => {
     try {
       const response = await apiClient.post<LoginResponse>('/auth/register', credentials);
-      if (!response.data) {
-        throw new Error('Invalid registration response');
-      }
-      const { user, token, expiresIn } = response.data;
-      
+      const registrationData = responseValidators.create(response, 'registration');
+      const { user, token, expiresIn } = registrationData;
+
       // Store token and user data
       localStorage.setItem(AUTH_TOKEN_KEY, token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
-      
+
       return { user, token, expiresIn };
     } catch (error) {
       throw handleApiError(error);
@@ -80,10 +77,7 @@ export const authApi = {
   getCurrentUser: async (): Promise<AuthUser> => {
     try {
       const response = await apiClient.get<AuthUser>('/auth/me');
-      if (!response.data) {
-        throw new Error('No user data received');
-      }
-      return response.data;
+      return responseValidators.getById(response, 'current user', 'me');
     } catch (error) {
       throw handleApiError(error);
     }
@@ -117,12 +111,47 @@ export const authApi = {
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem(AUTH_TOKEN_KEY);
   },
-  
+
   /**
    * Get the authentication token
    */
   getToken: (): string | null => {
     return localStorage.getItem(AUTH_TOKEN_KEY);
+  },
+
+  /**
+   * Set the authentication token
+   */
+  setToken: (token: string): void => {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  },
+
+  /**
+   * Remove the authentication token
+   */
+  removeToken: (): void => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(USER_DATA_KEY);
+  },
+
+  /**
+   * Get user data from localStorage
+   */
+  getUserData: (): any | null => {
+    try {
+      const userData = localStorage.getItem(USER_DATA_KEY);
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Set user data in localStorage
+   */
+  setUserData: (user: any): void => {
+    localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
   }
 };
 

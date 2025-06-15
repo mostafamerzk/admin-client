@@ -4,37 +4,52 @@
  * This page displays and manages suppliers in the system.
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback } from 'react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import { BuildingOffice2Icon } from '@heroicons/react/24/outline';
-import { ROUTES } from '../constants/routes';
 import SupplierList from '../features/suppliers/components/SupplierList';
 import SupplierDetails from '../features/suppliers/components/SupplierDetails';
 import AddSupplierForm from '../features/suppliers/components/AddSupplierForm';
 import type { Supplier, SupplierFormData } from '../features/suppliers/types';
-import { getMockSuppliers } from '../features/suppliers/utils/supplierMappers';
+import { useSuppliers } from '../features/suppliers/hooks/useSuppliers';
+import useErrorHandler from '../hooks/useErrorHandler';
 
 const SuppliersPage: React.FC = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'verified' | 'rejected'>('all');
+  const [isLoading, setIsLoading] = useState(false);
   const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
-  const [isAddingSupplier, setIsAddingSupplier] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSupplierDetailsModalOpen, setIsSupplierDetailsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // In a real implementation, we would use the useSuppliers hook
-  // const { suppliers, isLoading, createSupplier, deleteSupplier, updateVerificationStatus } = useSuppliers();
+  // Use the useSuppliers hook for API integration
+  const {
+    suppliers,
+    isLoading: suppliersLoading,
+    createEntity: createSupplier,
+    deleteEntity: deleteSupplier,
+    updateVerificationStatus
+  } = useSuppliers();
 
-  // Use mock data from the centralized mock data file
-  const [suppliers, setSuppliers] = useState<Supplier[]>(getMockSuppliers());
-
-  const filteredSuppliers = suppliers.filter(supplier => {
-    if (activeTab === 'all') return true;
-    return supplier.verificationStatus === activeTab;
+  // Error handling
+  const {
+    withFormErrorHandling,
+    clearError
+  } = useErrorHandler({
+    enableNotifications: true,
+    enableReporting: true
   });
+
+  // Memoize filtered suppliers to prevent unnecessary recalculations
+  const filteredSuppliers = useMemo(() => {
+    if (activeTab === 'all') return suppliers;
+    return suppliers.filter(supplier => supplier.verificationStatus === activeTab);
+  }, [suppliers, activeTab]);
 
   const handleSupplierClick = (supplier: Supplier) => {
     handleViewSupplier(supplier);
@@ -45,59 +60,56 @@ const SuppliersPage: React.FC = () => {
     setIsSupplierDetailsModalOpen(true);
   };
 
-  const handleEditSupplier = (supplier: Supplier) => {
-    // Navigate to the supplier profile page
-    navigate(ROUTES.getSupplierProfileRoute(supplier.id));
-  };
 
-  const handleDeleteSupplier = (supplier: Supplier) => {
-    if (window.confirm(`Are you sure you want to delete ${supplier.name}?`)) {
-      setSuppliers(suppliers.filter(s => s.id !== supplier.id));
+
+  const handleDeleteSupplier = useCallback((supplier: Supplier) => {
+    setSupplierToDelete(supplier);
+    setIsDeleteModalOpen(true);
+  }, []);
+
+  const confirmDeleteSupplier = useCallback(async () => {
+    if (!supplierToDelete) return;
+
+    setIsDeleting(true);
+    const result = await withFormErrorHandling(async () => {
+      await deleteSupplier(supplierToDelete.id);
+      return true;
+    }, undefined, `Delete supplier ${supplierToDelete.name}`);
+
+    setIsDeleting(false);
+    if (result) {
+      setIsDeleteModalOpen(false);
+      setSupplierToDelete(null);
+    } else {
+      console.error('Failed to delete supplier');
     }
-  };
+  }, [supplierToDelete, withFormErrorHandling, deleteSupplier]);
 
-  const handleAddSupplier = (supplierData: SupplierFormData) => {
-    setIsAddingSupplier(true);
+  const handleAddSupplier = useCallback(async (supplierData: SupplierFormData, setFieldError?: (field: string, message: string) => void) => {
+    setIsLoading(true);
+    clearError();
 
-    // Simulate API call
-    setTimeout(() => {
-      // Create new supplier with form data
-      const newSupplier: Supplier = {
-        id: (suppliers.length + 1).toString(),
-        name: supplierData.name,
-        contactPerson: supplierData.contactPerson,
-        email: supplierData.email,
-        phone: supplierData.phone,
-        status: 'active',
-        verificationStatus: 'pending',
-        joinDate: new Date().toISOString().split('T')[0]!,
-        address: supplierData.address,
-        categories: supplierData.categories,
-        logo: supplierData.logo || '',
-        website: '' // Add empty website field for consistency
-      };
-
-      // Add to suppliers array
-      setSuppliers([...suppliers, newSupplier]);
-
-      // Reset state
-      setIsAddingSupplier(false);
+    const result = await withFormErrorHandling(async () => {
+      const newSupplier = await createSupplier(supplierData, false); // Don't show notifications from hook
       setIsAddSupplierModalOpen(false);
-    }, 1500);
-  };
+      return newSupplier;
+    }, setFieldError, 'Add Supplier');
 
-  const handleVerifySupplier = (supplierId: string, newStatus: 'verified' | 'rejected') => {
-    setSuppliers(suppliers.map(supplier => {
-      if (supplier.id === supplierId) {
-        return {
-          ...supplier,
-          verificationStatus: newStatus,
-          joinDate: new Date().toISOString().split('T')[0]!
-        };
-      }
-      return supplier;
-    }));
-    setIsSupplierDetailsModalOpen(false);
+    setIsLoading(false);
+
+    if (result) {
+      console.log('Supplier added successfully:', result);
+    }
+  }, [withFormErrorHandling, createSupplier, clearError]);
+
+  const handleVerifySupplier = async (supplierId: string, newStatus: 'verified' | 'rejected') => {
+    try {
+      await updateVerificationStatus(supplierId, newStatus);
+      setIsSupplierDetailsModalOpen(false);
+    } catch (error) {
+      console.error('Error updating verification status:', error);
+      // Error notification is handled by the hook
+    }
   };
 
   return (
@@ -147,14 +159,19 @@ const SuppliersPage: React.FC = () => {
           </Button>
         </div>
 
-        <SupplierList
-          suppliers={filteredSuppliers}
-          onSupplierClick={handleSupplierClick}
-          onViewSupplier={handleViewSupplier}
-          onEditSupplier={handleEditSupplier}
-          onDeleteSupplier={handleDeleteSupplier}
-          title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Suppliers (${filteredSuppliers.length})`}
-        />
+        {suppliersLoading ? (
+          <div className="flex justify-center py-8">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <SupplierList
+            suppliers={filteredSuppliers}
+            onSupplierClick={handleSupplierClick}
+            onViewSupplier={handleViewSupplier}
+            onDeleteSupplier={handleDeleteSupplier}
+            title={`${activeTab ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : 'All'} Suppliers (${filteredSuppliers.length})`}
+          />
+        )}
       </Card>
 
       {/* Add Supplier Modal */}
@@ -167,7 +184,7 @@ const SuppliersPage: React.FC = () => {
         <AddSupplierForm
           onSubmit={handleAddSupplier}
           onCancel={() => setIsAddSupplierModalOpen(false)}
-          isLoading={isAddingSupplier}
+          isLoading={isLoading}
         />
       </Modal>
 
@@ -206,6 +223,38 @@ const SuppliersPage: React.FC = () => {
           }
         >
           <SupplierDetails supplier={selectedSupplier} />
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {supplierToDelete && (
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          title="Delete Supplier"
+          size="sm"
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDeleteSupplier}
+                loading={isDeleting}
+              >
+                Delete Supplier
+              </Button>
+            </>
+          }
+        >
+          <div className="text-sm text-gray-500">
+            Are you sure you want to delete "{supplierToDelete.name}"? This action cannot be undone.
+          </div>
         </Modal>
       )}
     </div>

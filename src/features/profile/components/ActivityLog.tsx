@@ -5,37 +5,75 @@
  */
 
 import React from 'react';
-import type{ ActivityLogItem } from '../types/index';
+import type { ActivityLogItem } from '../types/index';
 import {
   UserCircleIcon,
   KeyIcon,
   ShieldCheckIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  ComputerDesktopIcon,
+  CogIcon,
+  BellIcon,
+  PlusCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface ActivityLogProps {
   activities: ActivityLogItem[];
+  isLoading?: boolean;
 }
 
 const ActivityLog: React.FC<ActivityLogProps> = ({
-  activities
+  activities,
+  isLoading = false
 }) => {
   // Helper function to get icon based on activity type
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'login':
-        return <UserCircleIcon className="h-5 w-5" />;
+        return <ComputerDesktopIcon className="h-5 w-5" />;
       case 'password':
         return <KeyIcon className="h-5 w-5" />;
       case 'security':
         return <ShieldCheckIcon className="h-5 w-5" />;
       case 'account':
-        return <CheckCircleIcon className="h-5 w-5" />;
+        return <PlusCircleIcon className="h-5 w-5" />;
       case 'profile':
-      default:
         return <UserCircleIcon className="h-5 w-5" />;
+      case 'settings':
+        return <CogIcon className="h-5 w-5" />;
+      case 'notifications':
+        return <BellIcon className="h-5 w-5" />;
+      default:
+        return <CheckCircleIcon className="h-5 w-5" />;
     }
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-500">Loading activity log...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state
+  if (activities.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <p className="text-gray-500">No activity found</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -50,10 +88,10 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
                 <div className="relative flex items-start space-x-3">
                   <div>
                     <div className="relative px-1">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary bg-opacity-10 ring-8 ring-white">
-                        <span className="text-primary">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 ring-8 ring-white icon-container">
+                        <div className="text-gray-600">
                           {activity.icon || getActivityIcon(activity.type)}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>

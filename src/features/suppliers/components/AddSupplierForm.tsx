@@ -1,231 +1,284 @@
 /**
  * Add Supplier Form Component
- * 
+ *
  * This component provides a form for adding new suppliers.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../../../components/common/Button';
+import FormField from '../../../components/common/FormField';
+import ImageUpload from '../../../components/common/ImageUpload';
 import type{ SupplierFormData } from '../types/index';
 import { validateForm, validationRules } from '../../../utils/validation';
+import type { Category } from '../../categories/types';
 
 interface AddSupplierFormProps {
-  onSubmit: (supplierData: SupplierFormData) => void;
+  onSubmit: (supplierData: SupplierFormData, setFieldError?: (field: string, message: string) => void) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-const AddSupplierForm: React.FC<AddSupplierFormProps> = ({ 
-  onSubmit, 
-  onCancel, 
-  isLoading = false 
+const AddSupplierForm: React.FC<AddSupplierFormProps> = ({
+  onSubmit,
+  onCancel,
+  isLoading = false
 }) => {
   const [formData, setFormData] = useState<SupplierFormData>({
-    name: '',
+    supplierName: '',
     email: '',
     phone: '',
     address: '',
-    contactPerson: '',
-    categories: [],
-    logo: ''
+    businessType: '',
+    password: '',
+    confirmPassword: '',
+    image: null
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Fetch categories for business type dropdown
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        // For now, use mock data. In production, you would use the categories API
+        const mockCategories: Category[] = [
+          {
+            id: '1',
+            name: 'Retail',
+            description: 'Retail business',
+            productCount: 0,
+            subcategoryCount: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            visibleInSupplierApp: true,
+            visibleInCustomerApp: true
+          },
+          {
+            id: '2',
+            name: 'Wholesale',
+            description: 'Wholesale business',
+            productCount: 0,
+            subcategoryCount: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            visibleInSupplierApp: true,
+            visibleInCustomerApp: true
+          },
+          {
+            id: '3',
+            name: 'Manufacturing',
+            description: 'Manufacturing business',
+            productCount: 0,
+            subcategoryCount: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            visibleInSupplierApp: true,
+            visibleInCustomerApp: true
+          },
+          {
+            id: '4',
+            name: 'Technology',
+            description: 'Technology business',
+            productCount: 0,
+            subcategoryCount: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            visibleInSupplierApp: true,
+            visibleInCustomerApp: true
+          },
+          {
+            id: '5',
+            name: 'Healthcare',
+            description: 'Healthcare business',
+            productCount: 0,
+            subcategoryCount: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            visibleInSupplierApp: true,
+            visibleInCustomerApp: true
+          },
+          {
+            id: '6',
+            name: 'Food & Beverage',
+            description: 'Food & Beverage business',
+            productCount: 0,
+            subcategoryCount: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            visibleInSupplierApp: true,
+            visibleInCustomerApp: true
+          },
+          {
+            id: '7',
+            name: 'Automotive',
+            description: 'Automotive business',
+            productCount: 0,
+            subcategoryCount: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            visibleInSupplierApp: true,
+            visibleInCustomerApp: true
+          }
+        ];
+        setCategories(mockCategories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const options = e.target.options;
-    const selectedCategories: string[] = [];
-    
-    for (let i = 0; i < options.length; i++) {
-      if (options[i]?.selected) {
-        selectedCategories.push(options[i]?.value || '');
-      }
-    }
-    
-    setFormData(prev => ({ ...prev, categories: selectedCategories }));
-    
+  const handleImageChange = (file: File | null) => {
+    setFormData(prev => ({ ...prev, image: file }));
+
     // Clear error when field is edited
-    if (errors.categories) {
-      setErrors(prev => ({ ...prev, categories: '' }));
+    if (errors.image) {
+      setErrors(prev => ({ ...prev, image: '' }));
     }
   };
 
   const validateFormData = () => {
-    const validationErrors = validateForm({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      contactPerson: formData.contactPerson,
-      address: formData.address
-    }, {
-      name: [validationRules.required('Company name is required')],
+    const formValidationRules = {
+      supplierName: [validationRules.required('Supplier name is required')],
       email: [validationRules.required('Email is required'), validationRules.email()],
       phone: [validationRules.required('Phone number is required'), validationRules.phone()],
-      contactPerson: [validationRules.required('Contact person is required')],
-      address: [validationRules.required('Address is required')]
-    });
+      address: [validationRules.required('Address is required')],
+      businessType: [validationRules.required('Business type is required')],
+      password: [validationRules.required('Password is required'), validationRules.password()],
+      confirmPassword: [validationRules.required('Confirm password is required'), validationRules.passwordMatch()],
+    };
 
-    if (formData.categories.length === 0) {
-      const newValidationErrors = {
-        ...validationErrors,
-        categories: 'Please select at least one category'
-      };
-      setErrors(newValidationErrors);
-      return Object.keys(newValidationErrors).length === 0;
-    }
-
+    const validationErrors = validateForm(formData, formValidationRules);
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
   };
 
+  const setFieldError = (field: string, message: string) => {
+    setErrors(prev => ({ ...prev, [field]: message }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateFormData()) {
-      onSubmit(formData);
+      onSubmit(formData, setFieldError);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Company Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
-              errors.name ? 'border-red-300' : ''
-            }`}
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-        </div>
+        <FormField
+          label="Supplier Name"
+          name="supplierName"
+          value={formData.supplierName}
+          onChange={handleChange}
+          error={errors.supplierName}
+          required
+        />
 
-        <div>
-          <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700">
-            Contact Person <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="contactPerson"
-            name="contactPerson"
-            value={formData.contactPerson}
-            onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
-              errors.contactPerson ? 'border-red-300' : ''
-            }`}
-          />
-          {errors.contactPerson && <p className="mt-1 text-sm text-red-600">{errors.contactPerson}</p>}
-        </div>
+        <FormField
+          label="Business Type"
+          name="businessType"
+          type="select"
+          value={formData.businessType}
+          onChange={handleChange}
+          error={errors.businessType}
+          required
+          loading={loadingCategories}
+          options={[
+            { value: '', label: 'Select a business type' },
+            ...categories.map((category) => ({
+              value: category.name,
+              label: category.name
+            }))
+          ]}
+        />
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email Address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
-              errors.email ? 'border-red-300' : ''
-            }`}
-          />
-          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-        </div>
+        <FormField
+          label="Email Address"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
+          required
+        />
 
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-            Phone Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
-              errors.phone ? 'border-red-300' : ''
-            }`}
-          />
-          {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-        </div>
+        <FormField
+          label="Phone Number"
+          name="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={handleChange}
+          error={errors.phone}
+          required
+        />
 
-        <div className="sm:col-span-2">
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-            Address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
-              errors.address ? 'border-red-300' : ''
-            }`}
-          />
-          {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
-        </div>
+        <FormField
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          error={errors.password}
+          required
+        />
 
-        <div className="sm:col-span-2">
-          <label htmlFor="categories" className="block text-sm font-medium text-gray-700">
-            Categories <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="categories"
-            name="categories"
-            multiple
-            value={formData.categories}
-            onChange={handleCategoryChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
-              errors.categories ? 'border-red-300' : ''
-            }`}
-            size={4}
-          >
-            <option value="Electronics">Electronics</option>
-            <option value="Furniture">Furniture</option>
-            <option value="Office Supplies">Office Supplies</option>
-            <option value="Food & Beverages">Food & Beverages</option>
-            <option value="Clothing">Clothing</option>
-            <option value="Healthcare">Healthcare</option>
-            <option value="Software">Software</option>
-            <option value="Hardware">Hardware</option>
-          </select>
-          <p className="mt-1 text-xs text-gray-500">Hold Ctrl (or Cmd) to select multiple categories</p>
-          {errors.categories && <p className="mt-1 text-sm text-red-600">{errors.categories}</p>}
-        </div>
+        <FormField
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+          required
+        />
 
-        <div className="sm:col-span-2">
-          <label htmlFor="logo" className="block text-sm font-medium text-gray-700">
-            Logo URL
-          </label>
-          <input
-            type="text"
-            id="logo"
-            name="logo"
-            value={formData.logo}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-          />
-        </div>
+        <FormField
+          label="Address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          error={errors.address}
+          required
+          className="sm:col-span-2"
+        />
       </div>
+
+      {/* Image Upload Field */}
+      <ImageUpload
+        label="Supplier Image"
+        name="image"
+        value={formData.image || null}
+        onChange={handleImageChange}
+        error={errors.image}
+        maxSize={5 * 1024 * 1024} // 5MB
+        allowedTypes={['image/jpeg', 'image/png', 'image/gif', 'image/webp']}
+      />
 
       <div className="flex justify-end space-x-3">
         <Button 

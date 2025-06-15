@@ -514,16 +514,36 @@ export const handleFormError = (
   if (error.response?.data?.errors) {
     // Handle validation errors from API
     const errors = error.response.data.errors;
+    let hasFieldErrors = false;
+
     Object.entries(errors).forEach(([field, messages]) => {
       const message = Array.isArray(messages) ? messages[0] : messages;
       if (setFieldError) {
         setFieldError(field, message as string);
+        hasFieldErrors = true;
       }
     });
+
+    // Only show notification if no field errors were handled
+    if (!hasFieldErrors && showNotification) {
+      const apiError = parseApiError(error);
+      showNotification({
+        type: 'error',
+        title: 'Form Error',
+        message: apiError.message
+      });
+    }
   } else {
-    // Handle general form errors
+    // Handle general form errors - check if it's a specific API error first
     const apiError = parseApiError(error);
-    if (showNotification) {
+
+    // Check if this is a field-specific error that can be mapped
+    if (setFieldError && apiError.message.toLowerCase().includes('email already in use')) {
+      setFieldError('email', 'Email already in use');
+    } else if (setFieldError && apiError.message.toLowerCase().includes('email')) {
+      setFieldError('email', apiError.message);
+    } else if (showNotification) {
+      // Only show generic notification if we couldn't map to a specific field
       showNotification({
         type: 'error',
         title: 'Form Error',
