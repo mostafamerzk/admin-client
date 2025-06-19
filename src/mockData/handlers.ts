@@ -9,7 +9,6 @@ import { mockDb } from './db';
 import type{ User } from './entities/users';
 import type{ Supplier } from './entities/suppliers';
 import type{ Category } from './entities/categories';
-import type{ Order } from './entities/orders';
 import type{ DashboardStats } from './entities/dashboard';
 import { mockProfile, mockActivityLog, updateProfileData, generateAvatarUrl } from './entities/profile';
 import { businessTypes } from './entities/businessTypes';
@@ -32,6 +31,13 @@ const errorResponse = (message: string, status: number = 500) => ({
   }
 });
 
+// Auth-specific error response in backend format
+const authErrorResponse = (message: string, status: number = 500) => ({
+  success: false,
+  message,
+  status
+});
+
 export const handlers = {
   // Authentication
   auth: {
@@ -42,7 +48,7 @@ export const handlers = {
       // Simulate login failure for specific credentials
       if (email === 'fail@example.com') {
         console.log('[Mock Auth] Login failed - test failure case');
-        return errorResponse('Invalid credentials', 401);
+        return authErrorResponse('Invalid credentials', 401);
       }
 
       // Special case for demo credentials
@@ -52,17 +58,21 @@ export const handlers = {
         // Generate mock JWT token
         const token = `mock-jwt-token-${Date.now()}`;
 
+        // Return backend format that production expects
         return {
-          user: {
-            id: mockProfile.id,
-            name: mockProfile.name,
-            email: mockProfile.email,
-            type: 'admin',
-            avatar: mockProfile.avatar,
-            role: mockProfile.role
-          },
-          token,
-          expiresIn: 3600 // 1 hour
+          success: true,
+          message: 'Login successful',
+          data: {
+            user: {
+              id: mockProfile.id,
+              name: mockProfile.name,
+              email: mockProfile.email,
+              type: 'admin',
+              avatar: mockProfile.avatar,
+              role: mockProfile.role
+            },
+            token
+          }
         };
       }
 
@@ -71,17 +81,20 @@ export const handlers = {
       const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
       if (!user) {
-        return errorResponse('Invalid credentials', 401);
+        return authErrorResponse('Invalid credentials', 401);
       }
 
       // In a real app, we would validate the password here
       // For demo purposes, we'll just reject all other login attempts
-      return errorResponse('Invalid credentials', 401);
+      return authErrorResponse('Invalid credentials', 401);
     },
 
     logout: async () => {
       await delay(300);
-      return { success: true };
+      return {
+        success: true,
+        message: 'Logout successful'
+      };
     },
 
     getCurrentUser: async (token: string) => {
@@ -243,43 +256,112 @@ export const handlers = {
 
   // Suppliers
   suppliers: {
-    getAll: async (filters?: { status?: string; verificationStatus?: string; search?: string }) => {
+    getAll: async (filters?: {
+      status?: string;
+      verificationStatus?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
+      sort?: string;
+      order?: string;
+    }) => {
       await delay(800);
 
       let suppliers = mockDb.getAll<Supplier, 'suppliers'>('suppliers');
 
-      // Map companyName to name for component compatibility
-      const mappedSuppliers = suppliers.map(supplier => ({
-        ...supplier,
-        name: supplier.companyName,
-        joinDate: supplier.verificationDate?.split('T')[0] || supplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
-      }));
-
       // Apply filters if provided
       if (filters) {
-        let filteredSuppliers = mappedSuppliers;
-
         if (filters.status) {
-          filteredSuppliers = filteredSuppliers.filter(supplier => supplier.status === filters.status);
+          suppliers = suppliers.filter(supplier => supplier.status === filters.status);
         }
 
         if (filters.verificationStatus) {
-          filteredSuppliers = filteredSuppliers.filter(supplier => supplier.verificationStatus === filters.verificationStatus);
+          suppliers = suppliers.filter(supplier => supplier.verificationStatus === filters.verificationStatus);
         }
 
         if (filters.search) {
           const searchLower = filters.search.toLowerCase();
-          filteredSuppliers = filteredSuppliers.filter(supplier =>
-            supplier.name.toLowerCase().includes(searchLower) ||
+          suppliers = suppliers.filter(supplier =>
+            supplier.companyName.toLowerCase().includes(searchLower) ||
             supplier.contactPerson.toLowerCase().includes(searchLower) ||
             supplier.email.toLowerCase().includes(searchLower)
           );
         }
-
-        return filteredSuppliers;
       }
 
-      return mappedSuppliers;
+      // Apply sorting
+      if (filters?.sort) {
+        const sortField = filters.sort;
+        const sortOrder = filters.order === 'desc' ? -1 : 1;
+
+        suppliers.sort((a, b) => {
+          let aValue: any, bValue: any;
+
+          switch (sortField) {
+            case 'Name':
+              aValue = a.companyName;
+              bValue = b.companyName;
+              break;
+            case 'Email':
+              aValue = a.email;
+              bValue = b.email;
+              break;
+            case 'createdAt':
+              aValue = a.createdAt;
+              bValue = b.createdAt;
+              break;
+            case 'updatedAt':
+              aValue = a.updatedAt;
+              bValue = b.updatedAt;
+              break;
+            default:
+              aValue = a.companyName;
+              bValue = b.companyName;
+          }
+
+          if (aValue < bValue) return -1 * sortOrder;
+          if (aValue > bValue) return 1 * sortOrder;
+          return 0;
+        });
+      }
+
+      // Apply pagination
+      const page = filters?.page || 1;
+      const limit = Math.min(filters?.limit || 20, 100); // Max 100 as per API spec
+      const total = suppliers.length;
+      const pages = Math.ceil(total / limit);
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+
+      const paginatedSuppliers = suppliers.slice(startIndex, endIndex);
+
+      // Transform to backend format
+      const backendSuppliers = paginatedSuppliers.map(supplier => ({
+        id: parseInt(supplier.id), // Convert to numeric ID
+        name: supplier.companyName,
+        email: supplier.email,
+        contactPerson: supplier.contactPerson,
+        phone: supplier.phone,
+        address: supplier.address,
+        categories: supplier.categories?.[0] || '', // Single category string
+        status: supplier.status === 'pending' || supplier.status === 'rejected' ? 'active' : supplier.status, // Backend only has active/banned
+        verificationStatus: supplier.verificationStatus === 'rejected' ? 'pending' : supplier.verificationStatus, // Backend only has verified/pending
+        createdDate: supplier.createdAt,
+        updatedDate: supplier.updatedAt
+      }));
+
+      // Return backend wrapped response format
+      return {
+        success: true,
+        message: 'Suppliers retrieved successfully',
+        data: backendSuppliers,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages
+        }
+      };
     },
 
     getById: async (id: string) => {
@@ -288,24 +370,46 @@ export const handlers = {
       const supplier = mockDb.getById<Supplier, 'suppliers'>('suppliers', id);
 
       if (!supplier) {
-        return errorResponse('Supplier not found', 404);
+        return {
+          success: false,
+          message: 'Supplier not found',
+          data: null
+        };
       }
 
-      // Map companyName to name for component compatibility
-      const mappedSupplier = {
-        ...supplier,
+      // Transform to backend format
+      const backendSupplier = {
+        id: parseInt(supplier.id), // Convert to numeric ID
         name: supplier.companyName,
-        joinDate: supplier.verificationDate?.split('T')[0] || supplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+        email: supplier.email,
+        contactPerson: supplier.contactPerson,
+        phone: supplier.phone,
+        address: supplier.address,
+        categories: supplier.categories?.[0] || '', // Single category string
+        status: supplier.status === 'pending' || supplier.status === 'rejected' ? 'active' : supplier.status, // Backend only has active/banned
+        verificationStatus: supplier.verificationStatus === 'rejected' ? 'pending' : supplier.verificationStatus, // Backend only has verified/pending
+        createdDate: supplier.createdAt,
+        updatedDate: supplier.updatedAt
       };
 
-      return mappedSupplier;
+      // Return backend wrapped response format
+      return {
+        success: true,
+        message: 'Supplier retrieved successfully',
+        data: backendSupplier
+      };
     },
 
     create: async (supplierData: any) => {
       await delay(1000);
 
-      if (!supplierData.name || !supplierData.email) {
-        return errorResponse('Supplier name and email are required', 400);
+      // Validate required fields per backend API spec
+      if (!supplierData.email || !supplierData.password || !supplierData.contactPerson) {
+        return {
+          success: false,
+          message: 'Email, password, and contact person are required',
+          data: null
+        };
       }
 
       // Check if email already exists
@@ -313,13 +417,17 @@ export const handlers = {
       const existingSupplier = suppliers.find(s => s.email.toLowerCase() === supplierData.email?.toLowerCase());
 
       if (existingSupplier) {
-        return errorResponse('Email already in use', 409);
+        return {
+          success: false,
+          message: 'Email already in use',
+          data: null
+        };
       }
 
       const newSupplier: Supplier = {
         id: `${Date.now()}`,
-        companyName: supplierData.name,
-        contactPerson: supplierData.contactPerson || supplierData.name,
+        companyName: supplierData.name || '',
+        contactPerson: supplierData.contactPerson,
         email: supplierData.email,
         phone: supplierData.phone || '',
         status: 'active',
@@ -327,7 +435,7 @@ export const handlers = {
         verificationDate: new Date().toISOString(),
         productCount: 0,
         rating: 0,
-        categories: supplierData.categories || [],
+        categories: supplierData.categories ? [supplierData.categories] : [], // Convert single category to array for internal storage
         logo: supplierData.image || '',
         website: supplierData.website || '',
         address: supplierData.address || '',
@@ -337,14 +445,27 @@ export const handlers = {
 
       const createdSupplier = mockDb.create<Supplier, 'suppliers'>('suppliers', newSupplier);
 
-      // Map companyName to name for component compatibility (same as getAll and getById)
-      const mappedSupplier = {
-        ...createdSupplier,
+      // Transform to backend format
+      const backendSupplier = {
+        id: parseInt(createdSupplier.id), // Convert to numeric ID
         name: createdSupplier.companyName,
-        joinDate: createdSupplier.verificationDate?.split('T')[0] || createdSupplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+        email: createdSupplier.email,
+        contactPerson: createdSupplier.contactPerson,
+        phone: createdSupplier.phone,
+        address: createdSupplier.address,
+        categories: createdSupplier.categories?.[0] || '', // Single category string
+        status: createdSupplier.status === 'pending' || createdSupplier.status === 'rejected' ? 'active' : createdSupplier.status,
+        verificationStatus: createdSupplier.verificationStatus === 'rejected' ? 'pending' : createdSupplier.verificationStatus,
+        createdDate: createdSupplier.createdAt,
+        updatedDate: createdSupplier.updatedAt
       };
 
-      return mappedSupplier;
+      // Return backend wrapped response format
+      return {
+        success: true,
+        message: 'Supplier created successfully',
+        data: backendSupplier
+      };
     },
 
     update: async (id: string, supplierData: any) => {
@@ -372,20 +493,23 @@ export const handlers = {
       // Map companyName to name for component compatibility (same as getAll and getById)
       const mappedSupplier = {
         ...savedSupplier,
-        name: savedSupplier.companyName,
-        joinDate: savedSupplier.verificationDate?.split('T')[0] || savedSupplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+        name: savedSupplier.companyName
       };
 
       return mappedSupplier;
     },
 
-    updateVerification: async (id: string, verificationData: { verificationStatus: 'verified' | 'pending' | 'rejected' }) => {
+    updateVerificationStatus: async (id: string, verificationData: { verificationStatus: 'verified' | 'pending' }) => {
       await delay(600);
 
       const supplier = mockDb.getById<Supplier, 'suppliers'>('suppliers', id);
 
       if (!supplier) {
-        return errorResponse('Supplier not found', 404);
+        return {
+          success: false,
+          message: 'Supplier not found',
+          data: null
+        };
       }
 
       const updatedSupplier = {
@@ -397,14 +521,27 @@ export const handlers = {
 
       const savedSupplier = mockDb.update<Supplier, 'suppliers'>('suppliers', updatedSupplier);
 
-      // Map companyName to name for component compatibility (same as getAll and getById)
-      const mappedSupplier = {
-        ...savedSupplier,
+      // Transform to backend format
+      const backendSupplier = {
+        id: parseInt(savedSupplier.id), // Convert to numeric ID
         name: savedSupplier.companyName,
-        joinDate: savedSupplier.verificationDate?.split('T')[0] || savedSupplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+        email: savedSupplier.email,
+        contactPerson: savedSupplier.contactPerson,
+        phone: savedSupplier.phone,
+        address: savedSupplier.address,
+        categories: savedSupplier.categories?.[0] || '', // Single category string
+        status: savedSupplier.status === 'pending' || savedSupplier.status === 'rejected' ? 'active' : savedSupplier.status,
+        verificationStatus: savedSupplier.verificationStatus === 'rejected' ? 'pending' : savedSupplier.verificationStatus,
+        createdDate: savedSupplier.createdAt,
+        updatedDate: savedSupplier.updatedAt
       };
 
-      return mappedSupplier;
+      // Return backend wrapped response format
+      return {
+        success: true,
+        message: 'Verification status updated successfully',
+        data: backendSupplier
+      };
     },
 
     delete: async (id: string) => {
@@ -419,13 +556,13 @@ export const handlers = {
       return { success: true };
     },
 
-    getProducts: async (_supplierId: string, _filters?: any) => {
+    getProducts: async (_supplierId: string, filters?: { page?: number; limit?: number }) => {
       await delay(600);
 
       // Mock supplier products data
       const mockProducts = [
         {
-          id: '1',
+          id: 1,
           name: 'Wireless Bluetooth Headphones',
           sku: 'WBH-001',
           category: 'Electronics',
@@ -434,11 +571,11 @@ export const handlers = {
           status: 'active',
           description: 'High-quality wireless headphones with noise cancellation',
           image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&h=150&fit=crop',
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-01-20T14:45:00Z'
+          createdDate: '2024-01-15T10:30:00Z',
+          updatedDate: '2024-01-20T14:45:00Z'
         },
         {
-          id: '2',
+          id: 2,
           name: 'Smart Watch Pro',
           sku: 'SWP-002',
           category: 'Electronics',
@@ -447,11 +584,11 @@ export const handlers = {
           status: 'active',
           description: 'Advanced smartwatch with health monitoring features',
           image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop',
-          createdAt: '2024-01-10T09:15:00Z',
-          updatedAt: '2024-01-18T16:20:00Z'
+          createdDate: '2024-01-10T09:15:00Z',
+          updatedDate: '2024-01-18T16:20:00Z'
         },
         {
-          id: '3',
+          id: 3,
           name: 'USB-C Cable',
           sku: 'USC-003',
           category: 'Accessories',
@@ -459,12 +596,33 @@ export const handlers = {
           stock: 0,
           status: 'out_of_stock',
           description: 'High-speed USB-C charging cable',
-          createdAt: '2024-01-05T11:00:00Z',
-          updatedAt: '2024-01-22T13:30:00Z'
+          createdDate: '2024-01-05T11:00:00Z',
+          updatedDate: '2024-01-22T13:30:00Z'
         }
       ];
 
-      return mockProducts;
+      // Apply pagination
+      const page = filters?.page || 1;
+      const limit = Math.min(filters?.limit || 10, 100); // Max 100 as per API spec
+      const total = mockProducts.length;
+      const pages = Math.ceil(total / limit);
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+
+      const paginatedProducts = mockProducts.slice(startIndex, endIndex);
+
+      // Return backend wrapped response format
+      return {
+        success: true,
+        message: 'Supplier products retrieved successfully',
+        data: paginatedProducts,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages
+        }
+      };
     },
 
     getDocuments: async (_supplierId: string, _filters?: any) => {
@@ -552,13 +710,17 @@ export const handlers = {
       return { imageUrl };
     },
 
-    ban: async (id: string) => {
+    ban: async (id: string, _banData?: { status: 'banned' }) => {
       await delay(700);
 
       const supplier = mockDb.getById<Supplier, 'suppliers'>('suppliers', id);
 
       if (!supplier) {
-        return errorResponse('Supplier not found', 404);
+        return {
+          success: false,
+          message: 'Supplier not found',
+          data: null
+        };
       }
 
       const bannedSupplier = {
@@ -569,14 +731,27 @@ export const handlers = {
 
       const savedSupplier = mockDb.update<Supplier, 'suppliers'>('suppliers', bannedSupplier);
 
-      // Map companyName to name for component compatibility (same as getAll and getById)
-      const mappedSupplier = {
-        ...savedSupplier,
+      // Transform to backend format
+      const backendSupplier = {
+        id: parseInt(savedSupplier.id), // Convert to numeric ID
         name: savedSupplier.companyName,
-        joinDate: savedSupplier.verificationDate?.split('T')[0] || savedSupplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+        email: savedSupplier.email,
+        contactPerson: savedSupplier.contactPerson,
+        phone: savedSupplier.phone,
+        address: savedSupplier.address,
+        categories: savedSupplier.categories?.[0] || '', // Single category string
+        status: savedSupplier.status,
+        verificationStatus: savedSupplier.verificationStatus === 'rejected' ? 'pending' : savedSupplier.verificationStatus,
+        createdDate: savedSupplier.createdAt,
+        updatedDate: savedSupplier.updatedAt
       };
 
-      return mappedSupplier;
+      // Return backend wrapped response format
+      return {
+        success: true,
+        message: 'Supplier banned successfully',
+        data: backendSupplier
+      };
     },
 
     unban: async (id: string) => {
@@ -585,7 +760,11 @@ export const handlers = {
       const supplier = mockDb.getById<Supplier, 'suppliers'>('suppliers', id);
 
       if (!supplier) {
-        return errorResponse('Supplier not found', 404);
+        return {
+          success: false,
+          message: 'Supplier not found',
+          data: null
+        };
       }
 
       const unbannedSupplier = {
@@ -596,14 +775,27 @@ export const handlers = {
 
       const savedSupplier = mockDb.update<Supplier, 'suppliers'>('suppliers', unbannedSupplier);
 
-      // Map companyName to name for component compatibility (same as getAll and getById)
-      const mappedSupplier = {
-        ...savedSupplier,
+      // Transform to backend format
+      const backendSupplier = {
+        id: parseInt(savedSupplier.id), // Convert to numeric ID
         name: savedSupplier.companyName,
-        joinDate: savedSupplier.verificationDate?.split('T')[0] || savedSupplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]
+        email: savedSupplier.email,
+        contactPerson: savedSupplier.contactPerson,
+        phone: savedSupplier.phone,
+        address: savedSupplier.address,
+        categories: savedSupplier.categories?.[0] || '', // Single category string
+        status: savedSupplier.status,
+        verificationStatus: savedSupplier.verificationStatus === 'rejected' ? 'pending' : savedSupplier.verificationStatus,
+        createdDate: savedSupplier.createdAt,
+        updatedDate: savedSupplier.updatedAt
       };
 
-      return mappedSupplier;
+      // Return backend wrapped response format
+      return {
+        success: true,
+        message: 'Supplier unbanned successfully',
+        data: backendSupplier
+      };
     }
   },
 
@@ -810,7 +1002,9 @@ export const handlers = {
     getAll: async (filters?: { status?: string; search?: string }) => {
       await delay(900);
 
-      let orders = mockDb.getAll<Order, 'orders'>('orders');
+      // Import the mapper functions
+      const { getMockOrders } = await import('../features/orders/utils/orderMappers');
+      let orders = getMockOrders();
 
       // Apply filters if provided
       if (filters) {
@@ -821,7 +1015,7 @@ export const handlers = {
         if (filters.search) {
           const searchLower = filters.search.toLowerCase();
           orders = orders.filter(order =>
-            order.orderNumber.toLowerCase().includes(searchLower) ||
+            order.id.toLowerCase().includes(searchLower) ||
             order.customerName.toLowerCase().includes(searchLower) ||
             order.supplierName.toLowerCase().includes(searchLower)
           );
@@ -833,24 +1027,26 @@ export const handlers = {
 
     getById: async (id: string) => {
       await delay(800);
-      
-      const order = mockDb.getById<Order, 'orders'>('orders', id);
-      
+
+      // Import the mapper functions
+      const { getMockOrderById } = await import('../features/orders/utils/orderMappers');
+      const order = getMockOrderById(id);
+
       if (!order) {
         return errorResponse('Order not found', 404);
       }
-      
+
       return order;
     },
 
-    create: async (orderData: Partial<Order>) => {
+    create: async (orderData: any) => {
       await delay(1000);
 
       if (!orderData.customerName || !orderData.supplierName) {
         return errorResponse('Customer name and supplier name are required', 400);
       }
 
-      const newOrder: Order = {
+      const newMockOrder = {
         id: `${Date.now()}`,
         customerId: orderData.customerId || `cust-${Date.now()}`,
         customerName: orderData.customerName,
@@ -871,17 +1067,20 @@ export const handlers = {
         items: orderData.items || [],
         orderDate: orderData.orderDate || new Date().toISOString(),
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        ...orderData
+        updatedAt: new Date().toISOString()
       };
 
-      return mockDb.create<Order, 'orders'>('orders', newOrder);
+      const createdMockOrder = mockDb.create('orders', newMockOrder);
+
+      // Map to application format
+      const { mapMockOrderToOrder } = await import('../features/orders/utils/orderMappers');
+      return mapMockOrderToOrder(createdMockOrder);
     },
 
-    update: async (id: string, orderData: Partial<Order>) => {
+    update: async (id: string, orderData: any) => {
       await delay(900);
 
-      const order = mockDb.getById<Order, 'orders'>('orders', id);
+      const order = mockDb.getById('orders', id);
 
       if (!order) {
         return errorResponse('Order not found', 404);
@@ -893,7 +1092,11 @@ export const handlers = {
         updatedAt: new Date().toISOString()
       };
 
-      return mockDb.update<Order, 'orders'>('orders', updatedOrder);
+      const savedOrder = mockDb.update('orders', updatedOrder);
+
+      // Map to application format
+      const { mapMockOrderToOrder } = await import('../features/orders/utils/orderMappers');
+      return mapMockOrderToOrder(savedOrder);
     },
 
     delete: async (id: string) => {
@@ -914,8 +1117,15 @@ export const handlers = {
     getStats: async () => {
       await delay(300);
 
-      const stats = mockDb.getAll<DashboardStats, 'dashboardStats'>('dashboardStats')[0];
-      return stats;
+      // Simulate random failure for testing error handling
+      if (simulateRandomFailure(0.05)) { // 5% failure rate
+        console.log('[Mock Dashboard] Simulating API failure');
+        throw new Error('Failed to fetch dashboard statistics');
+      }
+
+      // Return backend response format (not the full dashboard object)
+      const { dashboardStatsResponse } = await import('./entities/dashboard');
+      return dashboardStatsResponse;
     },
 
     getSalesData: async (period: 'day' | 'week' | 'month' | 'year') => {

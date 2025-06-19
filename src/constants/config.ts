@@ -11,7 +11,7 @@ export const IS_PROD = ENV === 'production';
 export const IS_TEST = ENV === 'test';
 
 // Environment variables with fallbacks
-export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 export const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true';
 export const ENVIRONMENT = process.env.REACT_APP_ENVIRONMENT || 'development';
 

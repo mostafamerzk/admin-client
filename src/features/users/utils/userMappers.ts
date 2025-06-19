@@ -16,15 +16,22 @@ export const mapMockUserToUser = (mockUser: any): User => {
     return null as unknown as User;
   }
   
-  return {
+  const result: User = {
     id: mockUser.id,
     name: mockUser.name,
     email: mockUser.email,
     type: mockUser.type as 'customer' | 'supplier',
-    status: mockUser.status === 'pending' ? 'active' : mockUser.status, // Map 'pending' to 'active' for compatibility
-    lastLogin: mockUser.lastLogin ? new Date(mockUser.lastLogin).toISOString().split('T')[0]! : new Date().toISOString().split('T')[0]!,
-    avatar: mockUser.avatar || ''
+    status: mockUser.status === 'pending' ? 'active' : mockUser.status // Map 'pending' to 'active' for compatibility
   };
+
+  if (mockUser.lastLogin) {
+    result.lastLogin = new Date(mockUser.lastLogin).toISOString().split('T')[0]!;
+  }
+  if (mockUser.avatar) {
+    result.avatar = mockUser.avatar;
+  }
+
+  return result;
 };
 
 /**

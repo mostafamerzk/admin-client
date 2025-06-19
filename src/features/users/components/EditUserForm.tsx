@@ -8,11 +8,11 @@ import React, { useState, useEffect } from 'react';
 import Button from '../../../components/common/Button';
 import Card from '../../../components/common/Card';
 import { validateForm, validationRules } from '../../../utils/validation';
-import type { User, UserFormData } from '../types/index';
+import type { User, UserFormDataFrontend } from '../types/index';
 
 interface EditUserFormProps {
   user: User;
-  onSubmit: (userData: UserFormData) => Promise<void>;
+  onSubmit: (userData: UserFormDataFrontend) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -21,7 +21,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
   onSubmit, 
   isLoading = false 
 }) => {
-  const [formData, setFormData] = useState<UserFormData>({
+  const [formData, setFormData] = useState<UserFormDataFrontend>({
     name: '',
     email: '',
     type: 'customer',

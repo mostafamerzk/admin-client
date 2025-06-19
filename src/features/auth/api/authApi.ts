@@ -11,11 +11,19 @@ import type {
   LoginResponse,
   RegisterCredentials,
   ForgotPasswordRequest,
-  ResetPasswordRequest
+  ResetPasswordRequest,
+  BackendLoginResponse
 } from '../types';
 import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../../../constants/config';
 import { handleApiError } from '../../../utils/errorHandling';
 import { responseValidators } from '../../../utils/apiHelpers';
+import {
+  transformLoginRequest,
+  transformLoginResponse,
+  transformUserProfileResponse,
+  validateBackendResponse,
+  extractErrorMessage
+} from '../utils/apiTransformers';
 
 export const authApi = {
   /**
@@ -23,8 +31,25 @@ export const authApi = {
    */
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
-      const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
-      const loginData = responseValidators.create(response, 'login');
+      // Transform frontend credentials to backend format
+      const backendRequest = transformLoginRequest(credentials);
+
+      // Make API call
+      const response = await apiClient.post<BackendLoginResponse>('/auth/login', backendRequest);
+
+      // Handle API client error wrapper
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (!response.data) {
+        throw new Error('No response data received');
+      }
+
+      // Validate and transform backend response
+      validateBackendResponse(response.data, ['user', 'token']);
+      const loginData = transformLoginResponse(response.data);
+
       const { user, token, expiresIn } = loginData;
 
       // Store token and user data
@@ -32,7 +57,12 @@ export const authApi = {
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
 
       return { user, token, expiresIn };
-    } catch (error) {
+    } catch (error: any) {
+      // Enhanced error handling for backend-specific errors
+      if (error.response?.data) {
+        const errorMessage = extractErrorMessage(error.response.data);
+        throw new Error(errorMessage);
+      }
       throw handleApiError(error);
     }
   },
@@ -76,9 +106,50 @@ export const authApi = {
    */
   getCurrentUser: async (): Promise<AuthUser> => {
     try {
-      const response = await apiClient.get<AuthUser>('/auth/me');
-      return responseValidators.getById(response, 'current user', 'me');
-    } catch (error) {
+      // Check if token exists and is not expired before making request
+      const token = authApi.getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Basic token expiration check (if token contains exp claim)
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3 && tokenParts[1]) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          if (payload.exp && payload.exp * 1000 < Date.now()) {
+            // Token is expired, remove it
+            authApi.removeToken();
+            throw new Error('Authentication token has expired');
+          }
+        }
+      } catch (tokenError) {
+        // If token parsing fails, it might be a mock token, continue with request
+        if (process.env.REACT_APP_ENVIRONMENT === 'production') {
+          console.warn('Failed to parse JWT token:', tokenError);
+        }
+      }
+
+      // Make API call
+      const response = await apiClient.get('/auth/me');
+
+      // Handle API client error wrapper
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (!response.data) {
+        throw new Error('No response data received');
+      }
+
+      // Transform backend response to frontend format
+      return transformUserProfileResponse(response.data);
+    } catch (error: any) {
+      // Enhanced error handling for backend-specific errors
+      if (error.response?.data) {
+        const errorMessage = extractErrorMessage(error.response.data);
+        throw new Error(errorMessage);
+      }
       throw handleApiError(error);
     }
   },

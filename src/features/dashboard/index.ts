@@ -11,6 +11,11 @@ export { default as UserGrowthChart } from './components/UserGrowthChart';
 export { default as CategoryDistributionChart } from './components/CategoryDistributionChart';
 export { default as RecentOrders } from './components/RecentOrders';
 
+// Container Components (with data fetching)
+export { default as SalesChartContainer } from './components/SalesChartContainer';
+export { default as UserGrowthChartContainer } from './components/UserGrowthChartContainer';
+export { default as CategoryDistributionChartContainer } from './components/CategoryDistributionChartContainer';
+
 // Hooks
 export { default as useDashboard } from './hooks/useDashboard';
 

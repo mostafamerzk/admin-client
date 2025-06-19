@@ -1,6 +1,6 @@
 /**
  * Order Mappers
- * 
+ *
  * Utility functions to map between different order data formats
  */
 
@@ -16,6 +16,7 @@ const mapMockOrderItemToOrderItem = (mockItem: MockOrderItem): OrderItem => {
     name: mockItem.productName,
     quantity: mockItem.quantity,
     unitPrice: mockItem.unitPrice,
+    description: `Product ID: ${mockItem.productId}`,
     sku: mockItem.productId
   };
 };
@@ -25,19 +26,20 @@ const mapMockOrderItemToOrderItem = (mockItem: MockOrderItem): OrderItem => {
  */
 export const mapMockOrderToOrder = (mockOrder: any): Order => {
   const formatDate = (dateString?: string): string => {
-    if (!dateString) return new Date().toISOString().split('T')[0]!;
-    return new Date(dateString).toISOString().split('T')[0]!;
+    if (!dateString) return new Date().toISOString();
+    return new Date(dateString).toISOString();
   };
 
   return {
-    id: mockOrder.orderNumber || mockOrder.id,
+    id: mockOrder.id,
     customerName: mockOrder.customerName,
     supplierName: mockOrder.supplierName,
     totalAmount: mockOrder.totalAmount,
-    status: mockOrder.status === 'cancelled' ? 'rejected' : mockOrder.status, // Map 'cancelled' to 'rejected' for compatibility
+    status: mockOrder.status === 'cancelled' ? 'rejected' : mockOrder.status,
     orderDate: formatDate(mockOrder.orderDate),
     deliveryDate: formatDate(mockOrder.deliveryDate),
     items: mockOrder.items ? mockOrder.items.map(mapMockOrderItemToOrderItem) : [],
+    notes: mockOrder.notes,
     ...(mockOrder.shippingAddress && {
       shippingAddress: {
         street: mockOrder.shippingAddress.street,
@@ -46,8 +48,7 @@ export const mapMockOrderToOrder = (mockOrder: any): Order => {
         postalCode: mockOrder.shippingAddress.zipCode,
         country: mockOrder.shippingAddress.country
       }
-    }),
-    notes: mockOrder.notes
+    })
   };
 };
 
@@ -61,9 +62,16 @@ export const getMockOrders = (): Order[] => {
 /**
  * Get an order by ID from mock data
  */
-export const getMockOrderById = (id: string): Order | undefined => {
+export const getMockOrderById = (id: string | number): Order | undefined => {
+  // Convert id to string for consistent comparison
+  const searchId = String(id);
+
   // Try to find by orderNumber first, then by id
-  const mockOrder = mockOrders.find(o => o.orderNumber === id || o.id === id);
+  const mockOrder = mockOrders.find(o =>
+    o.orderNumber === searchId ||
+    o.id === searchId ||
+    String(o.id) === searchId
+  );
   if (!mockOrder) return undefined;
   return mapMockOrderToOrder(mockOrder);
 };

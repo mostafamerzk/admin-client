@@ -12,8 +12,8 @@ export const setupInterceptors = (
   // Request interceptor
   instance.interceptors.request.use(
     async (config) => {
-      // Handle caching
-      if (cacheManager && config.method?.toLowerCase() === 'get') {
+      // Handle caching (skip caching for users endpoint temporarily)
+      if (cacheManager && config.method?.toLowerCase() === 'get' && !config.url?.includes('/users')) {
         const cacheKey = cacheManager.generateCacheKey(config);
         const cachedResponse = cacheManager.get(cacheKey);
 
@@ -21,6 +21,12 @@ export const setupInterceptors = (
           return Promise.reject({
             __CACHE_HIT__: true,
             data: cachedResponse.data,
+            config: config, // Include config to prevent undefined access
+            response: {
+              data: cachedResponse.data,
+              status: 200,
+              headers: {}
+            }
           });
         }
       }
@@ -46,8 +52,8 @@ export const setupInterceptors = (
   // Response interceptor
   instance.interceptors.response.use(
     async (response) => {
-      // Cache successful GET responses
-      if (cacheManager && response.config.method?.toLowerCase() === 'get') {
+      // Cache successful GET responses (skip caching for users endpoint temporarily)
+      if (cacheManager && response.config.method?.toLowerCase() === 'get' && !response.config.url?.includes('/users')) {
         const cacheKey = cacheManager.generateCacheKey(response.config);
         cacheManager.set(cacheKey, response.data);
       }
@@ -62,7 +68,13 @@ export const setupInterceptors = (
     async (error) => {
       // Handle cache hits
       if ((error as any).__CACHE_HIT__) {
-        return Promise.resolve({ data: (error as any).data } as AxiosResponse);
+        return Promise.resolve({
+          data: (error as any).data,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: (error as any).config || {}
+        } as AxiosResponse);
       }
 
       // Handle authentication errors

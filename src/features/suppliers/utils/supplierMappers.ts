@@ -19,7 +19,6 @@ export const mapMockSupplierToSupplier = (mockSupplier: any): Supplier => {
     phone: mockSupplier.phone,
     status: mockSupplier.status || 'active',
     verificationStatus: mockSupplier.verificationStatus || 'pending',
-    joinDate: mockSupplier.verificationDate ? new Date(mockSupplier.verificationDate).toISOString().split('T')[0]! : new Date().toISOString().split('T')[0]!,
     address: mockSupplier.address || [
       mockSupplier.address,
       mockSupplier.city,

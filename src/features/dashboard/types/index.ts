@@ -4,6 +4,50 @@
  * This file defines the TypeScript interfaces for the dashboard feature.
  */
 
+// Backend API Response Types (matching expected backend format)
+export interface DashboardStatsResponse {
+  totalUsers: number;
+  totalSuppliers: number;
+  totalOrders: number;
+  totalRevenue: number;
+  pendingVerifications: number;
+  activeUsers: number;
+  monthlyGrowth: {
+    users: number;
+    orders: number;
+    revenue: number;
+  };
+}
+
+export interface SalesDataResponse {
+  period: string;
+  data: {
+    date: string;
+    sales: number;
+    orders: number;
+  }[];
+  total: number;
+  growth: number;
+}
+
+export interface UserGrowthResponse {
+  period: string;
+  data: {
+    date: string;
+    newUsers: number;
+    totalUsers: number;
+  }[];
+  growth: number;
+}
+
+export interface CategoryDistributionResponse {
+  category: string;
+  count: number;
+  percentage: number;
+  revenue: number;
+}
+
+// Frontend UI Types (for components and charts)
 export interface DashboardStats {
   summary: {
     totalUsers: number;
@@ -11,7 +55,12 @@ export interface DashboardStats {
     totalOrders: number;
     totalRevenue: number;
     pendingVerifications: number;
-    activeProducts: number;
+    activeUsers: number;
+  };
+  monthlyGrowth: {
+    users: number;
+    orders: number;
+    revenue: number;
   };
   revenueData: {
     labels: string[];
@@ -67,11 +116,14 @@ export interface RecentOrder {
 export interface SalesData {
   date: string;
   amount: number;
+  orders?: number;
 }
 
 export interface UserGrowth {
   date: string;
   users: number;
+  newUsers?: number;
+  totalUsers?: number;
 }
 
 export interface CategoryDistributionData {
@@ -80,5 +132,6 @@ export interface CategoryDistributionData {
     data: number[];
     backgroundColor?: string[];
     borderColor?: string[];
+    borderWidth?: number;
   }[];
 }

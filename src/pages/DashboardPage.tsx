@@ -26,16 +26,15 @@ import {
 // Import dashboard feature components
 import {
   StatCard,
-  SalesChart,
-  UserGrowthChart,
-  CategoryDistributionChart,
+  SalesChartContainer,
+  UserGrowthChartContainer,
+  CategoryDistributionChartContainer,
   RecentOrders,
   useDashboard
 } from '../features/dashboard/index';
 
 const DashboardPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [, setActiveTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
 
   // Use dashboard hook
   const { stats: dashboardData, isLoading, fetchStats } = useDashboard();
@@ -128,7 +127,10 @@ const DashboardPage: React.FC = () => {
           title="Total Users"
           value={dashboardData.summary.totalUsers.toLocaleString()}
           icon={<UsersIcon className="w-6 h-6 text-primary" />}
-          change={{ value: 12, isPositive: true }}
+          change={{
+            value: Math.abs(dashboardData.monthlyGrowth.users),
+            isPositive: dashboardData.monthlyGrowth.users >= 0
+          }}
           // onClick={() => console.log('Card clicked')}
         />
 
@@ -136,41 +138,34 @@ const DashboardPage: React.FC = () => {
           title="Total Orders"
           value={dashboardData.summary.totalOrders.toLocaleString()}
           icon={<ShoppingCartIcon className="w-6 h-6 text-blue-500" />}
-          change={{ value: 8, isPositive: true }}
+          change={{
+            value: Math.abs(dashboardData.monthlyGrowth.orders),
+            isPositive: dashboardData.monthlyGrowth.orders >= 0
+          }}
         />
 
         <StatCard
-          title="Pending Verifications"
-          value={dashboardData.summary.pendingVerifications}
-          icon={<ClockIcon className="w-6 h-6 text-yellow-500" />}
-          change={{ value: 3, isPositive: false }}
+          title="Active Users"
+          value={dashboardData.summary.activeUsers.toLocaleString()}
+          icon={<ClockIcon className="w-6 h-6 text-green-500" />}
+          change={{ value: 0, isPositive: true }}
         />
 
         <StatCard
           title="Revenue"
           value={formatCurrency(dashboardData.summary.totalRevenue)}
           icon={<CurrencyDollarIcon className="w-6 h-6 text-green-500" />}
-          change={{ value: 15, isPositive: true }}
+          change={{
+            value: Math.abs(dashboardData.monthlyGrowth.revenue),
+            isPositive: dashboardData.monthlyGrowth.revenue >= 0
+          }}
         />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <SalesChart
-          data={dashboardData.revenueData.datasets[0]?.data.map((value, index) => ({
-            date: dashboardData.revenueData.labels[index] || '',
-            amount: value as number
-          })) || []}
-          onPeriodChange={(period) => setActiveTimeRange(period)}
-        />
-
-        <UserGrowthChart
-          data={dashboardData.userGrowth.datasets[0]?.data.map((value, index) => ({
-            date: dashboardData.userGrowth.labels[index] || '',
-            users: value as number
-          })) || []}
-          onPeriodChange={(period) => setActiveTimeRange(period)}
-        />
+        <SalesChartContainer />
+        <UserGrowthChartContainer />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -187,8 +182,7 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
-        <CategoryDistributionChart
-          data={dashboardData.categoryDistribution}
+        <CategoryDistributionChartContainer
           title="Category Distribution"
         />
       </div>

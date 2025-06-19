@@ -122,7 +122,7 @@ const SupplierList: React.FC<SupplierListProps> = ({
         );
       }
     },
-    { key: 'joinDate', label: 'Join Date', sortable: true },
+
     {
       key: 'actions',
       label: 'Actions',

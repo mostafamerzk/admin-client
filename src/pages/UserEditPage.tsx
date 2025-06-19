@@ -5,7 +5,7 @@ import Tabs from '../components/common/Tabs';
 import { UserDetails, EditUserForm, UserAnalytics, useUsers } from '../features/users/index';
 import { useOrders } from '../features/orders/index';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import type { User, UserFormData } from '../features/users/types';
+import type { User, UserFormDataFrontend } from '../features/users/types';
 
 const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +58,7 @@ const UserEditPage: React.FC = () => {
     getUserById
   ]); // Only userId as dependency - functions are called directly
   
-  const handleUpdateUser = useCallback(async (userData: UserFormData) => {
+  const handleUpdateUser = useCallback(async (userData: UserFormDataFrontend) => {
     if (!user) return;
 
     try {

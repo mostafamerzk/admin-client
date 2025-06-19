@@ -204,7 +204,17 @@ const mockApi = {
 
       // Special case for auth endpoints
       if (url === '/auth/login') {
-        response = await handlers.auth.login(data.email, data.password);
+        console.log('[Mock API] Login data received:', data);
+        // Handle backend format: { Email, password } (capital E as sent by authApi transformer)
+        const email = data?.Email || data?.email; // Try capital E first (backend format), then lowercase
+        const password = data?.password;
+
+        if (!email || !password) {
+          console.error('[Mock API] Invalid login data structure:', data);
+          response = { error: { message: 'Email and password are required', status: 400 } };
+        } else {
+          response = await handlers.auth.login(email, password);
+        }
       } else if (url === '/auth/logout') {
         response = await handlers.auth.logout();
       } else {
@@ -326,8 +336,11 @@ const mockApi = {
           break;
 
         case 'suppliers':
-          if (id && action === 'verification') {
-            response = await handlers.suppliers.updateVerification?.(id, data) || { error: 'Not implemented' };
+          if (id && action === 'verification-status') {
+            response = await handlers.suppliers.updateVerificationStatus?.(id, data) || { error: 'Not implemented' };
+          } else if (id && action === 'verification') {
+            // Legacy endpoint support
+            response = await handlers.suppliers.updateVerificationStatus?.(id, data) || { error: 'Not implemented' };
           } else if (id && action === 'documents') {
             const documentId = urlParts[3]; // suppliers/ID/documents/DOC_ID
             if (documentId) {
@@ -336,7 +349,7 @@ const mockApi = {
               response = { error: 'Missing document ID for update' };
             }
           } else if (id && action === 'ban') {
-            response = await handlers.suppliers.ban?.(id) || { error: 'Not implemented' };
+            response = await handlers.suppliers.ban?.(id, data) || { error: 'Not implemented' };
           } else if (id && action === 'unban') {
             response = await handlers.suppliers.unban?.(id) || { error: 'Not implemented' };
           } else if (id) {

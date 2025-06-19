@@ -10,10 +10,10 @@ import FormField from '../../../components/common/FormField';
 import ImageUpload from '../../../components/common/ImageUpload';
 import { validateForm, validationRules } from '../../../utils/validation';
 import { getBusinessTypes } from '../api/businessTypesApi';
-import type { UserFormData, BusinessType } from '../types';
+import type { UserFormDataFrontend, BusinessType } from '../types';
 
 interface AddUserFormProps {
-  onSubmit: (userData: UserFormData & { confirmPassword: string; sendInvite: boolean }) => void;
+  onSubmit: (userData: UserFormDataFrontend & { confirmPassword: string; sendInvite: boolean }) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

@@ -20,6 +20,15 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   type: _type = 'user',
   className = ''
 }) => {
+  // Handle undefined or null status
+  if (!status) {
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ${className}`}>
+        Unknown
+      </span>
+    );
+  }
+
   const statusKey = status.toLowerCase();
   let colorClass = '';
   let icon = null;

@@ -102,7 +102,7 @@ const SuppliersPage: React.FC = () => {
     }
   }, [withFormErrorHandling, createSupplier, clearError]);
 
-  const handleVerifySupplier = async (supplierId: string, newStatus: 'verified' | 'rejected') => {
+  const handleVerifySupplier = async (supplierId: string, newStatus: 'verified' | 'pending') => {
     try {
       await updateVerificationStatus(supplierId, newStatus);
       setIsSupplierDetailsModalOpen(false);
@@ -204,20 +204,20 @@ const SuppliersPage: React.FC = () => {
                 Close
               </Button>
               {selectedSupplier.verificationStatus === 'pending' && (
-                <>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleVerifySupplier(selectedSupplier.id, 'rejected')}
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    variant="success"
-                    onClick={() => handleVerifySupplier(selectedSupplier.id, 'verified')}
-                  >
-                    Verify
-                  </Button>
-                </>
+                <Button
+                  variant="success"
+                  onClick={() => handleVerifySupplier(selectedSupplier.id, 'verified')}
+                >
+                  Verify
+                </Button>
+              )}
+              {selectedSupplier.verificationStatus === 'verified' && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleVerifySupplier(selectedSupplier.id, 'pending')}
+                >
+                  Set to Pending
+                </Button>
               )}
             </>
           }

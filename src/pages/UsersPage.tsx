@@ -15,7 +15,7 @@ import {
   UserList,
   useUsers,
   type User,
-  type UserFormData
+  type UserFormDataFrontend
 } from '../features/users/index';
 import useErrorHandler from '../hooks/useErrorHandler';
 import { safeAsyncOperation } from '../utils/errorHandling';
@@ -37,7 +37,7 @@ const UsersPage: React.FC = () => {
     isLoading: usersLoading,
     createEntity: createUser,
     deleteEntity: deleteUser,
-    toggleUserStatus
+    updateUserStatus
   } = useUsers();
 
   // Error handling
@@ -129,7 +129,7 @@ const UsersPage: React.FC = () => {
     setIsLoading(false);
   }, [handleGeneralError]);
 
-  const handleAddUser = useCallback(async (userData: UserFormData) => {
+  const handleAddUser = useCallback(async (userData: UserFormDataFrontend) => {
     setIsLoading(true);
     clearError();
 
@@ -153,11 +153,11 @@ const UsersPage: React.FC = () => {
     const newStatus = user.status === 'active' ? 'banned' : 'active';
 
     const result = await withErrorHandling(async () => {
-      const updatedUser = await toggleUserStatus(userId, newStatus);
+      await updateUserStatus(userId, newStatus);
 
       // Update the selectedUser state if it's the same user
       if (selectedUser && selectedUser.id === userId) {
-        setSelectedUser(updatedUser);
+        setSelectedUser({ ...selectedUser, status: newStatus });
       }
 
       setIsUserDetailsModalOpen(false);
@@ -167,7 +167,7 @@ const UsersPage: React.FC = () => {
     if (!result) {
       console.error('Failed to toggle user status');
     }
-  }, [users, withErrorHandling, toggleUserStatus, selectedUser]);
+  }, [users, withErrorHandling, updateUserStatus, selectedUser]);
 
   return (
     <div className="space-y-6">

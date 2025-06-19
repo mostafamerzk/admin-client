@@ -18,7 +18,6 @@ import {
   MapPinIcon,
   GlobeAltIcon,
   UserIcon,
-  CalendarIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon
@@ -45,11 +44,11 @@ const SupplierPersonalInfo: React.FC<SupplierPersonalInfoProps> = ({ supplier })
   const getVerificationText = (status: string) => {
     switch (status) {
       case 'verified':
-        return `Verified on ${supplier.joinDate || 'Unknown date'}`;
+        return 'Verified';
       case 'pending':
         return 'Pending verification';
       case 'rejected':
-        return `Rejected on ${supplier.joinDate || 'Unknown date'}`;
+        return 'Rejected';
       default:
         return 'Unknown status';
     }
@@ -84,7 +83,7 @@ const SupplierPersonalInfo: React.FC<SupplierPersonalInfoProps> = ({ supplier })
                         : 'bg-red-100 text-red-800'
                   }`}>
                     {supplier.verificationStatus ?
-                      supplier.verificationStatus.charAt(0).toUpperCase() + supplier.verificationStatus.slice(1) :
+                      supplier.verificationStatus :
                       'Unknown'
                     }
                   </span>
@@ -174,19 +173,7 @@ const SupplierPersonalInfo: React.FC<SupplierPersonalInfoProps> = ({ supplier })
         description="Business categories and operational details"
       >
         <DetailList>
-          <DetailItem 
-            label="Join Date" 
-            value={
-              <div className="flex items-center">
-                <CalendarIcon className="w-4 h-4 text-gray-400 mr-2" />
-                {new Date(supplier.joinDate).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </div>
-            } 
-          />
+
           <DetailItem
             label="Business Categories"
             value={

@@ -31,6 +31,7 @@ const AddSupplierForm: React.FC<AddSupplierFormProps> = ({
     businessType: '',
     password: '',
     confirmPassword: '',
+    contactPerson: '', // Required field for backend
     image: null
   });
 

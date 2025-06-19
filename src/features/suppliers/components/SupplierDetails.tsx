@@ -116,10 +116,10 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier }) => {
           )}
           <span className="text-sm text-gray-700">
             {supplier.verificationStatus === 'verified'
-              ? `Verified on ${supplier.joinDate}`
+              ? 'Verified'
               : supplier.verificationStatus === 'pending'
                 ? 'Pending verification'
-                : `Rejected on ${supplier.joinDate}`}
+                : 'Rejected'}
           </span>
         </div>
       </div>

@@ -52,13 +52,19 @@ export const useDashboard = () => {
       };
       return data;
     } catch (err) {
-      setError(err as Error);
+      const error = err as Error;
+      setError(error);
+
+      // Provide more specific error message
+      const errorMessage = error.message || 'Failed to fetch dashboard statistics';
+      console.error('Dashboard fetch error:', error);
+
       showNotificationRef.current({
         type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch dashboard statistics'
+        title: 'Dashboard Error',
+        message: errorMessage
       });
-      throw err;
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -128,9 +134,22 @@ export const useDashboard = () => {
   useEffect(() => {
     if (!hasInitialFetched.current) {
       hasInitialFetched.current = true;
-      fetchStats();
+      fetchStats().catch(err => {
+        console.error('Failed to fetch initial dashboard stats:', err);
+        // Error is already handled in fetchStats, just log here
+      });
     }
   }, [fetchStats]);
+
+  // Reset state when component unmounts to prevent stale data issues
+  useEffect(() => {
+    return () => {
+      // Don't reset cache on unmount to preserve data between navigations
+      // Only reset loading and error states
+      setIsLoading(false);
+      setError(null);
+    };
+  }, []);
 
   return {
     stats,

@@ -73,7 +73,7 @@ export interface ErrorResponse {
 export const parseApiError = (error: any): ApiError => {
   if (error.isAxiosError) {
     const axiosError = error as AxiosError;
-    
+
     // Handle network errors
     if (!axiosError.response) {
       return {
@@ -82,11 +82,11 @@ export const parseApiError = (error: any): ApiError => {
         code: 'NETWORK_ERROR'
       };
     }
-    
+
     // Handle API errors with response
     const status = axiosError.response.status;
     const responseData = axiosError.response.data as any;
-    
+
     return {
       status,
       message: responseData.message || getDefaultErrorMessage(status),
@@ -94,11 +94,38 @@ export const parseApiError = (error: any): ApiError => {
       details: responseData.details
     };
   }
-  
-  // Handle non-Axios errors
+
+  // Handle Error objects
+  if (error instanceof Error) {
+    return {
+      status: 500,
+      message: error.message,
+      code: 'ERROR'
+    };
+  }
+
+  // Handle string errors
+  if (typeof error === 'string') {
+    return {
+      status: 500,
+      message: error,
+      code: 'STRING_ERROR'
+    };
+  }
+
+  // Handle object errors (prevent [object Object])
+  if (typeof error === 'object' && error !== null) {
+    return {
+      status: 500,
+      message: error.message || JSON.stringify(error) || 'An unexpected error occurred.',
+      code: 'OBJECT_ERROR'
+    };
+  }
+
+  // Handle all other cases
   return {
     status: 500,
-    message: error.message || 'An unexpected error occurred.',
+    message: 'An unexpected error occurred.',
     code: 'UNKNOWN_ERROR'
   };
 };
@@ -168,16 +195,25 @@ export const handleApiError = (
 ): ApiError => {
   const apiError = parseApiError(error);
 
-  // Log the error
-  logError(error, 'API Error');
+  // Check if this is a 404 error for endpoints under development
+  const url = error.config?.url || error.url || '';
+  const is404 = apiError.status === 404;
+  const isDocumentsEndpoint = url.includes('/documents');
+  const isAnalyticsEndpoint = url.includes('/analytics');
+  const isTemporaryEndpoint = is404 && (isDocumentsEndpoint || isAnalyticsEndpoint);
+
+  // Log the error (suppress for temporary endpoints)
+  if (!isTemporaryEndpoint) {
+    logError(error, 'API Error');
+  }
 
   // Handle unauthorized errors
   if (apiError.status === 401 && onUnauthorized) {
     onUnauthorized();
   }
 
-  // Show notification if provided
-  if (showNotification) {
+  // Show notification if provided (suppress for temporary endpoints)
+  if (showNotification && !isTemporaryEndpoint) {
     showNotification({
       type: 'error',
       title: `Error ${apiError.status || ''}`,

@@ -125,8 +125,10 @@ export const useSuppliers = () => {
   }, []);
 
   // Get supplier by ID
-  const getSupplierById = useCallback(async (id: string) => {
-    setIsLoading(true);
+  const getSupplierById = useCallback(async (id: string, setLoadingState: boolean = true) => {
+    if (setLoadingState) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const supplier = await suppliersApi.getSupplierById(id);
@@ -140,12 +142,14 @@ export const useSuppliers = () => {
       });
       throw err;
     } finally {
-      setIsLoading(false);
+      if (setLoadingState) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
-  // Update supplier verification status
-  const updateVerificationStatus = useCallback(async (id: string, status: 'verified' | 'pending' | 'rejected') => {
+  // Update supplier verification status (backend only supports verified/pending)
+  const updateVerificationStatus = useCallback(async (id: string, status: 'verified' | 'pending') => {
     setIsLoading(true);
     setError(null);
     try {
@@ -156,7 +160,7 @@ export const useSuppliers = () => {
       showNotificationRef.current({
         type: 'success',
         title: 'Success',
-        message: `Supplier ${status === 'verified' ? 'verified' : status === 'rejected' ? 'rejected' : 'set to pending'} successfully`
+        message: `Supplier ${status === 'verified' ? 'verified' : 'set to pending'} successfully`
       });
       return updatedSupplier;
     } catch (err) {
@@ -181,8 +185,10 @@ export const useSuppliers = () => {
   }, []);
 
   // Get supplier products
-  const getSupplierProducts = useCallback(async (supplierId: string) => {
-    setIsLoading(true);
+  const getSupplierProducts = useCallback(async (supplierId: string, setLoadingState: boolean = true) => {
+    if (setLoadingState) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const products = await suppliersApi.getSupplierProducts(supplierId);
@@ -196,7 +202,9 @@ export const useSuppliers = () => {
       });
       throw err;
     } finally {
-      setIsLoading(false);
+      if (setLoadingState) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -270,43 +278,45 @@ export const useSuppliers = () => {
     }
   }, []);
 
-  // Get supplier documents
+  // Get supplier documents (gracefully handles 404s for endpoints under development)
   const getSupplierDocuments = useCallback(async (supplierId: string) => {
-    setIsLoading(true);
-    setError(null);
     try {
       const documents = await suppliersApi.getSupplierDocuments(supplierId);
       return documents;
     } catch (err) {
-      setError(err as Error);
-      showNotificationRef.current({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch supplier documents'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
+      // Only show error notifications for non-404 errors
+      const error = err as any;
+      if (error.response?.status !== 404 && error.status !== 404) {
+        setError(err as Error);
+        showNotificationRef.current({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to fetch supplier documents'
+        });
+      }
+      // Return empty array for any error to prevent breaking the UI
+      return [];
     }
   }, []);
 
-  // Get supplier analytics
+  // Get supplier analytics (gracefully handles 404s for endpoints under development)
   const getSupplierAnalytics = useCallback(async (supplierId: string) => {
-    setIsLoading(true);
-    setError(null);
     try {
       const analytics = await suppliersApi.getSupplierAnalytics(supplierId);
       return analytics;
     } catch (err) {
-      setError(err as Error);
-      showNotificationRef.current({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch supplier analytics'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
+      // Only show error notifications for non-404 errors
+      const error = err as any;
+      if (error.response?.status !== 404 && error.status !== 404) {
+        setError(err as Error);
+        showNotificationRef.current({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to fetch supplier analytics'
+        });
+      }
+      // Return null for any error to prevent breaking the UI
+      return null;
     }
   }, []);
 

@@ -79,13 +79,36 @@ export class ApiClient {
         },
       };
     } catch (error: any) {
+      // Better error message handling to prevent [object Object]
+      let errorMessage = 'An unexpected error occurred';
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      }
+
+      // Safely extract request ID
+      let requestId: string;
+      try {
+        requestId = error.config?.headers?.['x-request-id'] ||
+                   error.response?.headers?.['x-request-id'] ||
+                   Math.random().toString(36).substring(7);
+      } catch {
+        requestId = Math.random().toString(36).substring(7);
+      }
+
       return {
         data: null,
-        error: error.response?.data?.message || error.message,
+        error: errorMessage,
         status: error.response?.status || 500,
         metadata: {
           timestamp: Date.now(),
-          requestId: error.config?.headers?.['x-request-id'] || Math.random().toString(36).substring(7),
+          requestId,
         },
       };
     }
@@ -104,13 +127,23 @@ export class ApiClient {
         },
       };
     } catch (error: any) {
+      // Safely extract request ID
+      let requestId: string;
+      try {
+        requestId = error.config?.headers?.['x-request-id'] ||
+                   error.response?.headers?.['x-request-id'] ||
+                   Math.random().toString(36).substring(7);
+      } catch {
+        requestId = Math.random().toString(36).substring(7);
+      }
+
       return {
         data: null,
         error: error.response?.data?.message || error.message,
         status: error.response?.status || 500,
         metadata: {
           timestamp: Date.now(),
-          requestId: error.config?.headers?.['x-request-id'] || Math.random().toString(36).substring(7),
+          requestId,
         },
       };
     }
@@ -129,13 +162,23 @@ export class ApiClient {
         },
       };
     } catch (error: any) {
+      // Safely extract request ID
+      let requestId: string;
+      try {
+        requestId = error.config?.headers?.['x-request-id'] ||
+                   error.response?.headers?.['x-request-id'] ||
+                   Math.random().toString(36).substring(7);
+      } catch {
+        requestId = Math.random().toString(36).substring(7);
+      }
+
       return {
         data: null,
         error: error.response?.data?.message || error.message,
         status: error.response?.status || 500,
         metadata: {
           timestamp: Date.now(),
-          requestId: error.config?.headers?.['x-request-id'] || Math.random().toString(36).substring(7),
+          requestId,
         },
       };
     }
@@ -154,13 +197,23 @@ export class ApiClient {
         },
       };
     } catch (error: any) {
+      // Safely extract request ID
+      let requestId: string;
+      try {
+        requestId = error.config?.headers?.['x-request-id'] ||
+                   error.response?.headers?.['x-request-id'] ||
+                   Math.random().toString(36).substring(7);
+      } catch {
+        requestId = Math.random().toString(36).substring(7);
+      }
+
       return {
         data: null,
         error: error.response?.data?.message || error.message,
         status: error.response?.status || 500,
         metadata: {
           timestamp: Date.now(),
-          requestId: error.config?.headers?.['x-request-id'] || Math.random().toString(36).substring(7),
+          requestId,
         },
       };
     }

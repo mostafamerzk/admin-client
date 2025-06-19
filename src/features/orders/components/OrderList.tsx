@@ -47,7 +47,7 @@ const OrderList: React.FC<OrderListProps> = ({
       label: 'Status',
       sortable: true,
       render: (value: string) => (
-        <StatusBadge status={value} type="order" />
+        <StatusBadge status={value || 'pending'} type="order" />
       )
     },
     { key: 'orderDate', label: 'Order Date', sortable: true },

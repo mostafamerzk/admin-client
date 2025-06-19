@@ -1,9 +1,25 @@
 /**
  * Mock Dashboard Data
- * 
+ *
  * This file contains mock data for the dashboard statistics in the ConnectChain admin panel.
  */
 
+// Backend response format (what the API should return)
+export interface DashboardStatsResponse {
+  totalUsers: number;
+  totalSuppliers: number;
+  totalOrders: number;
+  totalRevenue: number;
+  pendingVerifications: number;
+  activeUsers: number;
+  monthlyGrowth: {
+    users: number;
+    orders: number;
+    revenue: number;
+  };
+}
+
+// Full dashboard data (for mock purposes, includes chart data)
 export interface DashboardStats {
   summary: {
     totalUsers: number;
@@ -11,7 +27,12 @@ export interface DashboardStats {
     totalOrders: number;
     totalRevenue: number;
     pendingVerifications: number;
-    activeProducts: number;
+    activeUsers: number;
+  };
+  monthlyGrowth: {
+    users: number;
+    orders: number;
+    revenue: number;
   };
   revenueData: {
     labels: string[];
@@ -56,6 +77,21 @@ export interface DashboardStats {
   }[];
 }
 
+// Mock backend response data (what the API endpoint should return)
+export const dashboardStatsResponse: DashboardStatsResponse = {
+  totalUsers: 1234,
+  totalSuppliers: 56,
+  totalOrders: 789,
+  totalRevenue: 123456.78,
+  pendingVerifications: 12,
+  activeUsers: 987, // Changed from activeProducts to activeUsers
+  monthlyGrowth: {
+    users: 12.5,
+    orders: -3.2,
+    revenue: 8.7
+  }
+};
+
 export const dashboardStats: DashboardStats = {
   summary: {
     totalUsers: 1234,
@@ -63,7 +99,12 @@ export const dashboardStats: DashboardStats = {
     totalOrders: 789,
     totalRevenue: 123456.78,
     pendingVerifications: 12,
-    activeProducts: 4567
+    activeUsers: 987 // Changed from activeProducts to activeUsers
+  },
+  monthlyGrowth: {
+    users: 12.5,
+    orders: -3.2,
+    revenue: 8.7
   },
   revenueData: {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
