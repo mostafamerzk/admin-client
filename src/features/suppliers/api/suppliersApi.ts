@@ -10,15 +10,13 @@ import { responseValidators } from '../../../utils/apiHelpers';
 import type {
   Supplier,
   SupplierFormData,
-  SupplierProduct,
   SupplierDocument,
   SupplierAnalyticsData,
+  SupplierProduct,
   BackendSupplier,
   ApiResponseWrapper,
   SuppliersListResponse,
-  SupplierQueryParams,
-  SupplierProductsResponse,
-  BackendSupplierProduct
+  SupplierQueryParams
 } from '../types';
 
 // Helper function to transform backend supplier to frontend format
@@ -39,25 +37,25 @@ const transformBackendSupplier = (backendSupplier: BackendSupplier): Supplier =>
   };
 };
 
-// Helper function to transform backend supplier product to frontend format
-const transformBackendSupplierProduct = (backendProduct: BackendSupplierProduct): SupplierProduct => ({
-  id: backendProduct.id.toString(), // Ensure string ID
-  name: backendProduct.name,
-  sku: backendProduct.sku,
-  category: backendProduct.category,
-  price: backendProduct.price,
-  stock: backendProduct.stock,
-  minimumStock: backendProduct.minimumStock || 10, // Use backend value or default
-  status: backendProduct.status,
-  description: backendProduct.description || '',
-  image: backendProduct.image || '',
-  images: backendProduct.images || (backendProduct.image ? [backendProduct.image] : []),
-  attributes: backendProduct.attributes || [],
-  variants: backendProduct.variants || [],
-  // Handle both createdAt/updatedAt (actual API fields) and createdDate/updatedDate (legacy)
-  createdAt: backendProduct.createdAt || backendProduct.createdDate || new Date().toISOString(),
-  updatedAt: backendProduct.updatedAt || backendProduct.updatedDate || new Date().toISOString()
-});
+// Helper function to transform backend product to SupplierProduct format
+const transformBackendProduct = (backendProduct: any): SupplierProduct => {
+  return {
+    id: String(backendProduct.id || backendProduct.Id || ''),
+    name: backendProduct.name || backendProduct.Name || '',
+    sku: backendProduct.sku || backendProduct.SKU || '',
+    category: backendProduct.category || backendProduct.Category || '',
+    price: Number(backendProduct.price || backendProduct.Price || 0),
+    stock: Number(backendProduct.stock || backendProduct.Stock || 0),
+    minimumStock: Number(backendProduct.minimumStock || backendProduct.MinimumStock || 0),
+    status: (backendProduct.status || backendProduct.Status || 'active') as 'active' | 'inactive' | 'out_of_stock',
+    description: backendProduct.description || backendProduct.Description || '',
+    image: backendProduct.image || backendProduct.Image || null,
+    createdAt: backendProduct.createdAt || backendProduct.CreatedAt || new Date().toISOString(),
+    updatedAt: backendProduct.updatedAt || backendProduct.UpdatedAt || new Date().toISOString()
+  };
+};
+
+
 
 export const suppliersApi = {
   /**
@@ -217,94 +215,7 @@ export const suppliersApi = {
     }
   },
 
-  /**
-   * Get supplier products with pagination
-   */
-  getSupplierProducts: async (supplierId: string, params?: { page?: number; limit?: number }): Promise<SupplierProduct[]> => {
-    try {
-      const response = await apiClient.get<SupplierProductsResponse | BackendSupplierProduct[]>(`/suppliers/${supplierId}/products`, { params });
 
-      // Handle wrapped response format
-      if (response.data && 'success' in response.data && response.data.success) {
-        const wrappedResponse = response.data as SupplierProductsResponse;
-        // Check if data.data has products array (new format)
-        if (wrappedResponse.data && 'products' in wrappedResponse.data) {
-          const backendProducts = wrappedResponse.data.products;
-          return backendProducts.map(transformBackendSupplierProduct);
-        }
-        // Fallback: data.data is directly an array (old format)
-        else if (Array.isArray(wrappedResponse.data)) {
-          const productsArray = wrappedResponse.data as BackendSupplierProduct[];
-          return productsArray.map(transformBackendSupplierProduct);
-        }
-        // Fallback: empty array if no products found
-        else {
-          return [];
-        }
-      } else {
-        // Fallback for non-wrapped responses (legacy support)
-        const products = Array.isArray(response.data) ? response.data as BackendSupplierProduct[] : [];
-        return products.map(transformBackendSupplierProduct);
-      }
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  /**
-   * Get a single product by ID
-   */
-  getProductById: async (productId: string): Promise<SupplierProduct> => {
-    try {
-      const response = await apiClient.get<SupplierProduct>(`/products/${productId}`);
-      if (!response.data) {
-        throw new Error(`No product data received for ID: ${productId}`);
-      }
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  /**
-   * Update a product
-   */
-  updateProduct: async (productId: string, productData: Partial<SupplierProduct>): Promise<SupplierProduct> => {
-    try {
-      const response = await apiClient.put<SupplierProduct>(`/products/${productId}`, productData);
-      if (!response.data) {
-        throw new Error(`Failed to update product ${productId}`);
-      }
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  /**
-   * Upload product images
-   */
-  uploadProductImages: async (productId: string, files: File[]): Promise<{ imageUrls: string[] }> => {
-    try {
-      const formData = new FormData();
-      files.forEach((file, index) => {
-        formData.append(`images[${index}]`, file);
-      });
-
-      const response = await apiClient.post<{ imageUrls: string[] }>(`/products/${productId}/upload-images`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      if (!response.data) {
-        throw new Error('Failed to upload product images');
-      }
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
 
   /**
    * Get supplier documents
@@ -343,6 +254,54 @@ export const suppliersApi = {
       if (error.response?.status === 404 || error.status === 404) {
         console.warn(`[TEMP] Analytics endpoint not yet implemented for supplier ${supplierId}`);
         return null; // Return null for 404s
+      }
+      throw handleApiError(error);
+    }
+  },
+
+  /**
+   * Get supplier products
+   * TEMPORARY: Returns empty array if endpoint returns 404 (under development)
+   */
+  getSupplierProducts: async (supplierId: string, params?: Record<string, any>): Promise<SupplierProduct[]> => {
+    try {
+      const response = await apiClient.get<any>(`/suppliers/${supplierId}/products`, { params });
+      if (!response.data) {
+        return []; // Return empty array instead of throwing error
+      }
+
+      // Handle nested response structure: response.data.data.products
+      let rawProducts: any[] = [];
+
+      if (response.data.data && response.data.data.products) {
+        // Nested structure: { data: { data: { products: [...] } } }
+        rawProducts = response.data.data.products;
+      } else if (response.data.products) {
+        // Alternative structure: { data: { products: [...] } }
+        rawProducts = response.data.products;
+      } else if (Array.isArray(response.data)) {
+        // Direct array: { data: [...] }
+        rawProducts = response.data;
+      } else {
+        console.warn(`[API] Unexpected response structure for supplier ${supplierId} products:`, response.data);
+        return [];
+      }
+
+      // Ensure rawProducts is always an array
+      if (!Array.isArray(rawProducts)) {
+        console.warn(`[API] Expected array but received ${typeof rawProducts} for supplier ${supplierId} products`);
+        return []; // Return empty array for non-array responses
+      }
+
+      // Transform backend products to frontend format
+      const products: SupplierProduct[] = rawProducts.map(transformBackendProduct);
+
+      return products;
+    } catch (error: any) {
+      // Gracefully handle 404 errors for endpoints under development
+      if (error.response?.status === 404 || error.status === 404) {
+        console.warn(`[TEMP] Products endpoint not yet implemented for supplier ${supplierId}`);
+        return []; // Return empty array for 404s
       }
       throw handleApiError(error);
     }

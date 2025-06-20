@@ -5,12 +5,22 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { DashboardStats } from '../types/index';
+import type { DashboardStats, SalesData, UserGrowth, CategoryDistributionData } from '../types/index';
 import dashboardApi from '../api/dashboardApi';
 import useNotification from '../../../hooks/useNotification';
 
 export const useDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [salesData, setSalesData] = useState<SalesData[]>([]);
+  const [userGrowthData, setUserGrowthData] = useState<UserGrowth[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryDistributionData>({
+    labels: [],
+    datasets: [{
+      data: [],
+      backgroundColor: [],
+      borderWidth: 1,
+    }]
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { showNotification } = useNotification();
@@ -76,6 +86,7 @@ export const useDashboard = () => {
     setError(null);
     try {
       const data = await dashboardApi.getSalesData(period);
+      setSalesData(data);
       return data;
     } catch (err) {
       setError(err as Error);
@@ -96,6 +107,7 @@ export const useDashboard = () => {
     setError(null);
     try {
       const data = await dashboardApi.getUserGrowth(period);
+      setUserGrowthData(data);
       return data;
     } catch (err) {
       setError(err as Error);
@@ -116,6 +128,7 @@ export const useDashboard = () => {
     setError(null);
     try {
       const data = await dashboardApi.getCategoryDistribution();
+      setCategoryData(data);
       return data;
     } catch (err) {
       setError(err as Error);
@@ -130,16 +143,54 @@ export const useDashboard = () => {
     }
   }, []);
 
+  // Refresh all dashboard data
+  const refreshAllData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Fetch all data in parallel
+      const [statsData, salesDataResult, userGrowthDataResult, categoryDataResult] = await Promise.all([
+        dashboardApi.getDashboardStats(),
+        dashboardApi.getSalesData('month'), // Default to month
+        dashboardApi.getUserGrowth('month'), // Default to month
+        dashboardApi.getCategoryDistribution()
+      ]);
+
+      // Update all state
+      setStats(statsData);
+      setSalesData(salesDataResult);
+      setUserGrowthData(userGrowthDataResult);
+      setCategoryData(categoryDataResult);
+
+      // Cache the stats data
+      cacheRef.current = {
+        data: statsData,
+        timestamp: Date.now()
+      };
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      showNotificationRef.current({
+        type: 'error',
+        title: 'Dashboard Error',
+        message: 'Failed to refresh dashboard data'
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Load dashboard stats on mount (only if not already fetched)
   useEffect(() => {
     if (!hasInitialFetched.current) {
       hasInitialFetched.current = true;
-      fetchStats().catch(err => {
-        console.error('Failed to fetch initial dashboard stats:', err);
-        // Error is already handled in fetchStats, just log here
+      refreshAllData().catch(err => {
+        console.error('Failed to fetch initial dashboard data:', err);
+        // Error is already handled in refreshAllData, just log here
       });
     }
-  }, [fetchStats]);
+  }, [refreshAllData]);
 
   // Reset state when component unmounts to prevent stale data issues
   useEffect(() => {
@@ -153,12 +204,16 @@ export const useDashboard = () => {
 
   return {
     stats,
+    salesData,
+    userGrowthData,
+    categoryData,
     isLoading,
     error,
     fetchStats,
     fetchSalesData,
     fetchUserGrowth,
-    fetchCategoryDistribution
+    fetchCategoryDistribution,
+    refreshAllData
   };
 };
 

@@ -107,7 +107,8 @@ const SupplierProfilePage: React.FC = () => {
       // Fetch products
       try {
         const products = await suppliersApi.getSupplierProducts(supplierId);
-        setSupplierProducts(products);
+        console.log('Fetched products:', products, 'Type:', typeof products, 'IsArray:', Array.isArray(products));
+        setSupplierProducts(Array.isArray(products) ? products : []);
       } catch (productError) {
         console.warn('Products fetch failed:', productError);
         setSupplierProducts([]);
@@ -429,7 +430,7 @@ const SupplierProfilePage: React.FC = () => {
       {activeTab === 'products' && (
         supplier ? (
           <SupplierProducts
-            products={supplierProducts}
+            products={Array.isArray(supplierProducts) ? supplierProducts : []}
             supplierId={supplier.id}
             onProductUpdate={fetchSupplierData}
           />

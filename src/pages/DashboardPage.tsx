@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/common/Button';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import PageLoader from '../components/common/PageLoader';
 import { formatCurrency } from '../utils/formatters';
 
 import useErrorHandler from '../hooks/useErrorHandler';
@@ -37,7 +37,14 @@ const DashboardPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Use dashboard hook
-  const { stats: dashboardData, isLoading, fetchStats } = useDashboard();
+  const {
+    stats: dashboardData,
+    salesData,
+    userGrowthData,
+    categoryData,
+    isLoading,
+    refreshAllData
+  } = useDashboard();
 
   // Error handling
   const {
@@ -64,8 +71,8 @@ const DashboardPage: React.FC = () => {
           }, 1500);
         });
 
-        // Use the dashboard hook's fetchStats method with force refresh
-        await fetchStats(true);
+        // Use the dashboard hook's refreshAllData method
+        await refreshAllData();
         return true;
       },
       {
@@ -84,11 +91,7 @@ const DashboardPage: React.FC = () => {
 
   // If data is not loaded yet
   if (isLoading || !dashboardData) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" variant="pulse" />
-      </div>
-    );
+    return <PageLoader text="Loading dashboard..." />;
   }
 
   return (
@@ -164,8 +167,8 @@ const DashboardPage: React.FC = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <SalesChartContainer />
-        <UserGrowthChartContainer />
+        <SalesChartContainer data={salesData} />
+        <UserGrowthChartContainer data={userGrowthData} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -184,6 +187,7 @@ const DashboardPage: React.FC = () => {
 
         <CategoryDistributionChartContainer
           title="Category Distribution"
+          data={categoryData}
         />
       </div>
     </div>

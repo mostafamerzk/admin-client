@@ -899,7 +899,40 @@ export const handlers = {
         `https://images.unsplash.com/photo-${Date.now()}-2?w=400&h=400&fit=crop`
       ];
 
-      return { imageUrls };
+      // Return proper ImageUploadResponse structure matching the actual API
+      return {
+        success: true,
+        message: 'Images uploaded successfully',
+        data: {
+          imageUrls,
+          uploadDetails: imageUrls.map((url, index) => ({
+            url,
+            publicId: `products/product_${_id}_${Date.now()}_${index}`,
+            originalName: `image_${index + 1}.jpg`
+          }))
+        }
+      };
+    },
+
+    deleteImage: async (productId: string, imageId: string) => {
+      await delay(800);
+
+      if (simulateRandomFailure(0.05)) {
+        return errorResponse('Failed to delete image');
+      }
+
+      // Simulate successful image deletion
+      return {
+        success: true,
+        message: 'Image deleted successfully',
+        data: {
+          imageId: parseInt(imageId),
+          productId: parseInt(productId),
+          imageUrl: `https://images.unsplash.com/photo-${Date.now()}?w=400&h=400&fit=crop`,
+          cloudinaryDeleted: true,
+          cloudinaryPublicId: `products/product_${productId}_${Date.now()}_${imageId}`
+        }
+      };
     }
   },
 

@@ -16,6 +16,7 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline';
 import { ROUTES } from '../../../constants/routes';
+import Avatar from '../../../components/common/Avatar';
 
 interface UserListProps {
   users: User[];
@@ -51,17 +52,14 @@ const UserList: React.FC<UserListProps> = ({
       sortable: true,
       render: (_value, user) => (
         <div className="flex items-center">
-          {user.avatar ? (
-            <img
-              src={user.avatar}
+          <div className="mr-3">
+            <Avatar
+              {...(user.avatar && { src: user.avatar })}
               alt={user.name}
-              className="w-8 h-8 rounded-full mr-3 object-cover"
+              name={user.name}
+              size="sm"
             />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center mr-3">
-              {user.name.charAt(0)}
-            </div>
-          )}
+          </div>
           <div>
             <div className="font-medium text-gray-900">{user.name}</div>
             <div className="text-xs text-gray-500">ID: {user.id}</div>

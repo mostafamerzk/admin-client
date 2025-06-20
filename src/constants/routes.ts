@@ -19,6 +19,7 @@ export const ROUTES = {
   SUPPLIER_DETAILS: '/suppliers/:id',
   SUPPLIER_PROFILE: '/suppliers/:id/profile',
   PRODUCT_DETAILS: '/products/:id',
+  EDIT_PRODUCT: '/products/:id/edit',
 
   CATEGORIES: '/categories',
   CATEGORY_MANAGEMENT: '/category-management',
@@ -34,6 +35,7 @@ export const ROUTES = {
   getSupplierDetailsRoute: (id: string) => `/suppliers/${id}`,
   getSupplierProfileRoute: (id: string) => `/suppliers/${id}/profile`,
   getProductDetailsRoute: (id: string) => `/products/${id}`,
+  getEditProductRoute: (id: string) => `/products/${id}/edit`,
 
   getCategoryDetailsRoute: (id: string) => `/categories/${id}`,
   getOrderDetailsRoute: (id: string) => `/orders/${id}`,

@@ -4,17 +4,18 @@
  * This component handles fetching user growth data and displaying the user growth chart.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import UserGrowthChart from './UserGrowthChart';
 import { dashboardApi } from '../api/dashboardApi';
 import type { UserGrowth } from '../types';
 
 interface UserGrowthChartContainerProps {
   className?: string;
+  data?: UserGrowth[];
 }
 
-const UserGrowthChartContainer: React.FC<UserGrowthChartContainerProps> = ({ className }) => {
-  const [userGrowthData, setUserGrowthData] = useState<UserGrowth[]>([]);
+const UserGrowthChartContainer: React.FC<UserGrowthChartContainerProps> = ({ className, data = [] }) => {
+  const [userGrowthData, setUserGrowthData] = useState<UserGrowth[]>(data);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -22,8 +23,8 @@ const UserGrowthChartContainer: React.FC<UserGrowthChartContainerProps> = ({ cla
     setIsLoading(true);
     setError(null);
     try {
-      const data = await dashboardApi.getUserGrowth(period);
-      setUserGrowthData(data);
+      const newData = await dashboardApi.getUserGrowth(period);
+      setUserGrowthData(newData);
     } catch (err) {
       setError(err as Error);
       console.error('Failed to fetch user growth data:', err);
@@ -32,10 +33,12 @@ const UserGrowthChartContainer: React.FC<UserGrowthChartContainerProps> = ({ cla
     }
   }, []);
 
-  // Load initial data
-  useEffect(() => {
-    fetchUserGrowthData('month');
-  }, [fetchUserGrowthData]);
+  // Update local state when props data changes
+  React.useEffect(() => {
+    if (data.length > 0) {
+      setUserGrowthData(data);
+    }
+  }, [data]);
 
   const handlePeriodChange = useCallback((period: 'day' | 'week' | 'month' | 'year') => {
     // Convert day to week since user growth API doesn't support day period

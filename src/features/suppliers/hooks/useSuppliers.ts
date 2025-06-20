@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type{ Supplier, SupplierFormData, SupplierProduct } from '../types/index';
+import type{ Supplier, SupplierFormData } from '../types/index';
 import suppliersApi from '../api/suppliersApi';
 import useNotification from '../../../hooks/useNotification';
 
@@ -184,99 +184,7 @@ export const useSuppliers = () => {
     }
   }, []);
 
-  // Get supplier products
-  const getSupplierProducts = useCallback(async (supplierId: string, setLoadingState: boolean = true) => {
-    if (setLoadingState) {
-      setIsLoading(true);
-    }
-    setError(null);
-    try {
-      const products = await suppliersApi.getSupplierProducts(supplierId);
-      return products;
-    } catch (err) {
-      setError(err as Error);
-      showNotificationRef.current({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch supplier products'
-      });
-      throw err;
-    } finally {
-      if (setLoadingState) {
-        setIsLoading(false);
-      }
-    }
-  }, []);
 
-  // Get product by ID
-  const getProductById = useCallback(async (productId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const product = await suppliersApi.getProductById(productId);
-      return product;
-    } catch (err) {
-      setError(err as Error);
-      showNotificationRef.current({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to fetch product details'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Update product
-  const updateProduct = useCallback(async (productId: string, productData: Partial<SupplierProduct>) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const updatedProduct = await suppliersApi.updateProduct(productId, productData);
-      showNotificationRef.current({
-        type: 'success',
-        title: 'Success',
-        message: 'Product updated successfully'
-      });
-      return updatedProduct;
-    } catch (err) {
-      setError(err as Error);
-      showNotificationRef.current({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to update product'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Upload product images
-  const uploadProductImages = useCallback(async (productId: string, files: File[]) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await suppliersApi.uploadProductImages(productId, files);
-      showNotificationRef.current({
-        type: 'success',
-        title: 'Success',
-        message: 'Product images uploaded successfully'
-      });
-      return result;
-    } catch (err) {
-      setError(err as Error);
-      showNotificationRef.current({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to upload product images'
-      });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   // Get supplier documents (gracefully handles 404s for endpoints under development)
   const getSupplierDocuments = useCallback(async (supplierId: string) => {
@@ -405,16 +313,11 @@ export const useSuppliers = () => {
     deleteSupplier,
     deleteEntity: deleteSupplier, // Alias for consistency with user pattern
     updateVerificationStatus,
-    getSupplierProducts,
     getSupplierDocuments,
     getSupplierAnalytics,
     uploadSupplierImage,
     banSupplier,
-    unbanSupplier,
-    // Product operations
-    getProductById,
-    updateProduct,
-    uploadProductImages
+    unbanSupplier
   };
 };
 

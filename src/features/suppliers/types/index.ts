@@ -89,77 +89,7 @@ export interface SuppliersListResponse {
   };
 }
 
-// Backend supplier products response
-export interface SupplierProductsResponse {
-  success: boolean;
-  message: string;
-  data: {
-    products: BackendSupplierProduct[];
-    pagination?: PaginationInfo;
-  };
-}
 
-// Backend supplier product interface
-export interface BackendSupplierProduct {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  stock: number;
-  minimumStock?: number; // Backend may provide this field
-  status: 'active' | 'inactive' | 'out_of_stock';
-  description?: string;
-  image?: string;
-  images?: string[]; // Backend may provide images array
-  attributes?: any[]; // Backend may provide attributes array
-  variants?: any[]; // Backend may provide variants array
-  createdAt?: string; // Backend uses createdAt (actual field name from API)
-  updatedAt?: string; // Backend uses updatedAt (actual field name from API)
-  createdDate?: string; // Fallback for legacy support
-  updatedDate?: string; // Fallback for legacy support
-}
-
-// Frontend supplier product interface (for UI compatibility)
-export interface SupplierProduct {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  stock: number;
-  minimumStock: number;
-  status: 'active' | 'inactive' | 'out_of_stock';
-  description?: string;
-  image?: string;
-  images?: string[];
-  attributes?: ProductAttribute[];
-  variants?: ProductVariant[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Product attribute types
-export interface ProductAttribute {
-  id: string;
-  name: string;
-  value: string;
-  type: 'text' | 'number' | 'boolean' | 'select';
-  unit?: string;
-}
-
-// Product variant types
-export interface ProductVariant {
-  id: string;
-  name: string;
-  sku: string;
-  price: number;
-  stock: number;
-  attributes: {
-    [key: string]: string;
-  };
-  image?: string;
-}
 
 // Document types for verification documents
 export interface SupplierDocument {
@@ -171,6 +101,22 @@ export interface SupplierDocument {
   uploadDate: string;
   url: string;
   notes?: string;
+}
+
+// Product types for supplier products
+export interface SupplierProduct {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  price: number;
+  stock: number;
+  minimumStock?: number;
+  status: 'active' | 'inactive' | 'out_of_stock';
+  description?: string;
+  image?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Analytics types for supplier performance

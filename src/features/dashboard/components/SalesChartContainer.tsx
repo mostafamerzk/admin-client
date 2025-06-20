@@ -4,17 +4,18 @@
  * This component handles fetching sales data and displaying the sales chart.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import SalesChart from './SalesChart';
 import { dashboardApi } from '../api/dashboardApi';
 import type { SalesData } from '../types';
 
 interface SalesChartContainerProps {
   className?: string;
+  data?: SalesData[];
 }
 
-const SalesChartContainer: React.FC<SalesChartContainerProps> = ({ className }) => {
-  const [salesData, setSalesData] = useState<SalesData[]>([]);
+const SalesChartContainer: React.FC<SalesChartContainerProps> = ({ className, data = [] }) => {
+  const [salesData, setSalesData] = useState<SalesData[]>(data);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -22,8 +23,8 @@ const SalesChartContainer: React.FC<SalesChartContainerProps> = ({ className }) 
     setIsLoading(true);
     setError(null);
     try {
-      const data = await dashboardApi.getSalesData(period);
-      setSalesData(data);
+      const newData = await dashboardApi.getSalesData(period);
+      setSalesData(newData);
     } catch (err) {
       setError(err as Error);
       console.error('Failed to fetch sales data:', err);
@@ -32,10 +33,12 @@ const SalesChartContainer: React.FC<SalesChartContainerProps> = ({ className }) 
     }
   }, []);
 
-  // Load initial data
-  useEffect(() => {
-    fetchSalesData('month');
-  }, [fetchSalesData]);
+  // Update local state when props data changes
+  React.useEffect(() => {
+    if (data.length > 0) {
+      setSalesData(data);
+    }
+  }, [data]);
 
   const handlePeriodChange = useCallback((period: 'day' | 'week' | 'month' | 'year') => {
     fetchSalesData(period);

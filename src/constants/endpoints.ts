@@ -32,6 +32,19 @@ export const ENDPOINTS = {
     REJECT: (id: string) => `/suppliers/${id}/reject`,
     PRODUCTS: (id: string) => `/suppliers/${id}/products`,
   },
+
+  // Product endpoints
+  PRODUCTS: {
+    BASE: '/products',
+    DETAILS: (id: string) => `/products/${id}`,
+    UPDATE: (id: string) => `/products/${id}`,
+    DELETE: (id: string) => `/products/${id}`,
+    STATUS: (id: string) => `/products/${id}/status`,
+    UPLOAD_IMAGES: (id: string) => `/products/${id}/images`,
+    DELETE_IMAGE: (productId: string) => `/products/${productId}/images`,
+    VARIANTS: (id: string) => `/products/${id}/variants`,
+    SEARCH: '/products/search'
+  },
   
   // Category endpoints
   CATEGORIES: {

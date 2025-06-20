@@ -4,7 +4,7 @@
  * This component handles fetching category distribution data and displaying the chart.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import CategoryDistributionChart from './CategoryDistributionChart';
 import { dashboardApi } from '../api/dashboardApi';
 import type { CategoryDistributionData } from '../types';
@@ -12,20 +12,24 @@ import type { CategoryDistributionData } from '../types';
 interface CategoryDistributionChartContainerProps {
   className?: string;
   title?: string;
+  data?: CategoryDistributionData;
 }
 
-const CategoryDistributionChartContainer: React.FC<CategoryDistributionChartContainerProps> = ({ 
+const CategoryDistributionChartContainer: React.FC<CategoryDistributionChartContainerProps> = ({
   className,
-  title = "Category Distribution"
+  title = "Category Distribution",
+  data
 }) => {
-  const [categoryData, setCategoryData] = useState<CategoryDistributionData>({
+  const defaultData: CategoryDistributionData = {
     labels: [],
     datasets: [{
       data: [],
       backgroundColor: [],
       borderWidth: 1,
     }]
-  });
+  };
+
+  const [categoryData, setCategoryData] = useState<CategoryDistributionData>(data || defaultData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -33,8 +37,8 @@ const CategoryDistributionChartContainer: React.FC<CategoryDistributionChartCont
     setIsLoading(true);
     setError(null);
     try {
-      const data = await dashboardApi.getCategoryDistribution();
-      setCategoryData(data);
+      const newData = await dashboardApi.getCategoryDistribution();
+      setCategoryData(newData);
     } catch (err) {
       setError(err as Error);
       console.error('Failed to fetch category distribution data:', err);
@@ -43,10 +47,12 @@ const CategoryDistributionChartContainer: React.FC<CategoryDistributionChartCont
     }
   }, []);
 
-  // Load initial data
-  useEffect(() => {
-    fetchCategoryData();
-  }, [fetchCategoryData]);
+  // Update local state when props data changes
+  React.useEffect(() => {
+    if (data && data.labels.length > 0) {
+      setCategoryData(data);
+    }
+  }, [data]);
 
   if (error) {
     return (

@@ -10,25 +10,10 @@ import MultipleImageUpload from './MultipleImageUpload';
 import DynamicArrayField from './DynamicArrayField';
 import Card from './Card';
 import { TagIcon, ClipboardDocumentListIcon, PhotoIcon } from '@heroicons/react/24/outline';
-import type { ProductAttribute, ProductVariant } from '../../features/suppliers/types';
-
-// Form data type that allows File objects for images
-interface ProductFormData {
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  stock: number;
-  minimumStock: number;
-  status: 'active' | 'inactive' | 'out_of_stock';
-  description: string;
-  images: (File | string)[];
-  attributes: ProductAttribute[];
-  variants: ProductVariant[];
-}
+import type { ProductAttribute, ProductVariant, ProductFormDataWithImages } from '../../features/products/types';
 
 interface ProductEditFormProps {
-  formData: Partial<ProductFormData>;
+  formData: Partial<ProductFormDataWithImages>;
   errors: Record<string, string>;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onImagesChange: (images: (File | string)[]) => void;

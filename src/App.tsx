@@ -27,6 +27,7 @@ const UserEditPage = lazy(() => import('./pages/UserEditPage'));
 const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
 const SupplierProfilePage = lazy(() => import('./pages/SupplierProfilePage'));
 const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'));
+const EditProductPage = lazy(() => import('./pages/EditProductPage'));
 
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
 const CategoryManagementPage = lazy(() => import('./pages/CategoryManagementPage'));
@@ -51,6 +52,7 @@ const App: React.FC = () => {
       { importFn: () => import('./pages/SuppliersPage'), name: 'suppliers' },
       { importFn: () => import('./pages/SupplierProfilePage'), name: 'supplier-profile' },
       { importFn: () => import('./pages/ProductDetailsPage'), name: 'product-details' },
+      { importFn: () => import('./pages/EditProductPage'), name: 'edit-product' },
 
       { importFn: () => import('./pages/CategoriesPage'), name: 'categories' },
       { importFn: () => import('./pages/OrdersPage'), name: 'orders' },
@@ -80,6 +82,7 @@ const App: React.FC = () => {
                       <Route path={ROUTES.SUPPLIERS} element={<SuppliersPage />} />
                       <Route path={ROUTES.SUPPLIER_PROFILE} element={<SupplierProfilePage />} />
                       <Route path={ROUTES.PRODUCT_DETAILS} element={<ProductDetailsPage />} />
+                      <Route path={ROUTES.EDIT_PRODUCT} element={<EditProductPage />} />
 
                       <Route path={ROUTES.CATEGORIES} element={<CategoriesPage />} />
                       <Route path={ROUTES.CATEGORY_MANAGEMENT} element={<CategoryManagementPage />} />

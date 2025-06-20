@@ -85,9 +85,12 @@ function DataTable<T extends Record<string, any>>({
   };
 
   const sortedData = useMemo(() => {
-    if (!sortConfig) return data;
+    // Defensive programming: ensure data is always an array
+    const safeData = Array.isArray(data) ? data : [];
 
-    return [...data].sort((a, b) => {
+    if (!sortConfig) return safeData;
+
+    return [...safeData].sort((a, b) => {
       const aValue = a[sortConfig.key];
       const bValue = b[sortConfig.key];
 
