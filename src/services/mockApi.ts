@@ -79,13 +79,7 @@ const mockApi = {
           }
           break;
 
-        case 'categories':
-          if (id) {
-            response = await handlers.categories.getById?.(id) || { error: 'Not implemented' };
-          } else {
-            response = await handlers.categories.getAll(queryParams);
-          }
-          break;
+
 
         case 'orders':
           if (id) {
@@ -243,9 +237,7 @@ const mockApi = {
             }
             break;
 
-          case 'categories':
-            response = await handlers.categories.create?.(data) || { error: 'Not implemented' };
-            break;
+
 
           case 'orders':
             response = await handlers.orders.create?.(data) || { error: 'Not implemented' };
@@ -367,13 +359,7 @@ const mockApi = {
           }
           break;
 
-        case 'categories':
-          if (id) {
-            response = await handlers.categories.update?.(id, data) || { error: 'Not implemented' };
-          } else {
-            response = { error: 'Missing ID for update' };
-          }
-          break;
+
 
         case 'orders':
           if (id) {
@@ -489,13 +475,7 @@ const mockApi = {
           }
           break;
 
-        case 'categories':
-          if (id) {
-            response = await handlers.categories.delete?.(id) || { error: 'Not implemented' };
-          } else {
-            response = { error: 'Missing ID for delete' };
-          }
-          break;
+
 
         case 'orders':
           if (id) {

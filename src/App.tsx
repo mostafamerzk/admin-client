@@ -30,6 +30,7 @@ const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'));
 const EditProductPage = lazy(() => import('./pages/EditProductPage'));
 
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
+const CategoryDetailsPage = lazy(() => import('./pages/CategoryDetailsPage'));
 const CategoryManagementPage = lazy(() => import('./pages/CategoryManagementPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const OrderDetailsPage = lazy(() => import('./pages/OrderDetailsPage'));
@@ -55,6 +56,7 @@ const App: React.FC = () => {
       { importFn: () => import('./pages/EditProductPage'), name: 'edit-product' },
 
       { importFn: () => import('./pages/CategoriesPage'), name: 'categories' },
+      { importFn: () => import('./pages/CategoryDetailsPage'), name: 'category-details' },
       { importFn: () => import('./pages/OrdersPage'), name: 'orders' },
       { importFn: () => import('./pages/OrderDetailsPage'), name: 'order-details' },
       { importFn: () => import('./pages/ProfilePage'), name: 'profile' },
@@ -85,6 +87,7 @@ const App: React.FC = () => {
                       <Route path={ROUTES.EDIT_PRODUCT} element={<EditProductPage />} />
 
                       <Route path={ROUTES.CATEGORIES} element={<CategoriesPage />} />
+                      <Route path={ROUTES.CATEGORY_DETAILS} element={<CategoryDetailsPage />} />
                       <Route path={ROUTES.CATEGORY_MANAGEMENT} element={<CategoryManagementPage />} />
                       <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
                       <Route path={ROUTES.ORDER_DETAILS} element={<OrderDetailsPage />} />

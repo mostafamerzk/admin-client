@@ -50,6 +50,9 @@ export const ENDPOINTS = {
   CATEGORIES: {
     BASE: '/categories',
     DETAILS: (id: string) => `/categories/${id}`,
+    UPDATE: (id: string) => `/categories/${id}`,
+    DELETE: (id: string) => `/categories/${id}`,
+    STATUS: (id: string) => `/categories/${id}/status`,
     PRODUCTS: (id: string) => `/categories/${id}/products`,
   },
 

@@ -9,7 +9,7 @@
 import type { User } from './entities/users';  
 import { users } from './entities/users';  
 import { suppliers, type Supplier } from './entities/suppliers';
-import { categories, type Category } from './entities/categories';
+
 import { orders, type Order } from './entities/orders';
 import { dashboardStats, type DashboardStats } from './entities/dashboard';
 
@@ -17,7 +17,6 @@ import { dashboardStats, type DashboardStats } from './entities/dashboard';
 interface Database {
   users: User[];
   suppliers: Supplier[];
-  categories: Category[];
   orders: Order[];
   dashboardStats: DashboardStats;
 }
@@ -26,7 +25,6 @@ interface Database {
 const STORAGE_KEYS = {
   USERS: 'connectchain_users',
   SUPPLIERS: 'connectchain_suppliers',
-  CATEGORIES: 'connectchain_categories',
   ORDERS: 'connectchain_orders',
 };
 
@@ -34,7 +32,6 @@ const STORAGE_KEYS = {
 // type _CollectionType<K extends keyof Database> =
 //   K extends 'users' ? User[] :
 //   K extends 'suppliers' ? Supplier[] :
-//   K extends 'categories' ? Category[] :
 //   K extends 'orders' ? Order[] :
 //   K extends 'dashboardStats' ? DashboardStats :
 //   never;
@@ -83,7 +80,6 @@ const initializeDb = (): Database => {
   const db: Database = {
     users: dbUsers,
     suppliers: loadFromStorage(STORAGE_KEYS.SUPPLIERS, suppliers),
-    categories: loadFromStorage(STORAGE_KEYS.CATEGORIES, categories),
     orders: loadFromStorage(STORAGE_KEYS.ORDERS, orders),
     dashboardStats,
   };
@@ -91,7 +87,6 @@ const initializeDb = (): Database => {
   // Save initial data to localStorage
   saveToStorage(STORAGE_KEYS.USERS, db.users);
   saveToStorage(STORAGE_KEYS.SUPPLIERS, db.suppliers);
-  saveToStorage(STORAGE_KEYS.CATEGORIES, db.categories);
   saveToStorage(STORAGE_KEYS.ORDERS, db.orders);
 
   return db;
@@ -111,8 +106,6 @@ const saveCollectionToStorage = <K extends keyof Database>(collection: K): void 
     saveToStorage(STORAGE_KEYS.USERS, db.users);
   } else if (collection === 'suppliers') {
     saveToStorage(STORAGE_KEYS.SUPPLIERS, db.suppliers);
-  } else if (collection === 'categories') {
-    saveToStorage(STORAGE_KEYS.CATEGORIES, db.categories);
   } else if (collection === 'orders') {
     saveToStorage(STORAGE_KEYS.ORDERS, db.orders);
   }

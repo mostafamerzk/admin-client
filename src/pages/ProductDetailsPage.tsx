@@ -5,8 +5,8 @@
  * details, attributes, and variants.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
@@ -25,19 +25,25 @@ import {
   PencilIcon,
   CubeIcon,
   TagIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 import type { Product } from '../features/products';
 
 const ProductDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showError } = useNotification();
-  const { getProductById } = useProducts({ initialFetch: false });
+  const location = useLocation();
+  const { showError, showNotification } = useNotification();
+  const { getProductById, updateEntity } = useProducts({ initialFetch: false });
 
   // Product state
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check if we came from a category page
+  const fromCategory = location.state?.fromCategory || location.pathname.includes('/categories/');
 
   // Use refs to store stable references to functions
   const showErrorRef = useRef(showError);
@@ -48,6 +54,46 @@ const ProductDetailsPage: React.FC = () => {
     showErrorRef.current = showError;
     navigateRef.current = navigate;
   }, [showError, navigate]);
+
+  // Handle product status toggle
+  const handleToggleProductStatus = useCallback(async () => {
+    if (!product) return;
+
+    const newStatus = product.status === 'active' ? 'inactive' : 'active';
+    const previousStatus = product.status;
+
+    try {
+      // Optimistic update
+      setProduct(prev => prev ? { ...prev, status: newStatus } : null);
+
+      await updateEntity(product.id, { ...product, status: newStatus });
+
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: `Product ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+      });
+    } catch (error) {
+      // Rollback on error - handle undefined status properly
+      setProduct(prev => {
+        if (!prev) return null;
+
+        // Create a new object without the status property first
+        const { status: _, ...productWithoutStatus } = prev;
+
+        // Only add status if previousStatus is defined
+        return previousStatus !== undefined
+          ? { ...productWithoutStatus, status: previousStatus }
+          : productWithoutStatus;
+      });
+
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update product status'
+      });
+    }
+  }, [product, updateEntity, showNotification]);
 
   // Load product data
   useEffect(() => {
@@ -137,7 +183,11 @@ const ProductDetailsPage: React.FC = () => {
       <PageHeader
         title={product.name}
         description="Complete product information and details"
-        breadcrumbs={[
+        breadcrumbs={fromCategory ? [
+          { label: 'Categories', path: ROUTES.CATEGORIES },
+          { label: product.category || 'Category', path: ROUTES.getCategoryDetailsRoute(product.categoryId?.toString() || '1') },
+          { label: product.name }
+        ] : [
           { label: 'Suppliers', path: ROUTES.SUPPLIERS },
           { label: product.name }
         ]}
@@ -150,13 +200,23 @@ const ProductDetailsPage: React.FC = () => {
             >
               Edit Product
             </Button>
-            <Button
-              onClick={() => navigateRef.current(-1)}
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              variant="outline"
-            >
-              Go Back
-            </Button>
+            {fromCategory ? (
+              <Button
+                onClick={handleToggleProductStatus}
+                icon={product.status === 'active' ? <XCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
+                variant={product.status === 'active' ? 'outline' : 'success'}
+              >
+                {product.status === 'active' ? 'Deactivate Product' : 'Activate Product'}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => navigateRef.current(-1)}
+                icon={<ArrowLeftIcon className="w-4 h-4" />}
+                variant="outline"
+              >
+                Go Back
+              </Button>
+            )}
           </div>
         }
       />

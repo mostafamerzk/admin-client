@@ -8,7 +8,7 @@
 import { mockDb } from './db';
 import type{ User } from './entities/users';
 import type{ Supplier } from './entities/suppliers';
-import type{ Category } from './entities/categories';
+
 import type{ DashboardStats } from './entities/dashboard';
 import { mockProfile, mockActivityLog, updateProfileData, generateAvatarUrl } from './entities/profile';
 import { businessTypes } from './entities/businessTypes';
@@ -936,99 +936,7 @@ export const handlers = {
     }
   },
 
-  // Categories
-  categories: {
-    getAll: async (filters?: { status?: string; search?: string }) => {
-      await delay(600);
 
-      let categories = mockDb.getAll<Category, 'categories'>('categories');
-
-      // Apply filters if provided
-      if (filters) {
-        if (filters.status) {
-          categories = categories.filter(category => category.status === filters.status);
-        }
-
-        if (filters.search) {
-          const searchLower = filters.search.toLowerCase();
-          categories = categories.filter(category =>
-            category.name.toLowerCase().includes(searchLower) ||
-            category.description.toLowerCase().includes(searchLower)
-          );
-        }
-      }
-
-      return categories;
-    },
-
-    getById: async (id: string) => {
-      await delay(550);
-      
-      const category = mockDb.getById<Category, 'categories'>('categories', id);
-      
-      if (!category) {
-        return errorResponse('Category not found', 404);
-      }
-      
-      return category;
-    },
-
-    create: async (categoryData: Partial<Category>) => {
-      await delay(800);
-
-      if (!categoryData.name) {
-        return errorResponse('Category name is required', 400);
-      }
-
-      const newCategory: Category = {
-        id: `${Date.now()}`,
-        name: categoryData.name,
-        description: categoryData.description || '',
-        productCount: 0,
-        subcategoryCount: 0,
-        status: categoryData.status || 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        visibleInSupplierApp: true,
-        visibleInCustomerApp: true,
-        ...categoryData
-      };
-
-      return mockDb.create<Category, 'categories'>('categories', newCategory);
-    },
-
-    update: async (id: string, categoryData: Partial<Category>) => {
-      await delay(750);
-
-      const category = mockDb.getById<Category, 'categories'>('categories', id);
-
-      if (!category) {
-        return errorResponse('Category not found', 404);
-      }
-
-      const updatedCategory = {
-        ...category,
-        ...categoryData,
-        updatedAt: new Date().toISOString()
-      };
-
-      return mockDb.update<Category, 'categories'>('categories', updatedCategory);
-    },
-
-    delete: async (id: string) => {
-      await delay(700);
-
-      const success = mockDb.delete('categories', id);
-
-      if (!success) {
-        return errorResponse('Category not found', 404);
-      }
-
-      return { success: true };
-    },
-
-    // Add other category methods...
-  },
 
   // Orders
   orders: {

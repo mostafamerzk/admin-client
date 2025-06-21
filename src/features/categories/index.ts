@@ -16,9 +16,7 @@ export { default as useCategories } from './hooks/useCategories';
 // API
 export { default as categoriesApi } from './api/categoriesApi';
 
-// Utils
-export { default as categoryMappers } from './utils/categoryMappers';
-export { getMockCategories } from './utils/categoryMappers';
+
 
 // Types
 export * from './types/index';

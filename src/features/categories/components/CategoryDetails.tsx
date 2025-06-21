@@ -25,9 +25,17 @@ const CategoryDetails: React.FC<CategoryDetailsProps> = ({ category }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-full bg-primary bg-opacity-10 text-primary flex items-center justify-center">
-            <TagIcon className="w-6 h-6" />
-          </div>
+          {category.image ? (
+            <img
+              src={category.image}
+              alt={category.name}
+              className="w-16 h-16 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-lg bg-primary bg-opacity-10 text-primary flex items-center justify-center">
+              <TagIcon className="w-8 h-8" />
+            </div>
+          )}
           <div>
             <h3 className="text-lg font-medium text-gray-900">{category.name}</h3>
             <p className="text-sm text-gray-500">ID: {category.id}</p>
@@ -76,28 +84,7 @@ const CategoryDetails: React.FC<CategoryDetailsProps> = ({ category }) => {
         </div>
       </div>
 
-      {category.subcategories && category.subcategories.length > 0 && (
-        <div className="border-t border-gray-200 pt-4">
-          <h4 className="text-sm font-medium text-gray-500 mb-3">Subcategories</h4>
-          <ul className="divide-y divide-gray-200">
-            {category.subcategories.map((subcategory) => (
-              <li key={subcategory.id} className="py-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{subcategory.name}</p>
-                    <p className="text-sm text-gray-500">{subcategory.productCount} products</p>
-                  </div>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    subcategory.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {subcategory.status}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
     </div>
   );
 };

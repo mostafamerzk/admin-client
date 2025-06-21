@@ -6,6 +6,7 @@
 
 import apiClient from '../../../api';
 import { handleApiError } from '../../../utils/errorHandling';
+import { requestDeduplicator } from '../../../utils/requestDeduplication';
 import { ENDPOINTS } from '../../../constants/endpoints';
 import type {
   Product,
@@ -39,9 +40,11 @@ export const productsApi = {
    * @returns Promise resolving to paginated product data with pagination info
    */
   getProducts: async (params?: ProductQueryParams): Promise<ApiResponseWrapper<Product[]> & { pagination?: PaginationInfo }> => {
-    try {
-      const backendParams = params ? transformQueryParamsToBackend(params) : {};
-      const response = await apiClient.get(ENDPOINTS.PRODUCTS.BASE, { params: backendParams });
+    const key = requestDeduplicator.generateApiKey('/products', 'GET', params);
+    return requestDeduplicator.execute(key, async () => {
+      try {
+        const backendParams = params ? transformQueryParamsToBackend(params) : {};
+        const response = await apiClient.get(ENDPOINTS.PRODUCTS.BASE, { params: backendParams });
 
       // Handle API client error wrapper
       if (response.error) {
@@ -52,17 +55,18 @@ export const productsApi = {
         throw new Error('No response data received');
       }
 
-      // Validate and transform backend response
-      const validatedResponse = validateBackendResponse<BackendProduct[] | ProductsListResponse>(response.data);
-      return transformProductsListResponse(validatedResponse.data);
-    } catch (error: any) {
-      // Enhanced error handling for backend-specific errors
-      if (error.response?.data) {
-        const errorMessage = extractErrorMessage(error.response.data);
-        throw new Error(errorMessage);
+        // Validate and transform backend response
+        const validatedResponse = validateBackendResponse<BackendProduct[] | ProductsListResponse>(response.data);
+        return transformProductsListResponse(validatedResponse.data);
+      } catch (error: any) {
+        // Enhanced error handling for backend-specific errors
+        if (error.response?.data) {
+          const errorMessage = extractErrorMessage(error.response.data);
+          throw new Error(errorMessage);
+        }
+        throw handleApiError(error);
       }
-      throw handleApiError(error);
-    }
+    });
   },
 
   /**

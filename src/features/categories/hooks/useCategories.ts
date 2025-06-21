@@ -4,19 +4,22 @@
  * This hook provides methods and state for working with categories.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useEntityData } from '../../../hooks/useEntityData';
 import categoriesApi from '../api/categoriesApi';
 import type { Category } from '../types';
 
 export const useCategories = (options = { initialFetch: true }) => {
-  const baseHook = useEntityData({
-    getAll: categoriesApi.getCategories,
+  // Create stable API service object to prevent unnecessary re-renders
+  const apiService = useMemo(() => ({
+    getAll: () => categoriesApi.getCategories(undefined, false), // Don't clear cache on every call
     getById: categoriesApi.getCategoryById,
     create: categoriesApi.createCategory,
     update: categoriesApi.updateCategory,
     delete: categoriesApi.deleteCategory
-  }, {
+  }), []);
+
+  const baseHook = useEntityData(apiService, {
     entityName: 'categories',
     initialFetch: options.initialFetch
   });
@@ -25,12 +28,8 @@ export const useCategories = (options = { initialFetch: true }) => {
   
   // Category-specific methods
   const getCategoryHierarchy = useCallback(() => {
-    // In the new hierarchy, all categories are top-level
-    // Subcategories are now embedded within categories
-    return (baseHook.entities as Category[]).map(category => ({
-      ...category,
-      subcategories: category.subcategories || []
-    }));
+    // In the flat structure, categories directly contain products
+    return baseHook.entities as Category[];
   }, [baseHook.entities]);
   
   return {

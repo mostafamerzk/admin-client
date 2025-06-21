@@ -4,22 +4,15 @@
  * This hook provides methods and state for working with products.
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { useEntityData } from '../../../hooks/useEntityData';
 import productsApi from '../api/productsApi';
 import type { Product, ProductFormData, ProductQueryParams, ImageUploadData, ImageDeletionData } from '../types';
 import useNotification from '../../../hooks/useNotification';
-import apiClient from '../../../api';
 
 export const useProducts = (options = { initialFetch: true }) => {
-  // Clear any cached products data on hook initialization
-  useEffect(() => {
-    // Clear cache for products endpoint
-    apiClient.clearCache();
-  }, []);
-
-  // Create an adapter that maps productsApi methods to what useEntityData expects
-  const apiAdapter = {
+  // Create stable API adapter to prevent unnecessary re-renders
+  const apiAdapter = useMemo(() => ({
     getAll: async () => {
       const response = await productsApi.getProducts();
       return response.data; // Extract just the data array for useEntityData
@@ -28,7 +21,7 @@ export const useProducts = (options = { initialFetch: true }) => {
     create: productsApi.createProduct,
     update: productsApi.updateProduct,
     delete: productsApi.deleteProduct
-  };
+  }), []);
 
   const baseHook = useEntityData<Product>(apiAdapter, {
     entityName: 'products',

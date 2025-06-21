@@ -4,13 +4,12 @@
  * This component provides a form for adding new suppliers.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from '../../../components/common/Button';
 import FormField from '../../../components/common/FormField';
 import ImageUpload from '../../../components/common/ImageUpload';
 import type{ SupplierFormData } from '../types/index';
 import { validateForm, validationRules } from '../../../utils/validation';
-import type { Category } from '../../categories/types';
 
 interface AddSupplierFormProps {
   onSubmit: (supplierData: SupplierFormData, setFieldError?: (field: string, message: string) => void) => void;
@@ -36,111 +35,18 @@ const AddSupplierForm: React.FC<AddSupplierFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-
-  // Fetch categories for business type dropdown
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        // For now, use mock data. In production, you would use the categories API
-        const mockCategories: Category[] = [
-          {
-            id: '1',
-            name: 'Retail',
-            description: 'Retail business',
-            productCount: 0,
-            subcategoryCount: 0,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            visibleInSupplierApp: true,
-            visibleInCustomerApp: true
-          },
-          {
-            id: '2',
-            name: 'Wholesale',
-            description: 'Wholesale business',
-            productCount: 0,
-            subcategoryCount: 0,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            visibleInSupplierApp: true,
-            visibleInCustomerApp: true
-          },
-          {
-            id: '3',
-            name: 'Manufacturing',
-            description: 'Manufacturing business',
-            productCount: 0,
-            subcategoryCount: 0,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            visibleInSupplierApp: true,
-            visibleInCustomerApp: true
-          },
-          {
-            id: '4',
-            name: 'Technology',
-            description: 'Technology business',
-            productCount: 0,
-            subcategoryCount: 0,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            visibleInSupplierApp: true,
-            visibleInCustomerApp: true
-          },
-          {
-            id: '5',
-            name: 'Healthcare',
-            description: 'Healthcare business',
-            productCount: 0,
-            subcategoryCount: 0,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            visibleInSupplierApp: true,
-            visibleInCustomerApp: true
-          },
-          {
-            id: '6',
-            name: 'Food & Beverage',
-            description: 'Food & Beverage business',
-            productCount: 0,
-            subcategoryCount: 0,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            visibleInSupplierApp: true,
-            visibleInCustomerApp: true
-          },
-          {
-            id: '7',
-            name: 'Automotive',
-            description: 'Automotive business',
-            productCount: 0,
-            subcategoryCount: 0,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            visibleInSupplierApp: true,
-            visibleInCustomerApp: true
-          }
-        ];
-        setCategories(mockCategories);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  // Static business type options - no need for API call for this simple dropdown
+  const businessTypeOptions = [
+    { value: '', label: 'Select a business type' },
+    { value: 'Retail', label: 'Retail' },
+    { value: 'Wholesale', label: 'Wholesale' },
+    { value: 'Manufacturing', label: 'Manufacturing' },
+    { value: 'Technology', label: 'Technology' },
+    { value: 'Healthcare', label: 'Healthcare' },
+    { value: 'Food & Beverage', label: 'Food & Beverage' },
+    { value: 'Automotive', label: 'Automotive' },
+    { value: 'Other', label: 'Other' }
+  ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -209,14 +115,7 @@ const AddSupplierForm: React.FC<AddSupplierFormProps> = ({
           onChange={handleChange}
           error={errors.businessType}
           required
-          loading={loadingCategories}
-          options={[
-            { value: '', label: 'Select a business type' },
-            ...categories.map((category) => ({
-              value: category.name,
-              label: category.name
-            }))
-          ]}
+          options={businessTypeOptions}
         />
 
         <FormField

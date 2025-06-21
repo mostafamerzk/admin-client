@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import Button from '../../../components/common/Button';
+import ImageUpload from '../../../components/common/ImageUpload';
 import type { CategoryFormData } from '../types/index';
 import { validateForm, validationRules } from '../../../utils/validation';
 
@@ -23,10 +24,10 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     description: '',
-    status: 'active',
-    visibleInSupplierApp: true,
-    visibleInCustomerApp: true
+    status: 'active'
   });
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -53,11 +54,26 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
     return Object.keys(validationErrors).length === 0;
   };
 
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    // Clear image error if exists
+    if (errors.image) {
+      setErrors(prev => ({ ...prev, image: '' }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateFormData()) {
-      onSubmit(formData);
+      // Include image file in form data if present
+      const submitData = { ...formData };
+      if (imageFile) {
+        // For now, we'll handle the image as a File object
+        // In a real implementation, you might upload it first and get a URL
+        submitData.image = URL.createObjectURL(imageFile);
+      }
+      onSubmit(submitData);
     }
   };
 
@@ -114,31 +130,17 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="visibleInSupplierApp"
-                checked={formData.visibleInSupplierApp}
-                onChange={(e) => setFormData(prev => ({ ...prev, visibleInSupplierApp: e.target.checked }))}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <span className="ml-2 text-sm text-gray-700">Visible in Supplier App</span>
-            </label>
-          </div>
-          <div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="visibleInCustomerApp"
-                checked={formData.visibleInCustomerApp}
-                onChange={(e) => setFormData(prev => ({ ...prev, visibleInCustomerApp: e.target.checked }))}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <span className="ml-2 text-sm text-gray-700">Visible in Customer App</span>
-            </label>
-          </div>
+        <div>
+          <ImageUpload
+            label="Category Image"
+            name="image"
+            value={imageFile}
+            onChange={handleImageChange}
+            error={errors.image}
+            required={false}
+            maxSize={5 * 1024 * 1024} // 5MB
+            allowedTypes={['image/jpeg', 'image/png', 'image/gif', 'image/webp']}
+          />
         </div>
       </div>
 

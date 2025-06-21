@@ -1,65 +1,81 @@
 /**
  * Category Management Page
  *
- * This page provides a comprehensive interface for managing the three-level hierarchy:
- * Categories → Subcategories → Products
+ * This page provides a comprehensive interface for managing categories
  */
 
-import React, { useState, useCallback, memo, useMemo } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { 
+import DataTable from '../components/common/DataTable';
+import type { Column } from '../components/common/DataTable';
+import {
+  PlusIcon,
+  EyeIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  TagIcon
+} from '@heroicons/react/24/outline';
+import {
   useCategories,
-  Category,
   CategoryFormData,
-  AddCategoryForm
+  AddCategoryForm,
+  Category
 } from '../features/categories';
-import CategoryHierarchyView from '../components/categories/CategoryHierarchyView';
-import AddSubcategoryForm from '../components/categories/AddSubcategoryForm';
 import { ROUTES } from '../constants/routes';
 import useNotification from '../hooks/useNotification';
-import type { SubcategoryFormData } from '../features/categories/types';
 
 const CategoryManagementPage: React.FC = () => {
   const navigate = useNavigate();
-  const { categories, isLoading, fetchCategories } = useCategories();
+  const { categories, isLoading, fetchCategories, deleteEntity } = useCategories();
   const { showNotification } = useNotification();
-  
+
   // Modal states
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
-  const [isAddSubcategoryModalOpen, setIsAddSubcategoryModalOpen] = useState(false);
-  const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState<Category | null>(null);
-  
-  // Filter states
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'supplier' | 'customer'>('all');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
-  // Memoized filtered categories
-  const filteredCategories = useMemo(() => {
-    return categories.filter(category => {
-      // Status filter
-      if (statusFilter !== 'all' && category.status !== statusFilter) {
-        return false;
-      }
-      
-      // Visibility filter
-      if (visibilityFilter === 'supplier' && !category.visibleInSupplierApp) {
-        return false;
-      }
-      if (visibilityFilter === 'customer' && !category.visibleInCustomerApp) {
-        return false;
-      }
-      
-      return true;
-    });
-  }, [categories, statusFilter, visibilityFilter]);
+
 
   // Event handlers
+  const handleCategoryClick = useCallback((category: Category) => {
+    navigate(ROUTES.getCategoryDetailsRoute(category.id));
+  }, [navigate]);
+
+  const handleViewCategory = useCallback((category: Category) => {
+    navigate(ROUTES.getCategoryDetailsRoute(category.id));
+  }, [navigate]);
+
+  const handleDeleteCategory = useCallback((category: Category) => {
+    setSelectedCategory(category);
+    setIsDeleteModalOpen(true);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedCategory) return;
+
+    try {
+      await deleteEntity(selectedCategory.id);
+      setIsDeleteModalOpen(false);
+      setSelectedCategory(null);
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'Category deleted successfully'
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to delete category'
+      });
+    }
+  }, [selectedCategory, deleteEntity, showNotification]);
+
   const handleAddCategory = useCallback(async (categoryData: CategoryFormData) => {
     try {
       // TODO: Implement actual API call
@@ -80,184 +96,120 @@ const CategoryManagementPage: React.FC = () => {
     }
   }, [fetchCategories, showNotification]);
 
-  const handleAddSubcategory = useCallback(async (subcategoryData: SubcategoryFormData) => {
-    try {
-      // TODO: Implement actual API call
-      console.log('Adding subcategory:', subcategoryData);
-      setIsAddSubcategoryModalOpen(false);
-      setSelectedCategoryForSubcategory(null);
-      await fetchCategories();
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Subcategory added successfully'
-      });
-    } catch (error) {
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to add subcategory'
-      });
+
+
+
+
+  // Define DataTable columns
+  const columns: Column<Category>[] = [
+    {
+      key: 'name',
+      label: 'Category Name',
+      sortable: true,
+      render: (_value: string, category: Category) => (
+        <div className="flex items-center">
+          {category.image ? (
+            <img
+              src={category.image}
+              alt={category.name}
+              className="h-10 w-10 rounded-lg object-cover mr-3"
+            />
+          ) : (
+            <div className="h-10 w-10 bg-gray-200 rounded-lg flex items-center justify-center mr-3">
+              <TagIcon className="h-5 w-5 text-gray-400" />
+            </div>
+          )}
+          <div>
+            <div className="font-medium text-gray-900">{category.name}</div>
+            <div className="text-xs text-gray-500">ID: {category.id}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'productCount',
+      label: 'Products',
+      sortable: true,
+      render: (value: number) => (
+        <span className="font-medium text-gray-900">{value}</span>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (value: string) => (
+        <div className="flex items-center">
+          {value === 'active' ? (
+            <CheckCircleIcon className="w-4 h-4 text-green-500 mr-1" />
+          ) : (
+            <XCircleIcon className="w-4 h-4 text-red-500 mr-1" />
+          )}
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {value.charAt(0).toUpperCase() + value.slice(1)}
+          </span>
+        </div>
+      )
+    },
+
+    {
+      key: 'actions',
+      label: 'Actions',
+      sortable: false,
+      render: (_value: any, category: Category) => (
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => handleViewCategory(category)}
+            icon={<EyeIcon className="w-4 h-4" />}
+            title="View category details"
+          >
+            View
+          </Button>
+          <Button
+            variant="danger"
+            size="xs"
+            onClick={() => handleDeleteCategory(category)}
+            icon={<TrashIcon className="w-4 h-4" />}
+            title="Delete category"
+          >
+            Delete
+          </Button>
+        </div>
+      )
     }
-  }, [fetchCategories, showNotification]);
-
-  const handleDeleteCategory = useCallback(async (categoryId: string) => {
-    try {
-      // TODO: Implement actual API call
-      console.log('Deleting category:', categoryId);
-      await fetchCategories();
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Category deleted successfully'
-      });
-    } catch (error) {
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to delete category'
-      });
-    }
-  }, [fetchCategories, showNotification]);
-
-  const handleDeleteSubcategory = useCallback(async (subcategoryId: string) => {
-    try {
-      // TODO: Implement actual API call
-      console.log('Deleting subcategory:', subcategoryId);
-      await fetchCategories();
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Subcategory deleted successfully'
-      });
-    } catch (error) {
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to delete subcategory'
-      });
-    }
-  }, [fetchCategories, showNotification]);
-
-  const handleToggleCategoryVisibility = useCallback(async (categoryId: string, app: 'supplier' | 'customer') => {
-    try {
-      // TODO: Implement actual API call
-      console.log('Toggling category visibility:', categoryId, app);
-      await fetchCategories();
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Category visibility updated'
-      });
-    } catch (error) {
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to update category visibility'
-      });
-    }
-  }, [fetchCategories, showNotification]);
-
-  const handleToggleSubcategoryVisibility = useCallback(async (subcategoryId: string, app: 'supplier' | 'customer') => {
-    try {
-      // TODO: Implement actual API call
-      console.log('Toggling subcategory visibility:', subcategoryId, app);
-      await fetchCategories();
-      showNotification({
-        type: 'success',
-        title: 'Success',
-        message: 'Subcategory visibility updated'
-      });
-    } catch (error) {
-      showNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to update subcategory visibility'
-      });
-    }
-  }, [fetchCategories, showNotification]);
-
-  const handleProductClick = useCallback((productId: string) => {
-    navigate(ROUTES.getProductDetailsRoute(productId));
-  }, [navigate]);
-
-  const handleRequestAddSubcategory = useCallback((category: Category) => {
-    setSelectedCategoryForSubcategory(category);
-    setIsAddSubcategoryModalOpen(true);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+  ];
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Category Management"
-        description="Manage categories, subcategories, and their visibility in supplier and customer apps"
+        description="Manage product categories and their details"
         actions={
-          <div className="flex space-x-3">
-            <Button
-              variant="outline"
-              icon={<FunnelIcon className="h-5 w-5" />}
-              onClick={() => {/* TODO: Implement filter modal */}}
-            >
-              Filters
-            </Button>
-            <Button
-              icon={<PlusIcon className="h-5 w-5" />}
-              onClick={() => setIsAddCategoryModalOpen(true)}
-            >
-              Add Category
-            </Button>
-          </div>
+          <Button
+            icon={<PlusIcon className="h-5 w-5" />}
+            onClick={() => setIsAddCategoryModalOpen(true)}
+          >
+            Add Category
+          </Button>
         }
       />
 
-      {/* Filter Controls */}
       <Card>
-        <div className="flex flex-wrap gap-4 p-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-              className="rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-            <select
-              value={visibilityFilter}
-              onChange={(e) => setVisibilityFilter(e.target.value as 'all' | 'supplier' | 'customer')}
-              className="rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-            >
-              <option value="all">All Apps</option>
-              <option value="supplier">Supplier App Only</option>
-              <option value="customer">Customer App Only</option>
-            </select>
-          </div>
-        </div>
+        <DataTable<Category>
+          columns={columns}
+          data={categories}
+          onRowClick={handleCategoryClick}
+          loading={isLoading}
+          pagination={true}
+          pageSize={10}
+          emptyMessage="No categories found"
+          selectable={false}
+        />
       </Card>
-
-      {/* Category Hierarchy */}
-      <CategoryHierarchyView
-        categories={filteredCategories}
-        onDeleteCategory={handleDeleteCategory}
-        onDeleteSubcategory={handleDeleteSubcategory}
-        onToggleCategoryVisibility={handleToggleCategoryVisibility}
-        onToggleSubcategoryVisibility={handleToggleSubcategoryVisibility}
-        onProductClick={handleProductClick}
-        onAddSubcategory={handleRequestAddSubcategory}
-      />
 
       {/* Add Category Modal */}
       <Modal
@@ -271,25 +223,33 @@ const CategoryManagementPage: React.FC = () => {
         />
       </Modal>
 
-      {/* Add Subcategory Modal */}
+      {/* Delete Confirmation Modal */}
       <Modal
-        isOpen={isAddSubcategoryModalOpen}
-        onClose={() => {
-          setIsAddSubcategoryModalOpen(false);
-          setSelectedCategoryForSubcategory(null);
-        }}
-        title={`Add Subcategory to ${selectedCategoryForSubcategory?.name || ''}`}
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Category"
+        size="sm"
       >
-        {selectedCategoryForSubcategory && (
-          <AddSubcategoryForm
-            categoryId={selectedCategoryForSubcategory.id}
-            onSubmit={handleAddSubcategory}
-            onCancel={() => {
-              setIsAddSubcategoryModalOpen(false);
-              setSelectedCategoryForSubcategory(null);
-            }}
-          />
-        )}
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Are you sure you want to delete the category "{selectedCategory?.name}"?
+            This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

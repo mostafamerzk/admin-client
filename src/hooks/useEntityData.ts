@@ -156,7 +156,7 @@ export const useEntityData = <T, IdType = string>(
     }
   }, []);
 
-  // Initial fetch effect - runs only once
+  // Initial fetch effect - use refs to avoid dependency issues
   useEffect(() => {
     if (options.initialFetch !== false && !hasInitialFetched.current) {
       console.log(`[useEntityData] Starting initial fetch for ${options.entityName}`);
@@ -167,7 +167,7 @@ export const useEntityData = <T, IdType = string>(
         setError(null);
         try {
           console.log(`[useEntityData] Calling API for ${options.entityName}`);
-          const data = await apiService.getAll();
+          const data = await apiServiceRef.current.getAll();
           console.log(`[useEntityData] Received data for ${options.entityName}:`, data);
           setEntities(data);
         } catch (err) {
@@ -177,21 +177,17 @@ export const useEntityData = <T, IdType = string>(
           showNotificationRef.current({
             type: 'error',
             title: 'Error',
-            message: `Failed to fetch ${options.entityName}`
+            message: `Failed to fetch ${entityNameRef.current}`
           });
         } finally {
-          console.log(`[useEntityData] Finished fetch for ${options.entityName}`);
+          console.log(`[useEntityData] Finished fetch for ${entityNameRef.current}`);
           setIsLoading(false);
         }
       };
 
       initialFetch();
     }
-  }, [
-    apiService,
-    options.entityName,
-    options.initialFetch
-  ]); // Empty dependency array - runs only once on mount
+  }, [options.initialFetch]); // Only depend on initialFetch option
 
   return {
     entities,
