@@ -11,7 +11,6 @@ export interface UserProfile {
   phone: string;
   role: string;
   avatar?: string;
-  joinDate: string;
   twoFactorEnabled: boolean;
   notificationsEnabled: {
     email: boolean;

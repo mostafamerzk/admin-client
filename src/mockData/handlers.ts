@@ -956,7 +956,7 @@ export const handlers = {
         if (filters.search) {
           const searchLower = filters.search.toLowerCase();
           orders = orders.filter(order =>
-            order.id.toLowerCase().includes(searchLower) ||
+            order.id.toString().toLowerCase().includes(searchLower) ||
             order.customerName.toLowerCase().includes(searchLower) ||
             order.supplierName.toLowerCase().includes(searchLower)
           );

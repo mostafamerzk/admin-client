@@ -231,6 +231,41 @@ export const validationRules = {
       return value.length <= maxFiles;
     },
     message: message || `Maximum ${maxFiles} images allowed`
+  }),
+
+  // Category-specific validation rules to match backend Joi validation
+  categoryName: (message?: string): ValidationRule => ({
+    validator: (value: string) => {
+      if (!value || typeof value !== 'string') return false;
+      const trimmed = value.trim();
+      return trimmed.length >= 1 && trimmed.length <= 255;
+    },
+    message: message || 'Category name must be between 1 and 255 characters'
+  }),
+
+  categoryDescription: (message?: string): ValidationRule => ({
+    validator: (value: string) => {
+      if (!value || typeof value !== 'string') return false;
+      return value.trim().length <= 1000;
+    },
+    message: message || 'Description must not exceed 1000 characters'
+  }),
+
+  categoryStatus: (message?: string): ValidationRule => ({
+    validator: (value: string) => {
+      return value === 'active' || value === 'inactive';
+    },
+    message: message || 'Status must be either active or inactive'
+  }),
+
+  optionalImageUrl: (message?: string): ValidationRule => ({
+    validator: (value: string | null | undefined) => {
+      // Optional field - null/undefined is valid
+      if (!value) return true;
+      // If provided, must be a valid URL
+      return isValidUrl(value);
+    },
+    message: message || 'Image URL must be a valid URL'
   })
 };
 

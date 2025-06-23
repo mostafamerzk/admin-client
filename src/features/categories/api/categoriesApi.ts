@@ -9,7 +9,7 @@ import { handleApiError } from '../../../utils/errorHandling';
 import { responseValidators } from '../../../utils/apiHelpers';
 import { requestDeduplicator } from '../../../utils/requestDeduplication';
 import { ENDPOINTS } from '../../../constants/endpoints';
-import type { Category, CategoryFormData } from '../types';
+import type { Category, CategoryFormData, CategoryImageUploadData } from '../types';
 
 export const categoriesApi = {
   /**
@@ -24,8 +24,6 @@ export const categoriesApi = {
 
       const response = await apiClient.get<any>('/categories', { params });
 
-      // Handle the backend response structure: { success, message, data: [...], pagination }
-      // The API client wraps this in: { data: backendResponse, error, status, metadata }
       if (response.data && typeof response.data === 'object' && 'data' in response.data) {
         // Extract the actual categories array from the nested structure
         const categoriesArray = response.data.data;
@@ -34,8 +32,7 @@ export const categoriesApi = {
         }
       }
 
-      // Fallback to original validation for backward compatibility
-      return responseValidators.getList(response, 'categories');
+        return responseValidators.getList(response, 'categories');
     } catch (error) {
       throw handleApiError(error);
     }
@@ -70,7 +67,22 @@ export const categoriesApi = {
    */
   createCategory: async (categoryData: CategoryFormData): Promise<Category> => {
     try {
-      const response = await apiClient.post<any>('/categories', categoryData);
+      // Use FormData to handle file upload with multer middleware
+      const formData = new FormData();
+      formData.append('name', categoryData.name.trim());
+      formData.append('description', categoryData.description.trim());
+      formData.append('status', categoryData.status);
+
+      // Include image file if provided
+      if (categoryData.image) {
+        formData.append('image', categoryData.image);
+      }
+
+      const response = await apiClient.post<any>('/categories', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       // Handle the backend response structure: { success, message, data: {...} }
       if (response.data && typeof response.data === 'object' && 'data' in response.data) {
@@ -117,27 +129,7 @@ export const categoriesApi = {
 
 
 
-  /**
-   * Get products for a category
-   */
-  getCategoryProducts: async (categoryId: string): Promise<any[]> => {
-    try {
-      const response = await apiClient.get<any>(ENDPOINTS.CATEGORIES.PRODUCTS(categoryId));
 
-      // Handle the backend response structure: { success, message, data: [...], pagination }
-      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
-        const productsArray = response.data.data;
-        if (Array.isArray(productsArray)) {
-          return productsArray;
-        }
-      }
-
-      // Fallback to original validation for backward compatibility
-      return responseValidators.getList(response, 'products', true);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
 
   /**
    * Update category status (ban/unban)
@@ -146,13 +138,59 @@ export const categoriesApi = {
     try {
       const response = await apiClient.put<any>(ENDPOINTS.CATEGORIES.STATUS(id), { status });
 
-      // Handle the backend response structure: { success, message, data: {...} }
+      // Handle the backend response structure: { success, message, data: {category: {...}, updatedProductsCount: number} }
       if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        // For status update, the category is nested under data.category
+        if (response.data.data && typeof response.data.data === 'object' && 'category' in response.data.data) {
+          return response.data.data.category;
+        }
+        // Fallback to direct data access for backward compatibility
         return response.data.data;
       }
 
       // Fallback to original validation for backward compatibility
       return responseValidators.update(response, 'category', id);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  /**
+   * Upload category image
+   * @param categoryId - The category ID
+   * @param file - The image file to upload
+   * @returns Promise resolving to upload response
+   */
+  uploadCategoryImage: async (categoryId: string, file: File): Promise<CategoryImageUploadData> => {
+    try {
+      if (!categoryId) {
+        throw new Error('Category ID is required');
+      }
+
+      if (!file) {
+        throw new Error('Image file is required');
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await apiClient.post(ENDPOINTS.CATEGORIES.UPLOAD_IMAGE(categoryId), formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Handle the backend response structure: { success, message, data: {...} }
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return response.data.data as CategoryImageUploadData;
+      }
+
+      // Fallback to original validation for backward compatibility
+      if (!response.data) {
+        throw new Error('No response data received');
+      }
+
+      return response.data as CategoryImageUploadData;
     } catch (error) {
       throw handleApiError(error);
     }

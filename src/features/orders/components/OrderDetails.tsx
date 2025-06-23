@@ -6,16 +6,18 @@
 
 import React from 'react';
 import type{ Order, OrderItem } from '../types/index';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
-import { 
-  CheckCircleIcon, 
-  ClockIcon, 
+import { formatCurrency } from '../../../utils/formatters';
+import { formatOrderDate } from '../utils/orderTransformers';
+import {
+  CheckCircleIcon,
+  ClockIcon,
   XCircleIcon,
   TruckIcon,
   CalendarIcon,
   UserIcon,
   BuildingOffice2Icon,
-
+  CreditCardIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 interface OrderDetailsProps {
@@ -59,7 +61,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium text-gray-900">Order #{order.id}</h3>
+          <h3 className="text-lg font-medium text-gray-900">Order #{order.orderNumber}</h3>
+          <p className="text-sm text-gray-500">ID: {order.id}</p>
           <div className="mt-1">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(order.status)}`}>
               {getStatusIcon(order.status)}
@@ -97,18 +100,60 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
             <CalendarIcon className="w-5 h-5 text-gray-400 mt-0.5 mr-2" />
             <div>
               <div className="text-sm font-medium text-gray-500">Order Date</div>
-              <div className="text-sm text-gray-900">{formatDate(order.orderDate)}</div>
+              <div className="text-sm text-gray-900">{formatOrderDate(order.orderDate)}</div>
             </div>
           </div>
-          
+
           <div className="flex items-start">
-            <TruckIcon className="w-5 h-5 text-gray-400 mt-0.5 mr-2" />
+            <CreditCardIcon className="w-5 h-5 text-gray-400 mt-0.5 mr-2" />
             <div>
-              <div className="text-sm font-medium text-gray-500">Delivery Date</div>
-              <div className="text-sm text-gray-900">{formatDate(order.deliveryDate)}</div>
+              <div className="text-sm font-medium text-gray-500">Payment Method</div>
+              <div className="text-sm text-gray-900 capitalize">{order.paymentMethod?.replace('_', ' ') || 'N/A'}</div>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Additional Order Information */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="text-sm font-medium text-gray-500 mb-3">Shipping Address</h4>
+          <div className="text-sm text-gray-900">
+            {order.shippingAddress?.address || 'No shipping address provided'}
+          </div>
+        </div>
+
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="text-sm font-medium text-gray-500 mb-3">Billing Address</h4>
+          <div className="text-sm text-gray-900">
+            {order.billingAddress?.address || 'Same as shipping address'}
+          </div>
+        </div>
+      </div>
+
+      {/* Order Notes */}
+      {order.notes && (
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="flex items-start">
+            <DocumentTextIcon className="w-5 h-5 text-gray-400 mt-0.5 mr-2" />
+            <div>
+              <div className="text-sm font-medium text-gray-500 mb-2">Order Notes</div>
+              <div className="text-sm text-gray-900">{order.notes}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Timestamps */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-500">
+        <div>
+          <span className="font-medium">Created:</span> {formatOrderDate(order.createdAt)}
+        </div>
+        {order.updatedAt && (
+          <div>
+            <span className="font-medium">Last Updated:</span> {formatOrderDate(order.updatedAt)}
+          </div>
+        )}
       </div>
 
       {order.items && order.items.length > 0 && (
@@ -120,6 +165,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Item
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    SKU
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantity
@@ -135,8 +183,14 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {order.items.map((item: OrderItem) => (
                   <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {item.name}
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <div>{item.name}</div>
+                      {item.description && (
+                        <div className="text-xs text-gray-500 mt-1">{item.description}</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.sku}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {item.quantity}
@@ -152,7 +206,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={3} className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                  <td colSpan={4} className="px-6 py-4 text-right text-sm font-medium text-gray-900">
                     Total
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">

@@ -18,6 +18,7 @@ export { default as ordersApi } from './api/ordersApi';
 // Utils
 export { default as orderMappers } from './utils/orderMappers';
 export { getMockOrders } from './utils/orderMappers';
+export { default as orderTransformers } from './utils/orderTransformers';
 
 // Types
 export * from './types/index';

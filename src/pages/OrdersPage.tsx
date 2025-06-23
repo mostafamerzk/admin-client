@@ -36,7 +36,7 @@ const OrdersPage: React.FC = () => {
 
   // Memoize event handlers to prevent unnecessary re-renders
   const handleOrderClick = useCallback((order: Order) => {
-    navigate(ROUTES.getOrderDetailsRoute(order.id));
+    navigate(ROUTES.getOrderDetailsRoute(String(order.id)));
   }, [navigate]);
 
   const handleExportOrders = useCallback(() => {

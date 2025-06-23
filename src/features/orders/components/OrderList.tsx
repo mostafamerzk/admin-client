@@ -10,6 +10,7 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import type { Column } from '../../../components/common/DataTable';
 import type { Order } from '../types';
 import { formatCurrency } from '../../../utils/formatters';
+import { formatOrderDate } from '../utils/orderTransformers';
 
 interface OrderListProps {
   orders: Order[];
@@ -27,8 +28,8 @@ const OrderList: React.FC<OrderListProps> = ({
   // Memoize columns to prevent unnecessary re-renders
   const columns: Column<Order>[] = useMemo(() => [
     {
-      key: 'id',
-      label: 'Order ID',
+      key: 'orderNumber',
+      label: 'Order Number',
       sortable: true,
       render: (value: string) => (
         <span className="font-medium text-black">{value}</span>
@@ -50,8 +51,20 @@ const OrderList: React.FC<OrderListProps> = ({
         <StatusBadge status={value || 'pending'} type="order" />
       )
     },
-    { key: 'orderDate', label: 'Order Date', sortable: true },
-    { key: 'deliveryDate', label: 'Delivery Date', sortable: true },
+    {
+      key: 'orderDate',
+      label: 'Order Date',
+      sortable: true,
+      render: (value: string) => formatOrderDate(value)
+    },
+    {
+      key: 'paymentMethod',
+      label: 'Payment Method',
+      sortable: true,
+      render: (value: string) => (
+        <span className="capitalize">{value?.replace('_', ' ') || 'N/A'}</span>
+      )
+    },
   ], []);
 
   return (

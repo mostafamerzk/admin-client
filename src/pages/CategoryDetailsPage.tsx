@@ -4,7 +4,7 @@
  * This page displays comprehensive category information including details and products.
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/common/Button';
@@ -18,14 +18,14 @@ import {
   TrashIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
-  PlusIcon,
   EyeIcon,
   TagIcon,
   DocumentTextIcon,
   CubeIcon,
-  CalendarIcon
+  CalendarIcon,
+  NoSymbolIcon
 } from '@heroicons/react/24/outline';
-import { useCategories, Category } from '../features/categories';
+import { useCategories, Category, AddCategoryForm, categoriesApi, CategoryFormData } from '../features/categories';
 import { useProducts, Product } from '../features/products';
 import { ROUTES } from '../constants/routes';
 import useNotification from '../hooks/useNotification';
@@ -34,45 +34,34 @@ import { formatDate, formatCurrency } from '../utils/formatters';
 const CategoryDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getCategoryById, deleteEntity } = useCategories({ initialFetch: false });
-  const { products, isLoading: productsLoading, fetchEntities: fetchProducts } = useProducts({ initialFetch: false });
+  const { getCategoryById, deleteCategory, updateCategory, updateCategoryStatus } = useCategories();
+  const { getProductsByCategory, updateProductStatus } = useProducts({ initialFetch: false });
   const { showNotification } = useNotification();
 
   const [category, setCategory] = useState<Category | null>(null);
+  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Use refs to store stable references to functions and avoid infinite loops
   const getCategoryByIdRef = useRef(getCategoryById);
-  const fetchProductsRef = useRef(fetchProducts);
+  const getProductsByCategoryRef = useRef(getProductsByCategory);
   const showNotificationRef = useRef(showNotification);
   const navigateRef = useRef(navigate);
 
   // Update refs when functions change
   useEffect(() => {
     getCategoryByIdRef.current = getCategoryById;
-    fetchProductsRef.current = fetchProducts;
+    getProductsByCategoryRef.current = getProductsByCategory;
     showNotificationRef.current = showNotification;
     navigateRef.current = navigate;
   });
 
-  // Filter products by category
-  const categoryProducts = useMemo(() => {
-    if (!products || !category) return [];
-    const categoryIdNumber = parseInt(category.id, 10);
-    if (isNaN(categoryIdNumber)) return [];
-    return products.filter(product => product.categoryId === categoryIdNumber);
-  }, [products, category]);
 
-  // Filter products by search term
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm) return categoryProducts;
-    return categoryProducts.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [categoryProducts, searchTerm]);
 
   // Load category data
   useEffect(() => {
@@ -93,9 +82,14 @@ const CategoryDetailsPage: React.FC = () => {
         const categoryData = await getCategoryByIdRef.current(id);
         setCategory(categoryData);
 
-        // Fetch products for this category
-        console.log('[CategoryDetailsPage] Fetching products');
-        await fetchProductsRef.current();
+        // Fetch products for this category using products API
+        console.log('[CategoryDetailsPage] Fetching category products');
+        setProductsLoading(true);
+        const categoryIdNumber = parseInt(id, 10);
+        if (!isNaN(categoryIdNumber)) {
+          const products = await getProductsByCategoryRef.current(categoryIdNumber);
+          setCategoryProducts(products);
+        }
       } catch (error) {
         console.error('Error fetching category:', error);
         showNotificationRef.current({
@@ -106,6 +100,7 @@ const CategoryDetailsPage: React.FC = () => {
         navigateRef.current(ROUTES.CATEGORIES);
       } finally {
         setIsLoading(false);
+        setProductsLoading(false);
       }
     };
 
@@ -120,7 +115,7 @@ const CategoryDetailsPage: React.FC = () => {
     if (!category) return;
 
     try {
-      await deleteEntity(category.id);
+      await deleteCategory(category.id);
       setIsDeleteModalOpen(false);
       showNotification({
         type: 'success',
@@ -135,34 +130,83 @@ const CategoryDetailsPage: React.FC = () => {
         message: 'Failed to delete category'
       });
     }
-  }, [category, deleteEntity, showNotification, navigate]);
+  }, [category, deleteCategory, showNotification, navigate]);
 
   const handleEditCategory = useCallback(() => {
-    // TODO: Implement edit functionality
-    showNotification({
-      type: 'info',
-      title: 'Coming Soon',
-      message: 'Edit category functionality will be implemented soon'
-    });
-  }, [showNotification]);
+    setIsEditModalOpen(true);
+  }, []);
 
-  const handleToggleStatus = useCallback(() => {
-    // TODO: Implement ban/unban functionality
-    showNotification({
-      type: 'info',
-      title: 'Coming Soon',
-      message: 'Ban/Unban category functionality will be implemented soon'
-    });
-  }, [showNotification]);
+  const handleUpdateCategory = useCallback(async (categoryData: CategoryFormData, imageFile?: File | null) => {
+    if (!category) return;
 
-  const handleCreateProduct = useCallback(() => {
-    // TODO: Navigate to create product page with category pre-selected
-    showNotification({
-      type: 'info',
-      title: 'Coming Soon',
-      message: 'Create product functionality will be implemented soon'
-    });
-  }, [showNotification]);
+    setIsSubmitting(true);
+    try {
+      // Step 1: Update category data (without image)
+      const updatedCategory = await updateCategory(category.id, categoryData);
+
+      // Step 2: Upload image separately if provided
+      if (imageFile) {
+        try {
+          const imageUploadResult = await categoriesApi.uploadCategoryImage(category.id, imageFile);
+          // Update the category with the new image URL
+          const categoryWithImage = { ...updatedCategory, image: imageUploadResult.imageUrl };
+          setCategory(categoryWithImage);
+        } catch (imageError) {
+          console.error('Error uploading category image:', imageError);
+          // Still show success for category update, but warn about image
+          showNotification({
+            type: 'warning',
+            title: 'Partial Success',
+            message: 'Category updated successfully, but image upload failed'
+          });
+          setCategory(updatedCategory);
+          setIsEditModalOpen(false);
+          return;
+        }
+      } else {
+        setCategory(updatedCategory);
+      }
+
+      setIsEditModalOpen(false);
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'Category updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating category:', error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update category'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [category, updateCategory, showNotification]);
+
+  const handleToggleStatus = useCallback(async () => {
+    if (!category || !category.status) return;
+
+    const newStatus = category.status === 'active' ? 'inactive' : 'active';
+
+    try {
+      const updatedCategory = await updateCategoryStatus(category.id, newStatus);
+      setCategory(updatedCategory);
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: `Category ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+      });
+    } catch (error) {
+      console.error('Error updating category status:', error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update category status'
+      });
+    }
+  }, [category, updateCategoryStatus, showNotification]);
 
   const handleViewProduct = useCallback((product: Product) => {
     navigate(ROUTES.getProductDetailsRoute(product.id), {
@@ -170,18 +214,38 @@ const CategoryDetailsPage: React.FC = () => {
     });
   }, [navigate]);
 
-  const handleEditProduct = useCallback((product: Product) => {
-    navigate(ROUTES.getEditProductRoute(product.id));
-  }, [navigate]);
+  const handleToggleProductStatus = useCallback(async (product: Product) => {
+    if (!product.status || !id) return;
 
-  const handleDeleteProduct = useCallback((_product: Product) => {
-    // TODO: Implement product deletion
-    showNotification({
-      type: 'info',
-      title: 'Coming Soon',
-      message: 'Delete product functionality will be implemented soon'
-    });
-  }, [showNotification]);
+    const newStatus = product.status === 'active' ? 'inactive' : 'active';
+
+    try {
+      await updateProductStatus(product.id, newStatus);
+
+      // Refresh category products to reflect the status change
+      const categoryIdNumber = parseInt(id, 10);
+      if (!isNaN(categoryIdNumber)) {
+        setProductsLoading(true);
+        const updatedProducts = await getProductsByCategory(categoryIdNumber);
+        setCategoryProducts(updatedProducts);
+        setProductsLoading(false);
+      }
+
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: `Product ${newStatus === 'active' ? 'activated' : 'banned'} successfully`
+      });
+    } catch (error) {
+      console.error('Error updating product status:', error);
+      setProductsLoading(false);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update product status'
+      });
+    }
+  }, [updateProductStatus, getProductsByCategory, showNotification, id]);
 
   // Define products DataTable columns
   const productColumns: Column<Product>[] = [
@@ -255,22 +319,13 @@ const CategoryDetailsPage: React.FC = () => {
             View
           </Button>
           <Button
-            variant="outline"
+            variant={product.status === 'active' ? 'outline' : 'success'}
             size="xs"
-            onClick={() => handleEditProduct(product)}
-            icon={<PencilIcon className="w-4 h-4" />}
-            title="Edit product"
+            onClick={() => handleToggleProductStatus(product)}
+            icon={product.status === 'active' ? <NoSymbolIcon className="w-4 h-4" /> : <NoSymbolIcon className="w-4 h-4" />}
+            title={product.status === 'active' ? 'Ban product' : 'Unban product'}
           >
-            Edit
-          </Button>
-          <Button
-            variant="danger"
-            size="xs"
-            onClick={() => handleDeleteProduct(product)}
-            icon={<TrashIcon className="w-4 h-4" />}
-            title="Delete product"
-          >
-            Delete
+            {product.status === 'active' ? 'Ban' : 'Unban'}
           </Button>
         </div>
       )
@@ -328,10 +383,11 @@ const CategoryDetailsPage: React.FC = () => {
             </Button>
             <Button
               onClick={handleToggleStatus}
-              icon={category.status === 'active' ? <ShieldExclamationIcon className="w-4 h-4" /> : <ShieldCheckIcon className="w-4 h-4" />}
-              variant={category.status === 'active' ? 'outline' : 'success'}
+              icon={(category.status === 'active') ? <ShieldExclamationIcon className="w-4 h-4" /> : <ShieldCheckIcon className="w-4 h-4" />}
+              variant={(category.status === 'active') ? 'outline' : 'success'}
+              disabled={!category.status}
             >
-              {category.status === 'active' ? 'Ban Category' : 'Unban Category'}
+              {(category.status === 'active') ? 'Ban Category' : 'Unban Category'}
             </Button>
           </div>
         }
@@ -362,9 +418,10 @@ const CategoryDetailsPage: React.FC = () => {
               <p className="text-sm text-gray-500 mt-1">ID: {category.id}</p>
               <div className="mt-2">
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  category.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  category.status === 'active' ? 'bg-green-100 text-green-800' :
+                  category.status === 'inactive' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {category.status.charAt(0).toUpperCase() + category.status.slice(1)}
+                  {category.status ? category.status.charAt(0).toUpperCase() + category.status.slice(1) : 'Unknown'}
                 </span>
               </div>
             </div>
@@ -415,27 +472,9 @@ const CategoryDetailsPage: React.FC = () => {
         title="Products"
         description={`${categoryProducts.length} products in this category`}
       >
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="block w-full pl-3 pr-3 py-2 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <Button
-            icon={<PlusIcon className="w-4 h-4" />}
-            onClick={handleCreateProduct}
-          >
-            Create New Product
-          </Button>
-        </div>
-
         <DataTable<Product>
           columns={productColumns}
-          data={filteredProducts}
+          data={categoryProducts}
           onRowClick={handleViewProduct}
           loading={productsLoading}
           pagination={true}
@@ -446,6 +485,24 @@ const CategoryDetailsPage: React.FC = () => {
         />
       </DetailSection>
 
+      {/* Edit Category Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Category"
+      >
+        <AddCategoryForm
+          onSubmit={handleUpdateCategory}
+          onCancel={() => setIsEditModalOpen(false)}
+          isLoading={isSubmitting}
+          initialData={{
+            name: category.name,
+            description: category.description || '',
+            status: category.status || 'active'
+          }}
+        />
+      </Modal>
+
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
@@ -455,7 +512,7 @@ const CategoryDetailsPage: React.FC = () => {
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Are you sure you want to delete the category "{category.name}"? 
+            Are you sure you want to delete the category "{category.name}"?
             This action cannot be undone and will affect all products in this category.
           </p>
           <div className="flex justify-end space-x-3">

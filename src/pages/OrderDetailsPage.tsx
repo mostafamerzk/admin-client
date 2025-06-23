@@ -205,7 +205,6 @@ const OrderDetailsPage: React.FC = () => {
           <DetailList>
             <DetailItem label="Customer Name" value={order.customerName} />
             <DetailItem label="Order Date" value={formatDate(order.orderDate)} />
-            <DetailItem label="Delivery Date" value={formatDate(order.deliveryDate)} />
           </DetailList>
         </DetailSection>
 
@@ -320,9 +319,7 @@ const OrderDetailsPage: React.FC = () => {
             description="Where this order will be delivered"
           >
             <div className="px-4 py-5 text-sm text-gray-900 space-y-1">
-              <div>{order.shippingAddress.street}</div>
-              <div>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}</div>
-              <div>{order.shippingAddress.country}</div>
+              <div>{order.shippingAddress.address}</div>
             </div>
           </DetailSection>
         )}
@@ -334,9 +331,7 @@ const OrderDetailsPage: React.FC = () => {
             description="Billing information for this order"
           >
             <div className="px-4 py-5 text-sm text-gray-900 space-y-1">
-              <div>{order.billingAddress.street}</div>
-              <div>{order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.postalCode}</div>
-              <div>{order.billingAddress.country}</div>
+              <div>{order.billingAddress.address}</div>
             </div>
           </DetailSection>
         )}

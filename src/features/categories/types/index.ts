@@ -35,7 +35,24 @@ export interface CategoryFormData {
   name: string;
   description: string;
   status: 'active' | 'inactive';
-  image?: string;
+  image?: File | null; // Image file for upload via multer middleware
+}
+
+// Image upload data (the actual data part)
+export interface CategoryImageUploadData {
+  imageUrl: string;
+  uploadDetails: {
+    url: string;
+    publicId: string;
+    originalName: string;
+  };
+}
+
+// Image upload response (the full API response)
+export interface CategoryImageUploadResponse {
+  success: boolean;
+  message: string;
+  data: CategoryImageUploadData;
 }
 
 // Management action types

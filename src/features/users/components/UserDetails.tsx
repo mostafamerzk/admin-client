@@ -24,7 +24,7 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user, userOrders = [] }) => {
   const navigate = useNavigate();
 
   const handleViewOrder = (order: Order) => {
-    navigate(ROUTES.getOrderDetailsRoute(order.id));
+    navigate(ROUTES.getOrderDetailsRoute(order.id.toString()));
   };
 
   return (

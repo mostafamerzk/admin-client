@@ -31,13 +31,14 @@ import useNotification from '../hooks/useNotification';
 
 const CategoryManagementPage: React.FC = () => {
   const navigate = useNavigate();
-  const { categories, isLoading, fetchCategories, deleteEntity } = useCategories();
+  const { categories, isLoading, deleteCategory, createCategory } = useCategories();
   const { showNotification } = useNotification();
 
   // Modal states
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
@@ -59,7 +60,7 @@ const CategoryManagementPage: React.FC = () => {
     if (!selectedCategory) return;
 
     try {
-      await deleteEntity(selectedCategory.id);
+      await deleteCategory(selectedCategory.id);
       setIsDeleteModalOpen(false);
       setSelectedCategory(null);
       showNotification({
@@ -74,27 +75,33 @@ const CategoryManagementPage: React.FC = () => {
         message: 'Failed to delete category'
       });
     }
-  }, [selectedCategory, deleteEntity, showNotification]);
+  }, [selectedCategory, deleteCategory, showNotification]);
 
   const handleAddCategory = useCallback(async (categoryData: CategoryFormData) => {
+    setIsSubmitting(true);
     try {
-      // TODO: Implement actual API call
-      console.log('Adding category:', categoryData);
+      console.log('Creating category:', categoryData);
+
+      // Create category with all data including image in one request
+      await createCategory(categoryData);
+
       setIsAddCategoryModalOpen(false);
-      await fetchCategories();
       showNotification({
         type: 'success',
         title: 'Success',
         message: 'Category added successfully'
       });
     } catch (error) {
+      console.error('Error creating category:', error);
       showNotification({
         type: 'error',
         title: 'Error',
         message: 'Failed to add category'
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [fetchCategories, showNotification]);
+  }, [createCategory, showNotification]);
 
 
 
@@ -220,6 +227,7 @@ const CategoryManagementPage: React.FC = () => {
         <AddCategoryForm
           onSubmit={handleAddCategory}
           onCancel={() => setIsAddCategoryModalOpen(false)}
+          isLoading={isSubmitting}
         />
       </Modal>
 

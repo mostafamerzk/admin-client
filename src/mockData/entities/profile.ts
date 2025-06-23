@@ -14,7 +14,6 @@ export const mockProfile: UserProfile = {
   phone: '+1 (555) 123-4567',
   role: 'Administrator',
   avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-  joinDate: '2023-10-15',
   twoFactorEnabled: true,
   notificationsEnabled: {
     email: true,

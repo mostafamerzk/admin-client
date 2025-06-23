@@ -23,7 +23,8 @@ import {
 import {
   AddCategoryForm,
   useCategories,
-  Category
+  Category,
+  CategoryFormData
 } from '../features/categories';
 import { ROUTES } from '../constants/routes';
 import useNotification from '../hooks/useNotification';
@@ -31,12 +32,13 @@ import { formatDate } from '../utils/formatters';
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { categories, isLoading, fetchCategories, deleteEntity } = useCategories();
+  const { categories, isLoading, deleteEntity, createCategory } = useCategories();
   const { showNotification } = useNotification();
 
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Memoize event handlers to prevent unnecessary re-renders
   const handleCategoryClick = useCallback((category: Category) => {
@@ -73,24 +75,31 @@ const CategoriesPage: React.FC = () => {
     }
   }, [selectedCategory, deleteEntity, showNotification]);
 
-  const handleAddCategory = useCallback(async (_categoryData: any) => {
+  const handleAddCategory = useCallback(async (categoryData: CategoryFormData) => {
+    setIsSubmitting(true);
     try {
-      // Implementation will be handled by the form component
+      console.log('Creating category:', categoryData);
+
+      // Create category with all data including image in one request
+      await createCategory(categoryData);
+
       setIsAddCategoryModalOpen(false);
-      await fetchCategories();
       showNotification({
         type: 'success',
         title: 'Success',
         message: 'Category added successfully'
       });
     } catch (error) {
+      console.error('Error creating category:', error);
       showNotification({
         type: 'error',
         title: 'Error',
         message: 'Failed to add category'
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [fetchCategories, showNotification]);
+  }, [createCategory, showNotification]);
 
   // Define DataTable columns
   const columns: Column<Category>[] = [
@@ -219,6 +228,7 @@ const CategoriesPage: React.FC = () => {
         <AddCategoryForm
           onSubmit={handleAddCategory}
           onCancel={() => setIsAddCategoryModalOpen(false)}
+          isLoading={isSubmitting}
         />
       </Modal>
 

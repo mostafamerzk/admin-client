@@ -14,20 +14,21 @@ interface AddCategoryFormProps {
   onSubmit: (categoryData: CategoryFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  initialData?: Partial<CategoryFormData>;
 }
 
 const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
+  initialData
 }) => {
   const [formData, setFormData] = useState<CategoryFormData>({
-    name: '',
-    description: '',
-    status: 'active'
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    status: initialData?.status || 'active',
+    image: null
   });
-
-  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -44,10 +45,18 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
   const validateFormData = () => {
     const validationErrors = validateForm({
       name: formData.name,
-      description: formData.description
+      description: formData.description,
+      status: formData.status
     }, {
-      name: [validationRules.required('Category name is required')],
-      description: [validationRules.required('Description is required')]
+      name: [
+        validationRules.required('Category name is required'),
+        validationRules.categoryName('Category name must be between 1 and 255 characters')
+      ],
+      description: [
+        validationRules.required('Description is required'),
+        validationRules.categoryDescription('Description must not exceed 1000 characters')
+      ],
+      status: [validationRules.categoryStatus('Status must be either active or inactive')]
     });
 
     setErrors(validationErrors);
@@ -55,25 +64,21 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
   };
 
   const handleImageChange = (file: File | null) => {
-    setImageFile(file);
+    setFormData(prev => ({ ...prev, image: file }));
     // Clear image error if exists
     if (errors.image) {
       setErrors(prev => ({ ...prev, image: '' }));
     }
   };
 
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (validateFormData()) {
-      // Include image file in form data if present
-      const submitData = { ...formData };
-      if (imageFile) {
-        // For now, we'll handle the image as a File object
-        // In a real implementation, you might upload it first and get a URL
-        submitData.image = URL.createObjectURL(imageFile);
-      }
-      onSubmit(submitData);
+      // Pass all category data including image in one object
+      onSubmit(formData);
     }
   };
 
@@ -134,10 +139,9 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
           <ImageUpload
             label="Category Image"
             name="image"
-            value={imageFile}
+            value={formData.image || null}
             onChange={handleImageChange}
             error={errors.image}
-            required={false}
             maxSize={5 * 1024 * 1024} // 5MB
             allowedTypes={['image/jpeg', 'image/png', 'image/gif', 'image/webp']}
           />
@@ -153,11 +157,11 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({
         >
           Cancel
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           loading={isLoading}
         >
-          Add Category
+          {initialData ? 'Update Category' : 'Add Category'}
         </Button>
       </div>
     </form>

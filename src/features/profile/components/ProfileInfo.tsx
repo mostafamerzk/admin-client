@@ -80,7 +80,6 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
         <div className="flex-1">
           <h3 className="text-xl font-bold text-gray-800">{profile.name}</h3>
           <p className="text-gray-500">{profile.role}</p>
-          <p className="text-sm text-gray-500 mt-1">Member since {new Date(profile.joinDate).toLocaleDateString()}</p>
         </div>
       </div>
 

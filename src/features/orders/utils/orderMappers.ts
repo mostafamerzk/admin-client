@@ -2,6 +2,7 @@
  * Order Mappers
  *
  * Utility functions to map between different order data formats
+ * @deprecated Use orderTransformers.ts instead for new backend API integration
  */
 
 import type{ Order, OrderItem } from '../types/index';
@@ -12,7 +13,7 @@ import { orders as mockOrders, type OrderItem as MockOrderItem } from '../../../
  */
 const mapMockOrderItemToOrderItem = (mockItem: MockOrderItem): OrderItem => {
   return {
-    id: mockItem.id,
+    id: parseInt(mockItem.id, 10),
     name: mockItem.productName,
     quantity: mockItem.quantity,
     unitPrice: mockItem.unitPrice,
