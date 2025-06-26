@@ -123,7 +123,6 @@ function DynamicArrayField<T extends Record<string, any>>({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {fieldConfigs.map((config) => {
                 const fieldProps: any = {
-                  key: config.name,
                   label: config.label,
                   name: `${config.name}_${index}`,
                   type: config.type,
@@ -145,7 +144,7 @@ function DynamicArrayField<T extends Record<string, any>>({
                   fieldProps.options = config.options;
                 }
 
-                return <FormField {...fieldProps} />;
+                return <FormField key={config.name} {...fieldProps} />;
               })}
             </div>
           </div>

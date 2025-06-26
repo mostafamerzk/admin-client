@@ -69,6 +69,40 @@ export const doPasswordsMatch = (password: string, confirmPassword: string): boo
   return password === confirmPassword;
 };
 
+// Product-specific validation functions
+export const validateVariants = (variants: any[]): string[] => {
+  const errors: string[] = [];
+
+  variants.forEach((variant, index) => {
+    if (!variant.name || !variant.name.trim()) {
+      errors.push(`Variant ${index + 1}: Name is required`);
+    }
+    if (!variant.price || variant.price <= 0) {
+      errors.push(`Variant ${index + 1}: Price must be greater than 0`);
+    }
+    if (variant.stock === undefined || variant.stock < 0 || !Number.isInteger(variant.stock)) {
+      errors.push(`Variant ${index + 1}: Stock must be a non-negative integer`);
+    }
+  });
+
+  return errors;
+};
+
+export const validateAttributes = (attributes: any[]): string[] => {
+  const errors: string[] = [];
+
+  attributes.forEach((attribute, index) => {
+    if (!attribute.name || !attribute.name.trim()) {
+      errors.push(`Attribute ${index + 1}: Name is required`);
+    }
+    if (!attribute.value || !attribute.value.trim()) {
+      errors.push(`Attribute ${index + 1}: Value is required`);
+    }
+  });
+
+  return errors;
+};
+
 export const isStrongPassword = (password: string): boolean => {
   // Password must be at least 8 characters long
   if (password.length < 8) return false;
@@ -266,6 +300,33 @@ export const validationRules = {
       return isValidUrl(value);
     },
     message: message || 'Image URL must be a valid URL'
+  }),
+
+  // Variant validation rules
+  variantName: (message: string = 'Variant name is required'): ValidationRule => ({
+    validator: (value: string) => Boolean(value && value.trim().length > 0),
+    message
+  }),
+
+  variantPrice: (message: string = 'Variant price must be greater than 0'): ValidationRule => ({
+    validator: (value: number) => value > 0 && value <= 999999,
+    message
+  }),
+
+  variantStock: (message: string = 'Variant stock must be a non-negative integer'): ValidationRule => ({
+    validator: (value: number) => Number.isInteger(value) && value >= 0,
+    message
+  }),
+
+  // Attribute validation rules
+  attributeName: (message: string = 'Attribute name is required'): ValidationRule => ({
+    validator: (value: string) => Boolean(value && value.trim().length > 0),
+    message
+  }),
+
+  attributeValue: (message: string = 'Attribute value is required'): ValidationRule => ({
+    validator: (value: string) => Boolean(value && value.trim().length > 0),
+    message
   })
 };
 

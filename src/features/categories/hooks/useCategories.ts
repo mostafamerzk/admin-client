@@ -75,7 +75,7 @@ export const useCategories = () => {
     }
   }, []);
 
-  // Update a category
+  // Update a category with atomic operation support
   const updateCategory = useCallback(async (id: string, categoryData: Partial<CategoryFormData>) => {
     setIsLoading(true);
     setError(null);
@@ -84,18 +84,34 @@ export const useCategories = () => {
       setCategories(prevCategories =>
         prevCategories.map(category => category.id === id ? updatedCategory : category)
       );
+
+      // Dynamic success message based on whether image was included
+      const hasImageUpdate = categoryData.image instanceof File;
       showNotificationRef.current({
         type: 'success',
         title: 'Success',
-        message: 'Category updated successfully'
+        message: hasImageUpdate
+          ? 'Category updated successfully with new image'
+          : 'Category updated successfully'
       });
       return updatedCategory;
     } catch (err) {
       setError(err as Error);
+
+      // Enhanced error handling for better user experience
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update category';
+      let userMessage = 'Failed to update category';
+
+      if (errorMessage.includes('Failed to upload image')) {
+        userMessage = 'Category updated but image upload failed';
+      } else if (errorMessage.includes('Category name already exists')) {
+        userMessage = 'Category name already exists';
+      }
+
       showNotificationRef.current({
         type: 'error',
         title: 'Error',
-        message: 'Failed to update category'
+        message: userMessage
       });
       throw err;
     } finally {

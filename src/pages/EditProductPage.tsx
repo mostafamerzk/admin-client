@@ -14,8 +14,8 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import ProductEditForm from '../components/common/ProductEditForm';
 import useNotification from '../hooks/useNotification';
 
-import { useProducts, updateProductFromFrontend } from '../features/products';
-import { validateForm, validationRules } from '../utils/validation';
+import { useProducts } from '../features/products';
+import { validateForm, validationRules, validateVariants, validateAttributes } from '../utils/validation';
 import { ROUTES } from '../constants/routes';
 import {
   ArrowLeftIcon,
@@ -23,18 +23,18 @@ import {
   XMarkIcon,
   CubeIcon
 } from '@heroicons/react/24/outline';
-import type { 
-  Product, 
-  ProductFormDataWithImages, 
-  ProductAttribute, 
-  ProductVariant 
+import type {
+  Product,
+  FrontendProductFormData,
+  ProductAttribute,
+  ProductVariant
 } from '../features/products';
 
 const EditProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
-  const { getProductById, uploadProductImages, deleteProductImage } = useProducts({ initialFetch: false });
+  const { getProductById, updateProductUnified } = useProducts({ initialFetch: false });
 
   // Product state
   const [product, setProduct] = useState<Product | null>(null);
@@ -42,9 +42,10 @@ const EditProductPage: React.FC = () => {
 
   // Form state
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState<Partial<ProductFormDataWithImages>>({});
+  const [formData, setFormData] = useState<Partial<Omit<FrontendProductFormData, 'images'> & { images?: (File | string)[] }>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [removedImageUrls, setRemovedImageUrls] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<File[]>([]);
 
   // Use refs to store stable references to functions
   const showErrorRef = useRef(showError);
@@ -65,9 +66,9 @@ const EditProductPage: React.FC = () => {
         name: product.name,
         sku: product.sku,
         category: product.category,
-        price: product.price,
-        stock: product.stock,
-        minimumStock: product.minimumStock,
+        price: Number(product.price) || 0,
+        stock: Number(product.stock) || 0,
+        minimumStock: Number(product.minimumStock) || 0,
         status: product.status || 'active',
         description: product.description || undefined,
         supplierId: product.supplierId,
@@ -106,7 +107,8 @@ const EditProductPage: React.FC = () => {
   // Form handling functions
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    const processedValue = type === 'number' ? parseFloat(value) || 0 : value;
+    // Ensure numeric values are properly converted and never NaN
+    const processedValue = type === 'number' ? (isNaN(parseFloat(value)) ? 0 : parseFloat(value)) : value;
 
     setFormData(prev => ({
       ...prev,
@@ -123,16 +125,24 @@ const EditProductPage: React.FC = () => {
   };
 
   const handleImagesChange = (images: (File | string)[]) => {
+    // Separate new files from existing URLs
+    const newFiles = images.filter((img): img is File => img instanceof File);
+    const existingUrls = images.filter((img): img is string => typeof img === 'string');
+
     // Track which existing images were removed
     if (product?.images) {
-      const currentImageUrls = images.filter((img): img is string => typeof img === 'string');
-      const removedUrls = product.images.filter(url => !currentImageUrls.includes(url));
+      const removedUrls = product.images.filter(url => !existingUrls.includes(url));
       setRemovedImageUrls(prev => Array.from(new Set([...prev, ...removedUrls])));
     }
 
+    // Update new images state
+    setNewImages(newFiles);
+
     setFormData(prev => ({
       ...prev,
-      images
+      images,
+      newImages: newFiles,
+      imagesToDelete: removedImageUrls
     }));
   };
 
@@ -167,6 +177,22 @@ const EditProductPage: React.FC = () => {
       supplierId: [validationRules.required('Supplier is required')]
     });
 
+    // Validate variants if they exist
+    if (formData.variants && formData.variants.length > 0) {
+      const variantErrors = validateVariants(formData.variants);
+      if (variantErrors.length > 0) {
+        validationErrors.variants = variantErrors.join(', ');
+      }
+    }
+
+    // Validate attributes if they exist
+    if (formData.attributes && formData.attributes.length > 0) {
+      const attributeErrors = validateAttributes(formData.attributes);
+      if (attributeErrors.length > 0) {
+        validationErrors.attributes = attributeErrors.join(', ');
+      }
+    }
+
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
   };
@@ -183,69 +209,35 @@ const EditProductPage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      // Separate files from URLs in images
-      const imageFiles = formData.images?.filter((img): img is File => img instanceof File) || [];
-      const imageUrls = formData.images?.filter((img): img is string => typeof img === 'string') || [];
-
-      // Delete removed images first (suppress individual success notifications)
-      if (removedImageUrls.length > 0) {
-        const deletionPromises = removedImageUrls.map(async (url) => {
-          try {
-            await deleteProductImage(id, url, false); // Suppress notifications
-            console.log(`Successfully deleted image: ${url}`);
-          } catch (error) {
-            console.warn(`Failed to delete image ${url}:`, error);
-            // Continue with other deletions even if one fails
-          }
-        });
-
-        // Wait for all deletions to complete (or fail)
-        await Promise.allSettled(deletionPromises);
-      }
-
-      // Upload new images if any (suppress individual success notifications)
-      let uploadedImageUrls: string[] = [];
-      if (imageFiles.length > 0) {
-        try {
-          const uploadResult = await uploadProductImages(id, imageFiles, false); // Suppress notifications
-          uploadedImageUrls = uploadResult.imageUrls;
-        } catch (imageError) {
-          // If image upload fails, show specific error and stop the process
-          console.error('Error uploading images:', imageError);
-          showErrorRef.current('Failed to upload product images. Please try again.');
-          return;
-        }
-      }
-
-      // Combine existing URLs with newly uploaded URLs
-      const allImageUrls = [...imageUrls, ...uploadedImageUrls];
-
-      // Prepare update data (including final image set)
+      // Prepare update data using the unified API pattern
+      // Ensure all numeric values are properly validated and converted
       const updateData = {
         name: formData.name!,
         sku: formData.sku || undefined,
         category: formData.category!,
         categoryId: product.categoryId, // Use existing category ID
-        price: formData.price!,
-        stock: formData.stock!,
-        minimumStock: formData.minimumStock!,
+        price: Number(formData.price) || 0,
+        stock: Number(formData.stock) || 0,
+        minimumStock: Number(formData.minimumStock) || 0,
         status: formData.status || 'active',
         description: formData.description,
         supplierId: formData.supplierId!,
         attributes: formData.attributes,
         variants: formData.variants,
-        // Include the final image set (existing + newly uploaded)
-        images: allImageUrls
+        // New unified API fields
+        newImages: newImages, // New images to upload
+        imagesToDelete: removedImageUrls // Images to delete
       };
 
-      // Update product using frontend API method
-      const updatedProduct = await updateProductFromFrontend(id, updateData);
+      // Update product using unified API method
+      const updatedProduct = await updateProductUnified(id, updateData, false); // Suppress hook notifications
 
       // Update local product state
-      setProduct({ ...updatedProduct, images: allImageUrls });
+      setProduct(updatedProduct);
 
-      // Clear removed images state
+      // Clear state
       setRemovedImageUrls([]);
+      setNewImages([]);
 
       // Show single consolidated success message
       showSuccessRef.current('Changes made successfully');
@@ -275,7 +267,7 @@ const EditProductPage: React.FC = () => {
     id: `var_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
     name: '',
     sku: '',
-    price: 0,
+    price: 0.01, // Set minimum price to avoid validation errors
     stock: 0,
     attributes: {},
     image: undefined

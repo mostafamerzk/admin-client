@@ -4,7 +4,7 @@
  * This page provides a comprehensive interface for managing categories
  */
 
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/common/Card';
@@ -24,7 +24,8 @@ import {
   useCategories,
   CategoryFormData,
   AddCategoryForm,
-  Category
+  Category,
+  CategoryFilter
 } from '../features/categories';
 import { ROUTES } from '../constants/routes';
 import useNotification from '../hooks/useNotification';
@@ -34,11 +35,20 @@ const CategoryManagementPage: React.FC = () => {
   const { categories, isLoading, deleteCategory, createCategory } = useCategories();
   const { showNotification } = useNotification();
 
+  // Filter state
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
   // Modal states
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Memoize filtered categories to prevent unnecessary recalculations
+  const filteredCategories = useMemo(() => {
+    if (activeFilter === 'all') return categories;
+    return categories.filter(category => category.status === activeFilter);
+  }, [categories, activeFilter]);
 
 
 
@@ -206,9 +216,14 @@ const CategoryManagementPage: React.FC = () => {
       />
 
       <Card>
+        <CategoryFilter
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+
         <DataTable<Category>
           columns={columns}
-          data={categories}
+          data={filteredCategories}
           onRowClick={handleCategoryClick}
           loading={isLoading}
           pagination={true}

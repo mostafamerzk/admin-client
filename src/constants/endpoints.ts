@@ -55,6 +55,7 @@ export const ENDPOINTS = {
     STATUS: (id: string) => `/categories/${id}/status`,
     PRODUCTS: (id: string) => `/categories/${id}/products`,
     UPLOAD_IMAGE: (id: string) => `/categories/${id}/upload-image`,
+    DELETE_IMAGE: (id: string) => `/categories/${id}/image`,
   },
 
   // Business Types endpoints

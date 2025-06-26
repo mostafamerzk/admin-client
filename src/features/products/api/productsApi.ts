@@ -13,16 +13,14 @@ import type {
   ProductFormData,
   FrontendProductFormData,
   ProductQueryParams,
-  ProductStatusUpdate,
-  ImageUploadData,
-  ImageDeletionData,
   ApiResponseWrapper,
   ProductsListResponse,
   BackendProduct,
-  PaginationInfo
+  PaginationInfo,
+  UnifiedProductResponse
 } from '../types';
 import {
-  transformFrontendFormToBackend,
+  transformPartialFrontendFormToBackend,
   transformProductsListResponse,
   transformProductResponse,
   transformQueryParamsToBackend,
@@ -137,48 +135,141 @@ export const productsApi = {
     }
   },
 
-  /**
-   * Create a new product from frontend form data
-   * @param frontendFormData - The frontend form data to create
-   * @returns Promise resolving to the created product
-   */
-  createProductFromFrontend: async (frontendFormData: FrontendProductFormData): Promise<Product> => {
-    try {
-      // Transform frontend data to backend format
-      const backendData = transformFrontendFormToBackend(frontendFormData);
-      return await productsApi.createProduct(backendData);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
+
 
   /**
-   * Update a product
+   * Update a product using the unified API pattern
+   * Supports text updates, image uploads, and image deletions in a single atomic operation
    * @param id - The product ID
    * @param productData - The product data to update (in backend format)
+   * @param newImages - Optional array of new image files to upload
+   * @param imagesToDelete - Optional array of image URLs to delete
    * @returns Promise resolving to the updated product
    */
-  updateProduct: async (id: string, productData: Partial<ProductFormData>): Promise<Product> => {
+  updateProduct: async (
+    id: string,
+    productData: Partial<ProductFormData>,
+    newImages?: File[],
+    imagesToDelete?: string[]
+  ): Promise<Product> => {
     try {
       if (!id) {
         throw new Error('Product ID is required');
       }
 
-      // Data is already in backend format, no transformation needed
-      const response = await apiClient.put(ENDPOINTS.PRODUCTS.UPDATE(id), productData);
+      // Check if we need to use multipart/form-data (when images are involved)
+      const hasImageOperations = (newImages && newImages.length > 0) || (imagesToDelete && imagesToDelete.length > 0);
 
-      // Handle API client error wrapper
-      if (response.error) {
-        throw new Error(response.error);
+      if (hasImageOperations) {
+        // Use FormData for multipart request when images are involved
+        const formData = new FormData();
+
+        // Add text fields if provided
+        if (productData.Name !== undefined) {
+          formData.append('Name', productData.Name);
+        }
+        if (productData.Description !== undefined) {
+          formData.append('Description', productData.Description);
+        }
+
+        // For numeric fields, ensure they are valid numbers before sending
+        // The backend will parse these string values back to numbers
+        if (productData.Price !== undefined) {
+          const price = Number(productData.Price);
+          if (!isNaN(price) && price >= 0) {
+            formData.append('Price', price.toString());
+          }
+        }
+        if (productData.Stock !== undefined) {
+          const stock = Number(productData.Stock);
+          if (!isNaN(stock) && Number.isInteger(stock) && stock >= 0) {
+            formData.append('Stock', stock.toString());
+          }
+        }
+        if (productData.MinimumStock !== undefined) {
+          const minimumStock = Number(productData.MinimumStock);
+          if (!isNaN(minimumStock) && Number.isInteger(minimumStock) && minimumStock >= 0) {
+            formData.append('MinimumStock', minimumStock.toString());
+          }
+        }
+        if (productData.CategoryId !== undefined) {
+          const categoryId = Number(productData.CategoryId);
+          if (!isNaN(categoryId) && Number.isInteger(categoryId) && categoryId > 0) {
+            formData.append('CategoryId', categoryId.toString());
+          }
+        }
+        if (productData.SupplierId !== undefined) {
+          formData.append('SupplierId', productData.SupplierId);
+        }
+
+        // Always send attributes as array (empty array if none)
+        formData.append('Attributes', JSON.stringify(productData.Attributes || []));
+
+        // Always send variants as array (empty array if none)
+        formData.append('Variants', JSON.stringify(productData.Variants || []));
+
+        // Add new images
+        if (newImages && newImages.length > 0) {
+          newImages.forEach((file) => {
+            formData.append('images', file);
+          });
+        }
+
+        // Add images to delete
+        if (imagesToDelete && imagesToDelete.length > 0) {
+          formData.append('imagesToDelete', JSON.stringify(imagesToDelete));
+        }
+
+        const response = await apiClient.put(ENDPOINTS.PRODUCTS.UPDATE(id), formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        // Handle API client error wrapper
+        if (response.error) {
+          throw new Error(response.error);
+        }
+
+        if (!response.data) {
+          throw new Error('No response data received');
+        }
+
+        // Validate and transform backend response
+        const validatedResponse = validateBackendResponse<UnifiedProductResponse>(response.data);
+        return transformProductResponse(validatedResponse.data);
+      } else {
+        // Use JSON for text-only updates (backward compatibility)
+        // Ensure data is in correct backend format by filtering out undefined values
+        const cleanedData: Partial<ProductFormData> = {};
+
+        // Only include defined fields with correct capitalized names
+        if (productData.Name !== undefined) cleanedData.Name = productData.Name;
+        if (productData.Description !== undefined) cleanedData.Description = productData.Description;
+        if (productData.Price !== undefined) cleanedData.Price = productData.Price;
+        if (productData.Stock !== undefined) cleanedData.Stock = productData.Stock;
+        if (productData.MinimumStock !== undefined) cleanedData.MinimumStock = productData.MinimumStock;
+        if (productData.CategoryId !== undefined) cleanedData.CategoryId = productData.CategoryId;
+        if (productData.SupplierId !== undefined) cleanedData.SupplierId = productData.SupplierId;
+        if (productData.CustomerId !== undefined) cleanedData.CustomerId = productData.CustomerId;
+        if (productData.Attributes !== undefined) cleanedData.Attributes = productData.Attributes;
+        if (productData.Variants !== undefined) cleanedData.Variants = productData.Variants;
+
+        const response = await apiClient.put(ENDPOINTS.PRODUCTS.UPDATE(id), cleanedData);
+
+        // Handle API client error wrapper
+        if (response.error) {
+          throw new Error(response.error);
+        }
+
+        if (!response.data) {
+          throw new Error('No response data received');
+        }
+
+        // Validate and transform backend response
+        const validatedResponse = validateBackendResponse<BackendProduct>(response.data);
+        return transformProductResponse(validatedResponse.data);
       }
-
-      if (!response.data) {
-        throw new Error('No response data received');
-      }
-
-      // Validate and transform backend response
-      const validatedResponse = validateBackendResponse<BackendProduct>(response.data);
-      return transformProductResponse(validatedResponse.data);
     } catch (error: any) {
       // Enhanced error handling for backend-specific errors
       if (error.response?.data) {
@@ -190,7 +281,7 @@ export const productsApi = {
   },
 
   /**
-   * Update a product from frontend form data
+   * Update a product from frontend form data using the unified API pattern
    * @param id - The product ID
    * @param frontendFormData - The frontend form data to update
    * @returns Promise resolving to the updated product
@@ -201,13 +292,20 @@ export const productsApi = {
         throw new Error('Product ID is required');
       }
 
-      // Transform frontend data to backend format
-      const backendData = transformFrontendFormToBackend(frontendFormData as FrontendProductFormData);
-      return await productsApi.updateProduct(id, backendData);
+      // Transform frontend data to backend format using partial transformation
+      const backendData = transformPartialFrontendFormToBackend(frontendFormData);
+
+      // Extract image operations from frontend form data
+      const newImages = frontendFormData.newImages || [];
+      const imagesToDelete = frontendFormData.imagesToDelete || [];
+
+      return await productsApi.updateProduct(id, backendData, newImages, imagesToDelete);
     } catch (error) {
       throw handleApiError(error);
     }
   },
+
+
 
   /**
    * Delete a product
@@ -239,184 +337,13 @@ export const productsApi = {
     }
   },
 
-  /**
-   * Update product status
-   * @param id - The product ID
-   * @param status - The new status
-   * @returns Promise resolving when the status is updated
-   */
-  updateProductStatus: async (id: string, status: ProductStatusUpdate['status']): Promise<void> => {
-    try {
-      if (!id) {
-        throw new Error('Product ID is required');
-      }
 
-      const response = await apiClient.put(ENDPOINTS.PRODUCTS.STATUS(id), { status });
 
-      // Handle API client error wrapper
-      if (response.error) {
-        throw new Error(response.error);
-      }
 
-      // Status update doesn't return data
-      return;
-    } catch (error: any) {
-      // Enhanced error handling for backend-specific errors
-      if (error.response?.data) {
-        const errorMessage = extractErrorMessage(error.response.data);
-        throw new Error(errorMessage);
-      }
-      throw handleApiError(error);
-    }
-  },
 
-  /**
-   * Search products
-   * @param query - Search query
-   * @param params - Additional query parameters
-   * @returns Promise resolving to search results
-   */
-  searchProducts: async (query: string, params?: Omit<ProductQueryParams, 'search'>): Promise<ApiResponseWrapper<Product[]>> => {
-    try {
-      const searchParams = { ...params, search: query };
-      return await productsApi.getProducts(searchParams);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
 
-  /**
-   * Get products by supplier
-   * @param supplierId - The supplier ID
-   * @param params - Additional query parameters
-   * @returns Promise resolving to supplier's products
-   */
-  getProductsBySupplier: async (supplierId: string, params?: Omit<ProductQueryParams, 'supplierId'>): Promise<Product[]> => {
-    try {
-      if (!supplierId) {
-        throw new Error('Supplier ID is required');
-      }
 
-      const searchParams = { ...params, supplierId };
-      const response = await productsApi.getProducts(searchParams);
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
 
-  /**
-   * Get products by category
-   * @param categoryId - The category ID (number)
-   * @param params - Additional query parameters
-   * @returns Promise resolving to category products
-   */
-  getProductsByCategory: async (categoryId: number, params?: Omit<ProductQueryParams, 'category'>): Promise<Product[]> => {
-    try {
-      if (!categoryId) {
-        throw new Error('Category ID is required');
-      }
-
-      const searchParams = { ...params, category: categoryId };
-      const response = await productsApi.getProducts(searchParams);
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  /**
-   * Upload product images
-   * @param productId - The product ID
-   * @param files - Array of image files
-   * @returns Promise resolving to upload response
-   */
-  uploadProductImages: async (productId: string, files: File[]): Promise<ImageUploadData> => {
-    try {
-      if (!productId) {
-        throw new Error('Product ID is required');
-      }
-
-      if (!files || files.length === 0) {
-        throw new Error('At least one image file is required');
-      }
-
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append(`images`, file);
-      });
-
-      const response = await apiClient.post(ENDPOINTS.PRODUCTS.UPLOAD_IMAGES(productId), formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      // Handle API client error wrapper
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      if (!response.data) {
-        throw new Error('No response data received');
-      }
-
-      // Validate backend response
-      const validatedResponse = validateBackendResponse<ImageUploadData>(response.data);
-      return validatedResponse.data;
-    } catch (error: any) {
-      // Enhanced error handling for backend-specific errors
-      if (error.response?.data) {
-        const errorMessage = extractErrorMessage(error.response.data);
-        throw new Error(errorMessage);
-      }
-      throw handleApiError(error);
-    }
-  },
-
-  /**
-   * Delete a product image
-   * @param productId - The product ID
-   * @param imageUrl - The image URL to delete
-   * @returns Promise resolving to deletion response
-   */
-  deleteProductImage: async (productId: string, imageUrl: string): Promise<ImageDeletionData> => {
-    try {
-      if (!productId) {
-        throw new Error('Product ID is required');
-      }
-
-      if (!imageUrl) {
-        throw new Error('Image URL is required');
-      }
-
-      const response = await apiClient.delete(ENDPOINTS.PRODUCTS.DELETE_IMAGE(productId), {
-        data: {
-          imageUrl
-        }
-      });
-
-      // Handle API client error wrapper
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      if (!response.data) {
-        throw new Error('No response data received');
-      }
-
-      // Validate backend response
-      const validatedResponse = validateBackendResponse<ImageDeletionData>(response.data);
-      return validatedResponse.data;
-    } catch (error: any) {
-      // Enhanced error handling for backend-specific errors
-      if (error.response?.data) {
-        const errorMessage = extractErrorMessage(error.response.data);
-        throw new Error(errorMessage);
-      }
-      throw handleApiError(error);
-    }
-  }
 };
 
 // Export individual methods for more flexible importing
@@ -424,16 +351,9 @@ export const {
   getProducts,
   getProductById,
   createProduct,
-  createProductFromFrontend,
   updateProduct,
   updateProductFromFrontend,
-  deleteProduct,
-  updateProductStatus,
-  searchProducts,
-  getProductsBySupplier,
-  getProductsByCategory,
-  uploadProductImages,
-  deleteProductImage
+  deleteProduct
 } = productsApi;
 
 export default productsApi;

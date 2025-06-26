@@ -78,6 +78,7 @@ export interface BackendProductAttribute {
   id: number;
   key: string;
   value: string;
+  createdDate?: string;
 }
 
 // Backend variant interface (matches actual API response)
@@ -85,8 +86,31 @@ export interface BackendProductVariant {
   id: number;
   name: string;
   type: string;
-  price: number;
+  customPrice: number;  // Updated to match API doc
   stock: number;
+  createdDate?: string;
+}
+
+// Action types for attributes and variants in unified API
+export type AttributeAction = 'create' | 'update' | 'delete';
+export type VariantAction = 'create' | 'update' | 'delete';
+
+// Attribute with action for unified API
+export interface AttributeWithAction {
+  _action: AttributeAction;
+  ID?: number;  // Required for update/delete
+  Key?: string;  // Required for create/update, optional for delete
+  Value?: string; // Required for create/update, optional for delete
+}
+
+// Variant with action for unified API
+export interface VariantWithAction {
+  _action: VariantAction;
+  ID?: number;  // Required for update/delete
+  Name?: string; // Required for create/update, optional for delete
+  Type?: string; // Required for create/update, optional for delete
+  CustomPrice?: number; // Required for create/update, optional for delete
+  Stock?: number; // Required for create/update, optional for delete
 }
 
 // Backend product interface matching actual API specification
@@ -142,20 +166,12 @@ export interface ProductFormData {
   Description?: string | undefined; // Backend expects capital D (optional)
   Price: number;                   // Backend expects capital P
   Stock: number;                   // Backend expects capital S
-  MinimumStock: number;            // Backend expects capital M and S
+  MinimumStock?: number;           // Backend expects capital M and S (optional for updates)
   CategoryId: number;              // Backend expects CategoryId (number)
   SupplierId: string;              // Backend expects SupplierId (GUID)
   CustomerId?: string | undefined; // Backend accepts CustomerId (optional)
-  Attributes?: {                   // Backend expects this structure
-    Key: string;
-    Value: string;
-  }[] | undefined;
-  Variants?: {                     // Backend expects this structure
-    Name: string;
-    Type: string;
-    CustomPrice: number;
-    Stock: number;
-  }[] | undefined;
+  Attributes?: AttributeWithAction[] | undefined; // Support action-based updates
+  Variants?: VariantWithAction[] | undefined;     // Support action-based updates
   // Images handled separately through upload endpoint
 }
 
@@ -175,12 +191,12 @@ export interface FrontendProductFormData {
   attributes?: ProductAttribute[] | undefined;
   variants?: ProductVariant[] | undefined;
   images?: string[] | undefined;   // Final image URLs for product update
+  // New fields for unified API
+  newImages?: File[] | undefined;  // New images to upload
+  imagesToDelete?: string[] | undefined; // Image URLs to delete
 }
 
-// Frontend form data that allows File objects for images
-export interface ProductFormDataWithImages extends Omit<FrontendProductFormData, 'images'> {
-  images?: (File | string)[];
-}
+
 
 // Backend API query parameters for products (matches actual API)
 export interface ProductQueryParams {
@@ -199,42 +215,28 @@ export interface ProductsListResponse extends ApiResponseWrapper<BackendProduct[
   pagination?: PaginationInfo;
 }
 
-// Image upload data (the actual data part)
-export interface ImageUploadData {
-  imageUrls: string[];
-  uploadDetails: Array<{
-    url: string;
-    publicId: string;
+// Unified API response interfaces
+export interface UnifiedImageUploadInfo {
+  uploadedCount: number;
+  images: Array<{
     originalName: string;
+    size: number;
+    mimeType: string;
   }>;
 }
 
-// Image upload response (the full API response)
-export interface ImageUploadResponse {
-  success: boolean;
-  message: string;
-  data: ImageUploadData;
+export interface UnifiedImageDeletionInfo {
+  deletedCount: number;
+  deletedUrls: string[];
 }
 
-// Image deletion response
-export interface ImageDeletionData {
-  imageId: number;
-  productId: number;
-  imageUrl: string;
-  cloudinaryDeleted: boolean;
-  cloudinaryPublicId: string;
+// Enhanced product response for unified API
+export interface UnifiedProductResponse extends BackendProduct {
+  imageUpload?: UnifiedImageUploadInfo;
+  imagesDeletion?: UnifiedImageDeletionInfo;
 }
 
-export interface ImageDeletionResponse {
-  success: boolean;
-  message: string;
-  data: ImageDeletionData;
-}
 
-// Product status update
-export interface ProductStatusUpdate {
-  status: 'active' | 'inactive' | 'out_of_stock';
-}
 
 // Product analytics data
 export interface ProductAnalyticsData {

@@ -4,7 +4,7 @@
  * This page displays and manages categories in the system.
  */
 
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/common/Card';
@@ -24,7 +24,8 @@ import {
   AddCategoryForm,
   useCategories,
   Category,
-  CategoryFormData
+  CategoryFormData,
+  CategoryFilter
 } from '../features/categories';
 import { ROUTES } from '../constants/routes';
 import useNotification from '../hooks/useNotification';
@@ -35,10 +36,17 @@ const CategoriesPage: React.FC = () => {
   const { categories, isLoading, deleteEntity, createCategory } = useCategories();
   const { showNotification } = useNotification();
 
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Memoize filtered categories to prevent unnecessary recalculations
+  const filteredCategories = useMemo(() => {
+    if (activeFilter === 'all') return categories;
+    return categories.filter(category => category.status === activeFilter);
+  }, [categories, activeFilter]);
 
   // Memoize event handlers to prevent unnecessary re-renders
   const handleCategoryClick = useCallback((category: Category) => {
@@ -207,9 +215,14 @@ const CategoriesPage: React.FC = () => {
       />
 
       <Card>
+        <CategoryFilter
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+
         <DataTable<Category>
           columns={columns}
-          data={categories}
+          data={filteredCategories}
           onRowClick={handleCategoryClick}
           loading={isLoading}
           pagination={true}

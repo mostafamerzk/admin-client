@@ -97,11 +97,42 @@ export const categoriesApi = {
   },
 
   /**
-   * Update a category
+   * Update a category with atomic operation support
+   * Supports both text-only updates and multipart updates with image
    */
   updateCategory: async (id: string, categoryData: Partial<CategoryFormData>): Promise<Category> => {
     try {
-      const response = await apiClient.put<any>(`/categories/${id}`, categoryData);
+      let response;
+
+      // Check if image file is provided to determine request format
+      if (categoryData.image instanceof File) {
+        // Use FormData for multipart request when image is included
+        const formData = new FormData();
+
+        // Add text fields if provided
+        if (categoryData.name !== undefined) {
+          formData.append('name', categoryData.name.trim());
+        }
+        if (categoryData.description !== undefined) {
+          formData.append('description', categoryData.description.trim());
+        }
+        if (categoryData.status !== undefined) {
+          formData.append('status', categoryData.status);
+        }
+
+        // Add image file
+        formData.append('image', categoryData.image);
+
+        response = await apiClient.put<any>(`/categories/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // Use JSON for text-only updates
+        const { image, ...textData } = categoryData;
+        response = await apiClient.put<any>(`/categories/${id}`, textData);
+      }
 
       // Handle the backend response structure: { success, message, data: {...} }
       if (response.data && typeof response.data === 'object' && 'data' in response.data) {
@@ -157,6 +188,7 @@ export const categoriesApi = {
 
   /**
    * Upload category image
+   * @deprecated Use updateCategory with image file instead for atomic operations
    * @param categoryId - The category ID
    * @param file - The image file to upload
    * @returns Promise resolving to upload response

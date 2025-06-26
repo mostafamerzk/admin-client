@@ -25,7 +25,7 @@ import {
   CalendarIcon,
   NoSymbolIcon
 } from '@heroicons/react/24/outline';
-import { useCategories, Category, AddCategoryForm, categoriesApi, CategoryFormData } from '../features/categories';
+import { useCategories, Category, AddCategoryForm, CategoryFormData } from '../features/categories';
 import { useProducts, Product } from '../features/products';
 import { ROUTES } from '../constants/routes';
 import useNotification from '../hooks/useNotification';
@@ -136,49 +136,45 @@ const CategoryDetailsPage: React.FC = () => {
     setIsEditModalOpen(true);
   }, []);
 
-  const handleUpdateCategory = useCallback(async (categoryData: CategoryFormData, imageFile?: File | null) => {
+  const handleUpdateCategory = useCallback(async (categoryData: CategoryFormData) => {
     if (!category) return;
 
     setIsSubmitting(true);
     try {
-      // Step 1: Update category data (without image)
+      // Use atomic update operation - single API call handles both data and image
       const updatedCategory = await updateCategory(category.id, categoryData);
 
-      // Step 2: Upload image separately if provided
-      if (imageFile) {
-        try {
-          const imageUploadResult = await categoriesApi.uploadCategoryImage(category.id, imageFile);
-          // Update the category with the new image URL
-          const categoryWithImage = { ...updatedCategory, image: imageUploadResult.imageUrl };
-          setCategory(categoryWithImage);
-        } catch (imageError) {
-          console.error('Error uploading category image:', imageError);
-          // Still show success for category update, but warn about image
-          showNotification({
-            type: 'warning',
-            title: 'Partial Success',
-            message: 'Category updated successfully, but image upload failed'
-          });
-          setCategory(updatedCategory);
-          setIsEditModalOpen(false);
-          return;
-        }
-      } else {
-        setCategory(updatedCategory);
-      }
-
+      setCategory(updatedCategory);
       setIsEditModalOpen(false);
+
+      // Show appropriate success message based on whether image was included
+      const hasImageUpdate = categoryData.image instanceof File;
       showNotification({
         type: 'success',
         title: 'Success',
-        message: 'Category updated successfully'
+        message: hasImageUpdate
+          ? 'Category updated successfully with new image'
+          : 'Category updated successfully'
       });
     } catch (error) {
       console.error('Error updating category:', error);
+
+      // Handle specific error types for better user experience
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update category';
+      let userMessage = 'Failed to update category. Please try again.';
+
+      if (errorMessage.includes('Failed to upload image')) {
+        userMessage = 'Image upload failed. Please try with a different image.';
+      } else if (errorMessage.includes('Category name already exists')) {
+        userMessage = 'A category with this name already exists.';
+      } else if (errorMessage.includes('Category not found')) {
+        userMessage = 'Category not found.';
+      }
+
       showNotification({
         type: 'error',
         title: 'Error',
-        message: 'Failed to update category'
+        message: userMessage
       });
     } finally {
       setIsSubmitting(false);

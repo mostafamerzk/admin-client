@@ -21,13 +21,7 @@ export {
   getProducts,
   getProductById,
   createProduct,
-  createProductFromFrontend,
   updateProduct,
   updateProductFromFrontend,
-  deleteProduct,
-  updateProductStatus,
-  searchProducts,
-  getProductsBySupplier,
-  getProductsByCategory,
-  uploadProductImages
+  deleteProduct
 } from './api/productsApi';
